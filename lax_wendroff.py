@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Tue Nov 28 14:56:05 2023
+
+@author: Cassidy.Northway
+"""
+
+# lax_wendroff.py, from the VamPy package
 
 from __future__ import division
-
-import sys
 import numpy as np
-from scipy.interpolate import interp1d
-
-import vampy.utils as utils
-
 
 class LaxWendroff(object):
     """
@@ -41,6 +42,7 @@ class LaxWendroff(object):
         :param F: flux function (see [2])
         :param S: source function (see [2])
         """
+        
         # U0: previous timestep, U1 current timestep
         U1 = np.zeros((2,self.nx))
         # apply boundary conditions
