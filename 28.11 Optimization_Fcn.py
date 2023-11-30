@@ -49,9 +49,9 @@ def ModelError(lambda_vals):
         
         base_name = str(ii) + '_VamPY_ST.csv'
         
-        A_sim = np.loadtxt('a' + base_name, delimiter=',')
-        U_sim = np.loadtxt('u' + base_name, delimiter=',')
-        P_sim = np.loadtxt('u' + base_name, delimiter=',')
+        A_sim = np.loadtxt('a' + base_name, delimiter=',')[:,-1]
+        U_sim = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
+        P_sim = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
         
         #Q data is the Velocity (cm/s)
         Q_sim = U_sim / A_sim
@@ -61,9 +61,9 @@ def ModelError(lambda_vals):
         os.chdir('C:\\Users\\Cassidy.Northway\\RemoteGit\\VamPy_3wk')
 
         base_name = str(ii) + '_VamPY_3wk.csv'
-        A_data = np.loadtxt('a' + base_name, delimiter=',')
-        U_data = np.loadtxt('u' + base_name, delimiter=',')
-        P_data = np.loadtxt('u' + base_name, delimiter=',')
+        A_data = np.loadtxt('a' + base_name, delimiter=',')[:,-1]
+        U_data = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
+        P_data = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
         
         #Q data is the Velocity (cm/s)
         Q_data = U_data / A_data
