@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+pip install pip install p# -*- coding: utf-8 -*-
 """
 Created on Tue Nov 28 15:07:10 2023
 
@@ -81,7 +81,7 @@ def runSimulation(lambda_val):
     alpha = 0.88 #branching ratio
     beta =0.66 #branching ratio
     l_rr = lambda_val #length to radius ratio 
-    r_min = 0.02 #minimum radius 
+    r_min = 0.025 #minimum radius 
     Z_term = 0 #terminal impedance value 
     out_arg = [] #place holder
     

@@ -1,4 +1,6 @@
 #Installations and Functions
+
+
 from __future__ import division
 import scipy.optimize as optimize
 import numpy as np
@@ -41,7 +43,7 @@ def ModelError(lambda_vals):
     v_number = [1,2] 
     EU = np.zeros ([50, 2]) #!HARD CODED! 2 = num vessles, 50 = number time steps
     EP = np.zeros ([50, 2])
-    E = np.zeros([4,1]) #4 = num vessels * 2 (for EU and EP)
+    E = np.zeros([4,]) #4 = num vessels * 2 (for EU and EP)
     #Load simulation data !CURRENTLY HARD CODED, EDIT LATER!
    
     for ii in v_number:
@@ -51,7 +53,7 @@ def ModelError(lambda_vals):
         
         A_sim = np.loadtxt('a' + base_name, delimiter=',')[:,-1]
         U_sim = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
-        P_sim = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
+        P_sim = np.loadtxt('p' + base_name, delimiter=',')[:,-1]
         
         #Q data is the Velocity (cm/s)
         Q_sim = U_sim / A_sim
@@ -63,17 +65,17 @@ def ModelError(lambda_vals):
         base_name = str(ii) + '_VamPY_3wk.csv'
         A_data = np.loadtxt('a' + base_name, delimiter=',')[:,-1]
         U_data = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
-        P_data = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
+        P_data = np.loadtxt('p' + base_name, delimiter=',')[:,-1]
         
         #Q data is the Velocity (cm/s)
         Q_data = U_data / A_data
         os.chdir('C:\\Users\\Cassidy.Northway\\RemoteGit')
     #Compute error 
-        EU[:,ii] =(Q_sim - Q_data) / np.linalg.norm(Q_data, ord =1)
-        EP[:,ii] =(P_sim - P_data) / np.linalg.norm(P_data, ord =1)
+        EU[:,ii-1] =(Q_sim - Q_data) / np.linalg.norm(Q_data, ord =1)
+        EP[:,ii-1] =(P_sim - P_data) / np.linalg.norm(P_data, ord =1)
         
     for ii in range(0, len(v_number)):
-        E[2*ii] = np.linalg.norm(E[:,ii], ord =1)
+        E[2*ii] = np.linalg.norm(EU[:,ii], ord =1)
         E[(2*ii)+1] = np.linalg.norm(EP[:,ii], ord =1)
 
     return E 
