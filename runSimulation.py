@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+pip install pip install p# -*- coding: utf-8 -*-
 """
 Created on Tue Nov 28 15:07:10 2023
 
@@ -123,4 +123,4 @@ def runSimulation(lambda_val):
     try:
         an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project')   
     except:
-         an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
+         an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\GitRemoteRepo')

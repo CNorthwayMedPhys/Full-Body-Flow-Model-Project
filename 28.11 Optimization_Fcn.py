@@ -81,16 +81,6 @@ def ModelError(lambda_vals):
     return E 
 
 #%%
-from datetime import datetime
-
-# datetime object containing current date and time
-start = datetime.now()
-print(start)
-
 [lambda_vals,E] = findOptLambda()
 print(lambda_vals)
 
-finish = datetime.now()
-print(finish)
-
-print(finish-start)
