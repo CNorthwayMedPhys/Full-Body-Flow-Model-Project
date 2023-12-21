@@ -49,7 +49,7 @@ def ModelError(lambda_vals):
     for ii in v_number:
         os.chdir('C:\\Users\\Cassidy.Northway\\RemoteGit\\VamPy_ST')
         
-        base_name = str(ii) + '_VamPY_ST.csv'
+        base_name = str(ii) + '_VamPy_ST.csv'
         
         A_sim = np.loadtxt('a' + base_name, delimiter=',')[:,-1]
         U_sim = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
@@ -62,7 +62,7 @@ def ModelError(lambda_vals):
     #Load ground truth data !CURRENTLY HARD CODED, EDIT LATER!
         os.chdir('C:\\Users\\Cassidy.Northway\\RemoteGit\\VamPy_3wk')
 
-        base_name = str(ii) + '_VamPY_3wk.csv'
+        base_name = str(ii) + '_VamPy_3wk.csv'
         A_data = np.loadtxt('a' + base_name, delimiter=',')[:,-1]
         U_data = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
         P_data = np.loadtxt('p' + base_name, delimiter=',')[:,-1]
