@@ -1,4 +1,4 @@
-pip install pip install p# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Created on Tue Nov 28 15:07:10 2023
 
