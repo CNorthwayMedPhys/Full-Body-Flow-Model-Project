@@ -216,11 +216,11 @@ class ArteryNetwork(object):
     
 
     @staticmethod
-    def outlet_st(artery, dt, t):
+    def outlet_st(artery, dt, k_array):
         """
         :param t: Current time step, within the period, 0<=t<=T
         """
-        k_array = np.arange(0,t+dt,dt) #actual range [0,t]
+        
         n_value = np.size(k_array)
         zk_array = artery.zn[0:n_value+1]
         Qnk_array = np.flip(artery.Qnk[0:n_value+1])
@@ -523,6 +523,7 @@ time step size." % (t))
         """
         
         tr = np.linspace(self.tf-self.T, self.tf, self.ntr)
+        k_master_array = np.arange(0,self.T + self.dt,self.dt) #actual range [0,T]
         i = 0
         self.print_status()
         self.timestep()
@@ -574,7 +575,9 @@ time step size." % (t))
                     if out_bc == 'p':
                         U_out = ArteryNetwork.outlet_p(artery, self.dt, *out_args)
                     elif out_bc == 'ST':
-                        U_out = ArteryNetwork.outlet_st(artery, self.dt, self.t)
+                        k_index = int ((self.t/self.dt) + 1)
+                        k_array = k_master_array[0:k_index]
+                        U_out = ArteryNetwork.outlet_st(artery, self.dt, k_array)
                 
                 artery.solve(lw, U_in, U_out, save, i-1)
                 

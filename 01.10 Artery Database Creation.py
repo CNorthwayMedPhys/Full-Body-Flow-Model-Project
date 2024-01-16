@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 
 #Import excel sheet
 try:
-    arteries_sheet = pd.read_excel('C:\\Users\\Cassidy.Northway\\GitRemoteRepo\\FlowTracker.xlsx', sheet_name = 0)
+    arteries_sheet = pd.read_excel('C:\\Users\\Cassidy.Northway\\RemoteGit\\FlowTracker.xlsx', sheet_name = 0)
     #veins_sheet = pd.read_excel('C:\\Users\\Cassidy.Northway\\GitRemoteRepo\\FlowTracker.xlsx', sheet_name = 1)
 except:
     arteries_sheet = pd.read_excel('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FlowTracker.xlsx', sheet_name = 0)
