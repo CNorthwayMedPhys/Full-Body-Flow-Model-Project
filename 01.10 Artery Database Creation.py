@@ -61,7 +61,7 @@ for index in range(0,sheet.shape[0]):
     else:
         seg_tag = True
         branches = branches.split(',')
-        branches = [s.strip for s in branches]
+        branches = [s.strip() for s in branches]
         
         #Remove branches with branching from the end 
         if final_cnd != 'ST':
@@ -75,7 +75,7 @@ for index in range(0,sheet.shape[0]):
         
         #Load the file data
         try:
-            array = np.load('C:\\Users\\Cassidy.Northway\\GitRemoteRepo\\FittedVesselsFiles\\' + main_file)
+            array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + main_file)
         except:
             array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + main_file)
         
@@ -102,13 +102,13 @@ for index in range(0,sheet.shape[0]):
         
     #If the vessel does branch we need to subdivide it into segements via an additional data frame
     if seg_tag == True:
-        seg_df = pd.DataFrame(columns=['Branch Name','Index of Split'])
+        seg_df = pd.DataFrame(columns=['Branch Name','Index of Split','Dist'])
         sub_index = 0
         
         #Get the names of all the files and import data
         main_file = file_name + '_fitted_data.npy'
         try:
-            main_array = np.load('C:\\Users\\Cassidy.Northway\\GitRemoteRepo\\FittedVesselsFiles\\' + main_file)
+            main_array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + main_file)
         except:
             main_array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + main_file)
         
@@ -116,22 +116,42 @@ for index in range(0,sheet.shape[0]):
         branch_files = []
         
         for i in range(0,len(branches)):
-            branch_row = sheet[sheet['Anatomy Name'].str.match(branches)].index.values[0]
+            branch_row = sheet[sheet['Anatomy Name'].str.match(branches[i])].index.values[0]
             branch_file = sheet.at[sheet.index[branch_row],'Filename']
             branch_file = branch_file + '_fitted_data.npy'
 
             try:
-               branch_array = np.load('C:\\Users\\Cassidy.Northway\\GitRemoteRepo\\FittedVesselsFiles\\' + branch_file)
+               branch_array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + branch_file)
             except:
                branch_array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + branch_file)
            
         #Find the nearest points
             dist_array = scipy.spatial.distance.cdist(main_array[:,0:3],branch_array[:,0:3])
-            dist_array = dist_array[:,0]
+            dist_array_a = dist_array[:,0]
+            dist_array_b = dist_array[:,-1]
+            if np.min(dist_array_b) < np.min(dist_array_a):
+                branch_array = np.flipud(branch_array)
+                np.save('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + branch_file, branch_array)
+                
             index_split = np.where (np.min(dist_array) == dist_array)[0]
-            seg_df.loc[len(seg_df)] = {'Branch Name': branches[i] , 'Index of Split': index_split[0]}
+            seg_df.loc[len(seg_df)] = {'Branch Name': branches[i] , 'Index of Split': index_split[0], 'Dist': np.min(dist_array)}
+            
+        
            
-           
+        #Sometimes segments have identical index values
+        match_index = seg_df.duplicated(subset = 'Index of Split', keep = False)
+        sub_df = seg_df[match_index]
+            
+        if not sub_df.empty:
+            dist_col = sub_df['Dist'].idxmax()
+            intial_index = sub_df.at[dist_col,'Index of Split']
+            seg_df.at[dist_col,'Index of Split'] = (intial_index + 1)
+            
+        #Sometime segment index values are equal to zero
+        seg_df = seg_df.replace(0,1)
+            
+            
+            
            #We now have the number of off branching vessels and where they branch so now we need to now save the segements and off branches and sort segment frame by distance along vessel
 
         seg_df = seg_df.sort_values(by ='Index of Split')
@@ -143,17 +163,24 @@ for index in range(0,sheet.shape[0]):
                 sub_name =  name + '_' + str(i)
                 final_index = seg_df.at [ i , 'Index of Split']
                 center_array = main_array[intial_index:final_index+1,0:3 ]
-                radius_array = main_array[intial_index:final_index,3 ]
-                end_cnd = [name + '_' + str(i+1), branches[i]+'_0' ]        
+                radius_values = main_array[intial_index:final_index,3 ]
+                end_cnd = [name + '_' + str(i+1), seg_df.at[i, 'Branch Name' ]+'_0' ]        
                 intial_index = final_index
                 
-                center_array = main_array[:,0:3 ]
-                radius_values = main_array[:,3 ]
+                
                 #Determine radius values
                 index_rounding=     np.round(len(radius_values)*percent).astype(int)+1
                 Ru = np.mean(radius_values[0:index_rounding])
                 Rd = np.mean(radius_values[-index_rounding:-1])
                 radius_array = [Ru, Rd]
+                
+                #Sometimes the radius values are very minimal then we get nan values, catch and correct here.
+                if np.isnan(radius_array).any():
+                    if np.isnan(Ru):
+                        Ru = radius_values[0]
+                    else:
+                        Rd = radius_values[-1]
+                    radius_array = [Ru,Rd]    
                 
                 #Determine the vessels length
                 tot_dist = 0
@@ -163,26 +190,35 @@ for index in range(0,sheet.shape[0]):
                 lam_value = tot_dist / Ru 
                 
                 #Add to the dataframe
-                new_row = {'Name' : seg_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': final_cnd }
+                new_row = {'Name' : sub_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': end_cnd }
                 df.loc[len(df)] = new_row
                 
             else:
                 sub_name =  name + '_' + str(i)
                 final_index = -1
                 center_array = main_array[intial_index:final_index,0:3 ]
-                radius_array = main_array[intial_index:final_index,3 ]
+                radius_values = main_array[intial_index:final_index,3 ]
+                
+                if radius_values.size == 0:
+                    center_array = main_array[-3:final_index,0:3 ] 
+                    radius_values = main_array[-3:final_index,3 ]
                 
                 if final_cnd != 'ST':
-                    end_condition = [final_cnd[0] +'_0']
+                    for j in range(0,len(final_cnd)):
+                        end_cnd = [final_cnd[j] +'_0']
                 else:
-                    end_condition = final_cnd
-                center_array = main_array[:,0:3 ]
-                radius_values = main_array[:,3 ]
+                    end_cnd = final_cnd
+
                 #Determine radius values
                 index_rounding=     np.round(len(radius_values)*percent).astype(int)+1
                 Ru = np.mean(radius_values[0:index_rounding])
                 Rd = np.mean(radius_values[-index_rounding:-1])
                 radius_array = [Ru, Rd]
+                
+                if np.isnan(radius_array).any():
+                    Ru = radius_values[0]
+                    Rd = radius_values[-1]
+                    radius_array = [Ru,Rd]
                  
                 #Determine the vessels length
                 tot_dist = 0
@@ -192,7 +228,7 @@ for index in range(0,sheet.shape[0]):
                 lam_value = tot_dist / Ru 
                  
                 #Add to the dataframe
-                new_row = {'Name' : seg_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': final_cnd }
+                new_row = {'Name' : sub_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': end_cnd }
                 df.loc[len(df)] = new_row
                 
 print(df)
@@ -208,32 +244,44 @@ for i in range (0,len(df)):
         Ru = df.at[i,'Radius Values'][0]
         Rd = df.at[index, 'Radius Values'][1]
         radius_values = [Ru, Rd]
+        lam_value = ((df.at[i,'Radius Values'][0]*df.at[i,'lam'])+(df.at[index, 'Radius Values'][0]*df.at[index, 'Radius Values'][0]))/Ru
         new_end_condition = df.at[index,'End Condition']
-        new_row = {'Name' : seg_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': final_cnd }
+        new_row = {'Name' : name, 'lam': lam_value, 'Radius Values': radius_values, 'End Condition': new_end_condition }
         df.loc[len(df)] = new_row
         removal_indices.append(i)
         removal_indices.append(index)
 
-df = df.drop(df.index[removal_indices])
-df = df.reset_index(drop=True)
-print(df)               
+df_updated = df.drop(df.index[removal_indices])
+df_updated = df_updated.reset_index(drop=True)
+print(df_updated)               
             
 #%% Sort everything descending from the input vessel
 df_ordered = pd.DataFrame(columns=['Name', 'lam', 'Radius Values', 'End Condition']) 
 
-df_ordered.loc[0]=df.loc[index_0]
+df_ordered.loc[0]=df_updated.loc[index_0]
 next_layer = df_ordered.at[0,'End Condition']
 while len(next_layer)>0:
     next_layer_1 = []
     for daughter in next_layer:
-        index = df[df['Name']==daughter].index.values[0]
-        df_ordered.loc[len(df_ordered)] = df.loc[index]
-        end_condition = df.at[index, 'End Condition']
+        index = df_updated[df_updated['Name']==daughter].index.values[0]
+        df_ordered.loc[len(df_ordered)] = df_updated.loc[index]
+        end_condition = df_updated.at[index, 'End Condition']
         
         if end_condition !='ST':
             next_layer_1 = np.append(next_layer_1, end_condition)
         next_layer = next_layer_1
-        
+ 
+#%% Why are there fewer after the ordering...
+df_leftovers = df_updated
+for i in range(0,len(df_ordered)):
+    name = df_ordered.at[i,'Name']
+    df_leftovers =      df_leftovers.drop(df_leftovers[df_leftovers['Name'] == name].index.values[0])  
+    
+print(df_leftovers)
+ 
+    
+ 
+    
 #%% Rename everything by the index        
 for i in range (0,len(df_ordered)):
     end_condition = df_ordered.at[i,'End Condition']
