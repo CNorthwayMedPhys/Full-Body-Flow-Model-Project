@@ -204,11 +204,13 @@ for index in range(0,sheet.shape[0]):
                     radius_values = main_array[-3:final_index,3 ]
                 
                 if final_cnd != 'ST':
+                    end_cnd = list()
                     for j in range(0,len(final_cnd)):
-                        end_cnd = [final_cnd[j] +'_0']
+                        end_cnd.append(final_cnd[j] +'_0')
                 else:
                     end_cnd = final_cnd
 
+               
                 #Determine radius values
                 index_rounding=     np.round(len(radius_values)*percent).astype(int)+1
                 Ru = np.mean(radius_values[0:index_rounding])
@@ -239,7 +241,7 @@ removal_indices=[]
 for i in range (0,len(df)):
     end_condition = df.at[i,'End Condition']
     if end_condition != 'ST' and len(end_condition)==1:
-        index = df[df['Name']==end_condition[0]].index[0]
+        index = df[df['Name'] == end_condition[0]].index[0]
         name = df.at[i,'Name']
         Ru = df.at[i,'Radius Values'][0]
         Rd = df.at[index, 'Radius Values'][1]
@@ -260,8 +262,8 @@ df_ordered = pd.DataFrame(columns=['Name', 'lam', 'Radius Values', 'End Conditio
 
 df_ordered.loc[0]=df_updated.loc[index_0]
 next_layer = df_ordered.at[0,'End Condition']
+next_layer_1 = []
 while len(next_layer)>0:
-    next_layer_1 = []
     for daughter in next_layer:
         index = df_updated[df_updated['Name']==daughter].index.values[0]
         df_ordered.loc[len(df_ordered)] = df_updated.loc[index]
@@ -269,15 +271,15 @@ while len(next_layer)>0:
         
         if end_condition !='ST':
             next_layer_1 = np.append(next_layer_1, end_condition)
-        next_layer = next_layer_1
+    next_layer = next_layer_1
+    next_layer_1 = []
  
 #%% Why are there fewer after the ordering...
 df_leftovers = df_updated
 for i in range(0,len(df_ordered)):
     name = df_ordered.at[i,'Name']
-    df_leftovers =      df_leftovers.drop(df_leftovers[df_leftovers['Name'] == name].index.values[0])  
+    df_leftovers = df_leftovers.drop(df_leftovers[df_leftovers['Name'] == name].index.values[0]) 
     
-print(df_leftovers)
  
     
  
@@ -300,7 +302,7 @@ for i in range (0,len(df_ordered)):
             
 print(df_ordered)        
         
-        
+df_ordered.to_pickle('SysArteries.pkl')       
         
                 
     
