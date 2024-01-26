@@ -9,7 +9,8 @@ def runSimulation(lambda_val):
     from scipy.interpolate import interp1d
     import numpy as np
     import pandas as pd
-    from artery_network_modified import ArteryNetwork
+    from artery_network_modified_numba import ArteryNetwork
+    
     
     #%%Define inlet function
     def inlet(qc, rc, f_inlet):
@@ -124,6 +125,8 @@ def runSimulation(lambda_val):
         an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project')   
     except:
          an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\GitRemoteRepo')
+
+import time
 
 
 runSimulation(50)

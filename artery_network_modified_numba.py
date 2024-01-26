@@ -9,7 +9,8 @@ Created on Tue Nov 28 14:59:33 2023
 import numpy as np
 
 from scipy import linalg
-
+from numba import njit, jit
+import timeit
 from artery_modified import Artery
 from lax_wendroff import LaxWendroff
 from utils_modified import extrapolate
@@ -17,8 +18,17 @@ from utils_modified import periodic
 from os import makedirs
 from os.path import exists
 
+
 import sys
 
+@njit      
+def jit_sum(a,b):
+    product = a * b
+    total = 0.0
+    for i in range(product.shape[0]):
+        total += product[i]
+    return total
+    
 
 class ArteryNetwork(object):
     """
@@ -227,7 +237,9 @@ class ArteryNetwork(object):
         Qnk_array = np.flip(artery.Qnk[0:n_value+1])
         #Need to have stored Q values for every time step up to this point
         #for k = 0 to n (n=current number of time steps)
-        p_out = np.sum(zk_array*Qnk_array)  #pressure at nth time step with constant time steps dt          
+        p_out = jit_sum(zk_array,Qnk_array) #pressure at nth time step with constant time steps dt
+        #p_out = np.sum(zk_array*Qnk_array) #pressure at nth time step with constant time steps dt
+
         #Here I take the outlet_p code from above
         theta = dt/artery.dx
         gamma = dt/2
