@@ -37,7 +37,7 @@ def runSimulation(lambda_val):
     vessel_df.at[2,'Radius Values'] = [0.177, 0.17]
     vessel_df.at[0, 'lam'] =56.22
     vessel_df.at[1, 'lam'] =100
-    vessel_df.at[2, 'lam'] =100
+    vessel_df.at[2, 'lam'] =99.4
     
     #%% Define parameters and passing variables
     
@@ -120,11 +120,11 @@ def runSimulation(lambda_val):
     if out_bc == '3wk':
         file_name = 'VamPy_3wk'
     elif out_bc == 'ST':
-        file_name = 'Vampy_ST_Lrr50'
+        file_name = 'Vampy_ST'
     try:
         an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project')   
     except:
-         an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
+         an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\GitRemoteRepo')
 
 import time
 
