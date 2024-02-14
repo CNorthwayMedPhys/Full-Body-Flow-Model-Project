@@ -54,7 +54,7 @@ class Artery(object):
         m = np.linspace(0,2*np.pi,(2*N)+1) #actual [0:2N-1] the size of 2N
         zeta = eta * np.exp(1j*m)
         Xi = 0.5*(zeta**2) - (2*zeta) + (3/2)
-        [Z_impedance, table] = Artery.impedance(self, Xi/dt, r_root, 0, 0, empty_table,nu, rho)
+        [Z_impedance, table] = Artery.impedance(self, Xi/dt, r_root, 0, 0, empty_table, nu, rho)
         z_n = np.zeros(int(T/dt)*tc, dtype = np.complex_)
         weighting = np.concatenate (([1], 2*np.ones(2*N-1),[1]))/ (4 * N) 
         for n in range(0,N+1): # actual range [0,N]
@@ -64,7 +64,7 @@ class Artery(object):
 
         return z_n
     
-    def impedance(self, s, r_root, N_alpha, N_beta, table,nu,rho):
+    def impedance(self, s, r_root, N_alpha, N_beta, table, nu, rho):
         ZL = np.zeros(np.size(s), dtype = np.complex_)
         r_0 = r_root * (self.alpha ** N_alpha) *(self.beta ** N_beta)
         if r_0 < self.r_min:
@@ -123,7 +123,7 @@ class Artery(object):
         self.Uold = self.U0.copy()
         
         if  dataframe.at[self.pos,'End Condition'] == 'LW':
-            zn = Artery.impedance_weights(self, self.Rd, dt, T, tc, nu,rho)
+            zn = Artery.impedance_weights(self, self.Rd, dt, T, tc, nu, rho)
             self._zn = zn
             self._Qnk = np.zeros(int(T/dt)*tc)
         else:

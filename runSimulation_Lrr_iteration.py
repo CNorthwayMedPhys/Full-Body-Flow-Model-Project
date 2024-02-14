@@ -11,7 +11,7 @@ def runSimulation(lambda_vals):
             from scipy.interpolate import interp1d
             import numpy as np
             import pandas as pd
-            from artery_network_modified_numba import ArteryNetwork
+            from artery_network_modified import ArteryNetwork
             
             
             #%%Define inlet function
@@ -39,7 +39,7 @@ def runSimulation(lambda_vals):
             vessel_df.at[2,'Radius Values'] = [0.177, 0.17]
             vessel_df.at[0, 'lam'] =56.22
             vessel_df.at[1, 'lam'] =100
-            vessel_df.at[2, 'lam'] =99.4
+            vessel_df.at[2, 'lam'] =100
             
             #%% Define parameters and passing variables
             
@@ -56,7 +56,7 @@ def runSimulation(lambda_vals):
             #Simulation parameters
             T = 0.917 #length of period (s)
             T = T * qc / rc**3 # time of one cycle
-            tc = 4 #number of periods
+            tc = 2 #number of periods normally 4
             dt = 1e-5 #time step size
             dx = 0.1 #physical step size
             ntr = 50 # number of time steps to be stored
@@ -119,17 +119,17 @@ def runSimulation(lambda_vals):
             
             #%% Name file and dump results
             #Define file name
-            if out_bc == '3wk':
+            if out_bc == '3wk':  
                 file_name = 'VamPy_3wk'
             elif out_bc == 'ST':
                 file_name = 'Vampy_ST_Lrr' + str(lambda_val)
             try:
                 an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project')   
             except:
-                 an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\GitRemoteRepo')
+                 an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
         except:
-            print(lambda_val + ' caused an error')
+            print(str(lambda_val) + ' caused an error')
 
 
-lambda_vals = [45,50,75,100,120]
+lambda_vals = [50]                                                                                                                                                                                                                                                                                                                                            
 runSimulation(lambda_vals)
