@@ -42,7 +42,7 @@ class ArteryNetwork(object):
     """
     
     
-    def __init__(self, phys_parameter, dataframe, st_parameter, ntr):
+    def __init__(self, rho, nu, p0, ntr, Re, k, dataframe, Z_term, alpha, beta, r_min, lrr):
         """
         ArteryNetwork constructor.
         """
@@ -50,15 +50,15 @@ class ArteryNetwork(object):
         self._t = 0.0
         self._ntr = ntr
         self._progress = 0
-        self._rho = phys_parameter[0]
-        self._nu = phys_parameter[1]
-        self._p0 = phys_parameter[2]
-        self._k = phys_parameter[4]
+        self._rho = rho
+        self._nu = nu
+        self._p0 = p0
+        self._k = k
         self._dataframe = dataframe 
         self._arteries = [0] * len(dataframe)
-        self.setup_arteries(phys_parameter[3], phys_parameter[2], phys_parameter[4] ,st_parameter)     
+        self.setup_arteries(Re, p0, k, alpha, beta, r_min, Z_term, lrr)     
         
-    def setup_arteries(self, Re, p0, k, st_parameter):
+    def setup_arteries(self, Re, p0, k, alpha, beta, r_min, Z_term, lrr):
         """
         Creates Artery objects.
         
@@ -75,7 +75,7 @@ class ArteryNetwork(object):
             Ru = self.dataframe.at[i,'Radius Values'][0] 
             Rd = self.dataframe.at[i,'Radius Values'][1]
             lam = self.dataframe.at[i,'lam']
-            self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, st_parameter)
+            self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr)
 
                    
     def initial_conditions(self, u0, dataframe):
@@ -85,7 +85,7 @@ class ArteryNetwork(object):
         :param u0: Initial condition for U_1.
         """
         for artery in self.arteries:
-            artery.initial_conditions(u0, self.dt, dataframe, self.T, self.tc, self.nu, self.rho)
+            artery.initial_conditions(u0, self.dt, dataframe, self.T, self.tc)
             
             
             
@@ -220,9 +220,8 @@ class ArteryNetwork(object):
         """
         :param t: Current time step, within the period, 0<=t<=T
         """
-        #k_array = np.arange(0,t+dt,dt) #actual range [0,t]
-        #n_value = np.size(k_array)
-        n_value = int(t/dt) + 1
+        k_array = np.arange(0,t+dt,dt) #actual range [0,t]
+        n_value = np.size(k_array)
         zk_array = artery.zn[0:n_value+1]
         Qnk_array = np.flip(artery.Qnk[0:n_value+1])
         #Need to have stored Q values for every time step up to this point

@@ -29,7 +29,7 @@ class Artery(object):
     """
         
         
-    def __init__(self, pos, Ru, Rd, lam, k, Re, p0, st_parameter):
+    def __init__(self, pos, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr):
         """
         Artery constructor.
         """
@@ -40,13 +40,13 @@ class Artery(object):
         self._k = k
         self._Re = Re
         self._p0 = p0
-        self._alpha = st_parameter[1]
-        self._beta = st_parameter[2]
-        self._r_min = st_parameter[3]
-        self._Z_term = st_parameter[0]
-        self._lrr = st_parameter[4]
+        self._alpha = alpha
+        self._beta = beta
+        self._r_min = r_min
+        self._Z_term = Z_term
+        self._lrr = lrr
         
-    def impedance_weights(self, r_root,dt, T,tc, nu, rho):
+    def impedance_weights(self, r_root,dt, T, tc):
         acc = 1e-10 #numerical accuracy of impedance fcn
         N = math.ceil(1/dt)
         eta = acc**(1/(2*N))
@@ -54,7 +54,7 @@ class Artery(object):
         m = np.linspace(0,2*np.pi,(2*N)+1) #actual [0:2N-1] the size of 2N
         zeta = eta * np.exp(1j*m)
         Xi = 0.5*(zeta**2) - (2*zeta) + (3/2)
-        [Z_impedance, table] = Artery.impedance(self, Xi/dt, r_root, 0, 0, empty_table, nu, rho)
+        [Z_impedance, table] = Artery.impedance(self, Xi/dt, r_root, 0, 0, empty_table)
         z_n = np.zeros(int(T/dt)*tc, dtype = np.complex_)
         weighting = np.concatenate (([1], 2*np.ones(2*N-1),[1]))/ (4 * N) 
         for n in range(0,N+1): # actual range [0,N]
@@ -64,7 +64,7 @@ class Artery(object):
 
         return z_n
     
-    def impedance(self, s, r_root, N_alpha, N_beta, table, nu, rho):
+    def impedance(self, s, r_root, N_alpha, N_beta, table):
         ZL = np.zeros(np.size(s), dtype = np.complex_)
         r_0 = r_root * (self.alpha ** N_alpha) *(self.beta ** N_beta)
         if r_0 < self.r_min:
@@ -74,30 +74,33 @@ class Artery(object):
             try:
                 ZD1 = table[N_alpha + 1 , N_beta]
             except:
-                [ZD1, table] = Artery.impedance( self, s,r_root,N_alpha+1,N_beta,table,nu,rho)
+                [ZD1, table] = Artery.impedance( self, s,r_root,N_alpha+1,N_beta,table)
             try:
                 ZD2 = table[N_alpha, N_beta +1,:]
             except:
-                [ZD2, table] = Artery.impedance(self, s, r_root, N_alpha, N_beta + 1, table,nu,rho)
+                [ZD2, table] = Artery.impedance(self, s, r_root, N_alpha, N_beta + 1, table)
        
             ZL = (ZD1 * ZD2) / (ZD1 + ZD2)
         
-        Z0 = Artery.singleVesselImpedance(self, ZL,s,r_0,nu,rho)
+        Z0 = Artery.singleVesselImpedance(self, ZL,s,r_0)
         table[N_alpha,N_beta] = Z0
         return [Z0, table]
                      
-    def singleVesselImpedance(self,ZL, s_range, r_0,nu, rho ):
+    def singleVesselImpedance(self,ZL, s_range, r_0):
+        gamma = 2 #velocity profile 
+        nu = 0.046 #blood viscosity
+        rho = 1.055 #blood density
         L = r_0 *self.lrr
         A0 = np.pi * (r_0 ** 2)
         Ehr = (2e7 *np.exp( -22.5*r_0) + 8.65e5) #Youngs Modulus * vessel thickness/radius
         C = (3/2) *(A0)/(Ehr) #complaince
-        delta = (2 * nu*(2 +2))/ (rho *r_0**2)
+        delta = (2 * nu*(gamma +2))/ (rho *r_0**2)
         i = 0
         Z0 = np.zeros(np.size(s_range), dtype = np.complex_)
         for s in s_range:
             if s == 0:
-                Z0[i] = ZL[i] + (2*(2 +2)*nu* self.lrr) / (np.pi * r_0**3)
-                print('s=0')
+                Z0[i] = ZL[i] + (2*(gamma +2)*nu* self.lrr) / (np.pi * r_0**3)
+                
             else:
                 d_s = (A0/(C*rho*s*(s+delta)))**(0.5)
                 num = ZL[i] +np.tanh(L/d_s)/(s*d_s*C)
@@ -106,7 +109,7 @@ class Artery(object):
             i = i + 1
         return Z0
                            
-    def initial_conditions(self, u0, dt, dataframe, T, tc, nu,rho):
+    def initial_conditions(self, u0, dt, dataframe, T, tc):
         """
         Initialises solution arrays with initial conditions.
         Checks if artery.mesh(dx) has been called first.
@@ -123,7 +126,7 @@ class Artery(object):
         self.Uold = self.U0.copy()
         
         if  dataframe.at[self.pos,'End Condition'] == 'LW':
-            zn = Artery.impedance_weights(self, self.Rd, dt, T, tc, nu, rho)
+            zn = Artery.impedance_weights(self, self.Rd, dt, T, tc)
             self._zn = zn
             self._Qnk = np.zeros(int(T/dt)*tc)
         else:
