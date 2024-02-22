@@ -78,7 +78,7 @@ class Artery(object):
         zeta = eta * np.exp(1j*m)
         Xi = 0.5*(zeta**2) - (2*zeta) + (3/2)
         [Z_impedance, table] = Artery.impedance(self, Xi/dt, r_root, 0, 0, empty_table)
-        z_n = np.zeros(int(T/dt)*tc, dtype = np.complex_)
+        z_n = np.zeros((int(T/dt)*tc)+1, dtype = np.complex_)
         weighting = np.concatenate (([1], 2*np.ones(2*N-1),[1]))/ (4 * N) 
         for n in range(0,N+1): # actual range [0,N]
             z_n[n] = ((1/(eta**n))*np.sum(weighting*Z_impedance * np.exp(-1j*n*m)))
@@ -883,26 +883,38 @@ class ArteryNetwork(object):
         k_array = np.arange(0,t+dt,dt) #actual range [0,t]
         n_value = np.size(k_array)
         zk_array = artery.zn[0:n_value+1]
-        Qnk_array = np.flip(artery.Qnk[0:n_value+1])
+        Qnk_array = np.flip(artery.Qnk[0:n_value])
         #Need to have stored Q values for every time step up to this point
         #for k = 0 to n (n=current number of time steps)
-        p_out = np.sum(zk_array*Qnk_array)  #pressure at nth time step with constant time steps dt          
-        #Here I take the outlet_p code from above
+        #p_out = np.sum(zk_array*Qnk_array)  #pressure at nth time step with constant time steps dt          
+        #Here I take the outlet_3wk code from above and attempt to modify for my needs
         theta = dt/artery.dx
         gamma = dt/2
-        U0_1 = artery.U0[:,-1]
-        U0_2 = artery.U0[:,-2]
+        U0_1 = artery.U0[:,-1] # m = M
+        U0_2 = artery.U0[:,-2] # m = M-1
+        U0_3 = artery.U0[:,-3] # m = M-2
         a_n, q_n = U0_1
-        a_out = (artery.A0[-1]*artery.f[-1]**2) / (artery.f[-1] - p_out)**2
-        U_np_mm = (U0_1 + U0_2)/2 -\
-                theta*(artery.F(U0_1, j=-1) - artery.F(U0_2, j=-2))/2 +\
-                gamma*(artery.S(U0_1, j=-1) + artery.S(U0_2, j=-2))/2
-        a_np_mp = 2*a_out - U_np_mm[0]
-        q_np_mp = (a_n - a_out)/theta + U_np_mm[1]
-        U_np_mp = np.array([a_np_mp, q_np_mp])
-        U_out = U0_1 - theta*(artery.F(U_np_mp, j=-1) - artery.F(U_np_mm, j=-1)) +\
-                gamma*(artery.S(U_np_mp, j=-1) + artery.S(U_np_mm, j=-1))
-        return U_out
+        p_new = artery.p(a_n, j=-1) # initial guess for p_out
+        U_np_mp = (U0_1 + U0_2)/2 +\
+                gamma * (-(artery.F(U0_1, j=-1) - artery.F(U0_2, j=-2))/artery.dx +\
+                        (artery.S(U0_1, j=-1) + artery.S(U0_2, j=-2))/2)
+        U_np_mm = (U0_2 + U0_3)/2 +\
+                gamma * (-(artery.F(U0_2, j=-2) - artery.F(U0_3, j=-3))/artery.dx +\
+                        (artery.S(U0_2, j=-2) + artery.S(U0_3, j=-3))/2)
+        U_mm = U0_2 - theta*(artery.F(U_np_mp, j=-2) - artery.F(U_np_mm, j=-2)) +\
+                gamma*(artery.S(U_np_mp, j=-2) + artery.S(U_np_mm, j=-2))
+        k = 0
+        
+        while k < 1000:
+            p_old = p_new
+            q_out = (p_old - np.sum(zk_array[1:]*Qnk_array))/zk_array[0]
+            a_out = a_n - theta * (q_out - U_mm[1])
+            p_new = artery.p(a_out, j=-1)
+            if abs(p_old - p_new) < 1e-7:
+                break
+            k += 1
+        return np.array([a_out, q_out])
+
          #Do we want to reset k at t>T or do we want to have total t regardless of number of T
     @staticmethod
     def jacobian(x, parent, d1, d2, theta, gamma):
@@ -1611,27 +1623,23 @@ Z_term = 0 #Terminal Impedance
 #%% Run simulation
 
 
-for lrr in [50]:
-    try:
-        an = ArteryNetwork(rho, nu, mu, p0, ntr, Re, k, dataframe, Z_term, alpha, beta, r_min, lrr)
+
+an = ArteryNetwork(rho, nu, mu, p0, ntr, Re, k, dataframe, Z_term, alpha, beta, r_min, lrr)
 
 
-        an.mesh(dx)
-        an.set_time(dt, T, tc)
-        an.initial_conditions(0, dataframe)
-
-    
+an.mesh(dx)
+an.set_time(dt, T, tc)
+an.initial_conditions(0, dataframe)
 
 
-        # run solver
-        an.solve(q_in, out_bc, out_args)
-        tt.toc() 
 
-        # redimensionalise
-        an.redimensionalise(rc, qc)
-        
-        file_name = 'VamPy_ST_Lrr_' + str(lrr)
-        an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
 
-    except:
-        print(str(lrr) + " did not work")
+# run solver
+an.solve(q_in, out_bc, out_args)
+tt.toc() 
+
+# redimensionalise
+an.redimensionalise(rc, qc)
+
+file_name = 'VamPy_modifiedST'
+an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
