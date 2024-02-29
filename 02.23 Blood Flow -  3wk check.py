@@ -1610,8 +1610,8 @@ k2 = -22.53
 k3 = 8.65e5
 
 k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
-out_args = [0] #[R1*rc**4/(qc*rho), R2*rc**4/(qc*rho), Ct*rho*qc**2/rc**7] # Windkessel parameters
-out_bc = 'ST'
+out_args = [R1*rc**4/(qc*rho), R2*rc**4/(qc*rho), Ct*rho*qc**2/rc**7] # Windkessel parameters
+out_bc = '3wk'
 p0 =((85 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure
   
 
@@ -1624,25 +1624,25 @@ terminal_resistance = 0
 Z_term = 0 #Terminal Impedance 
 
 #%% Run simulation
-for lrr in [25,50,75]:
 
 
-    an = ArteryNetwork(rho, nu, mu, p0, ntr, Re, k, dataframe, Z_term, alpha, beta, r_min, lrr)
-    
-    
-    an.mesh(dx)
-    an.set_time(dt, T, tc)
-    an.initial_conditions(0, dataframe)
-    
-    
-    
-    
-    # run solver
-    an.solve(q_in, out_bc, out_args)
-    tt.toc() 
-    
-    # redimensionalise
-    an.redimensionalise(rc, qc)
-    
-    file_name = 'VamPy_modifiedST' + str(lrr)
-    an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
+
+an = ArteryNetwork(rho, nu, mu, p0, ntr, Re, k, dataframe, Z_term, alpha, beta, r_min, lrr)
+
+
+an.mesh(dx)
+an.set_time(dt, T, tc)
+an.initial_conditions(0, dataframe)
+
+
+
+
+# run solver
+an.solve(q_in, out_bc, out_args)
+tt.toc() 
+
+# redimensionalise
+an.redimensionalise(rc, qc)
+
+file_name = 'VamPy_3wkFeb24'
+an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
