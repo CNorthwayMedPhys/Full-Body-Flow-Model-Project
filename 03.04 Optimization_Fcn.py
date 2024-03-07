@@ -20,7 +20,7 @@ def findOptLambda():
     n_vessels = 2
     
     #Run optimization
-    results = optimize.least_squares(ModelError, 50 , max_nfev = 10, ftol = 1e-6, diff_step = 0.01 )
+    results = optimize.least_squares(ModelError, 50 , max_nfev = 10, ftol = 1e-9, diff_step = 0.01, method = 'lm' )
     
     #Parse results
     lambda_vals = results.x
