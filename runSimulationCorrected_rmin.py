@@ -5,7 +5,7 @@
 Created on Wed Feb 14 13:43:34 2024
 @author: Cassidy.Northway
 """
-def runSimulation(lambda_val):
+def runSimulation(rmin):
     import numpy as np
     import sys
     import pandas as pd
@@ -1530,8 +1530,8 @@ def runSimulation(lambda_val):
     dataframe = vessel_df
     alpha = 0.88
     beta =0.66
-    lrr = lambda_val 
-    r_min =0.025 #0.01< 0.001
+    lrr = 50 
+    r_min = rmin #0.01< 0.001
     terminal_resistance = 0
     Z_term = 0 #Terminal Impedance 8
     

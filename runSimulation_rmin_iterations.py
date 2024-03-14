@@ -5,16 +5,16 @@
 Created on Wed Feb 14 13:43:34 2024
 @author: Cassidy.Northway
 """
-def runSimulation(lambda_val):
+def runSimulation(rmin_val):
     import numpy as np
     import sys
     import pandas as pd
     import math
     from scipy.interpolate import interp1d
-    from pytictoc import TicToc
+    #from pytictoc import TicToc
     
-    tt = TicToc() #create instance of class
-    tt.tic()
+    #tt = TicToc() #create instance of class
+    #tt.tic()
     
     #%% Load in vessel data frame
     
@@ -1496,9 +1496,9 @@ def runSimulation(lambda_val):
     qc = 10 
     rho = 1.06
     nu = 0.046
-    R1 = 25300
-    R2 = 13900
-    Ct = 1.3384e-6
+    #R1 = 25300
+    #R2 = 13900
+    #Ct = 1.3384e-6
         
     
     T = 0.917
@@ -1522,7 +1522,7 @@ def runSimulation(lambda_val):
     k3 = 8.65e5
     
     k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
-    out_args =[0] #[R1*rc**4/(qc*rho), R2*rc**4/(qc*rho), Ct*rho*qc**2/rc**7] # Windkessel parameters
+    out_args = [0] #[R1*rc**4/(qc*rho), R2*rc**4/(qc*rho), Ct*rho*qc**2/rc**7] # Windkessel parameters
     out_bc = 'ST'
     p0 =((85 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure
       
@@ -1530,10 +1530,10 @@ def runSimulation(lambda_val):
     dataframe = vessel_df
     alpha = 0.88
     beta =0.66
-    lrr = lambda_val 
-    r_min =0.025 #0.01< 0.001
-    terminal_resistance = 0
-    Z_term = 0 #Terminal Impedance 8
+    lrr = 50 
+    r_min = rmin_val #0.01< 0.001
+    #terminal_resistance = 0
+    Z_term = 0 #Terminal Impedance 
     
     #%% Run simulation
     
@@ -1551,13 +1551,26 @@ def runSimulation(lambda_val):
     
     # run solver
     an.solve(q_in, out_bc, out_args)
-    tt.toc() 
+    #tt.toc() 
     
     # redimensionalise
     an.redimensionalise(rc, qc)
     
-    file_name = 'VamPy_ST'
+    file_name = 'VamPy_ST_rmin_' + str(rmin_val) 
     try:
         an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
     except:
         an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project') 
+    
+#%% Test Lrr iterations
+
+for rmin in [0,0.05,0.1,0.2,0.4,0.8]:
+    try:
+        runSimulation(rmin)
+        print (str(rmin) + ' completed')
+        
+        
+    except:
+        print(str(rmin)+ ' caused an error')
+        pass
+    

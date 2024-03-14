@@ -102,7 +102,7 @@ def runSimulation(lambda_val):
             self._p0 = p0
             self._alpha = alpha
             self._beta = beta
-            self._r_min = r_min
+            self._r_min = r_min/rc
             self._Z_term = Z_term
             self._lrr = lrr
             
