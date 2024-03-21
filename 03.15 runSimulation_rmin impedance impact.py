@@ -5,33 +5,18 @@
 Created on Wed Feb 14 13:43:34 2024
 @author: Cassidy.Northway
 """
-def runSimulation(rmin):
+def runSimulation(rmin_val):
     import numpy as np
     import sys
     import pandas as pd
     import math
     from scipy.interpolate import interp1d
-    from pytictoc import TicToc
+    #from pytictoc import TicToc
     
-    tt = TicToc() #create instance of class
-    tt.tic()
+    #tt = TicToc() #create instance of class
+    #tt.tic()
     
     #%% Load in vessel data frame
-    try:
-        vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\larm.pkl')
-    except:
-        vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\RemoteGit\\larm.pkl')
-    
-    vessel_df = vessel_df.loc[0:2]
-    vessel_df.at[1,'End Condition'] = 'LW'
-    vessel_df.at[2,'End Condition'] = 'LW'
-    vessel_df.at[0,'Radius Values'] = [0.37, 0.37]
-    vessel_df.at[1,'Radius Values'] = [0.177, 0.17]
-    vessel_df.at[2,'Radius Values'] = [0.177, 0.17]
-    vessel_df.at[0, 'lam'] =56.22
-    vessel_df.at[1, 'lam'] =100
-    vessel_df.at[2, 'lam'] =100
-    
     
     #%% Utility functions
     
@@ -70,7 +55,20 @@ def runSimulation(rmin):
     
     
     
-   
+    try:
+        vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\larm.pkl')
+    except:
+        vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\RemoteGit\\larm.pkl')
+    
+    vessel_df = vessel_df.loc[0:2]
+    vessel_df.at[1,'End Condition'] = 'LW'
+    vessel_df.at[2,'End Condition'] = 'LW'
+    vessel_df.at[0,'Radius Values'] = [0.37, 0.37]
+    vessel_df.at[1,'Radius Values'] = [0.177, 0.17]
+    vessel_df.at[2,'Radius Values'] = [0.177, 0.17]
+    vessel_df.at[0, 'lam'] =56.22
+    vessel_df.at[1, 'lam'] =100
+    vessel_df.at[2, 'lam'] =100
     
     #%% Artery object 
     class Artery(object):
@@ -122,6 +120,7 @@ def runSimulation(rmin):
             for n in range(0,N+1): # actual range [0,N]
                 z_n[n] = ((1/(eta**n))*np.sum(weighting*Z_impedance * np.exp(-1j*n*m)))
             z_n = np.real(z_n)
+            print(z_n)
     
     
             return z_n
@@ -138,7 +137,7 @@ def runSimulation(rmin):
                 except:
                     [ZD1, table] = Artery.impedance( self, s,r_root,N_alpha+1,N_beta,table)
                 try:
-                    ZD2 = table[N_alpha, N_beta +1]
+                    ZD2 = table[N_alpha, N_beta +1,:]
                 except:
                     [ZD2, table] = Artery.impedance(self, s, r_root, N_alpha, N_beta + 1, table)
            
@@ -1498,9 +1497,9 @@ def runSimulation(rmin):
     qc = 10 
     rho = 1.06
     nu = 0.046
-    R1 = 25300
-    R2 = 13900
-    Ct = 1.3384e-6
+    #R1 = 25300
+    #R2 = 13900
+    #Ct = 1.3384e-6
         
     
     T = 0.917
@@ -1524,7 +1523,7 @@ def runSimulation(rmin):
     k3 = 8.65e5
     
     k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
-    out_args =[0] #[R1*rc**4/(qc*rho), R2*rc**4/(qc*rho), Ct*rho*qc**2/rc**7] # Windkessel parameters
+    out_args = [0] #[R1*rc**4/(qc*rho), R2*rc**4/(qc*rho), Ct*rho*qc**2/rc**7] # Windkessel parameters
     out_bc = 'ST'
     p0 =((85 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure
       
@@ -1533,9 +1532,9 @@ def runSimulation(rmin):
     alpha = 0.88
     beta =0.66
     lrr = 50 
-    r_min = rmin #0.01< 0.001
-    terminal_resistance = 0
-    Z_term = 0 #Terminal Impedance 8
+    r_min = rmin_val #0.01< 0.001
+    #terminal_resistance = 0
+    Z_term = 0 #Terminal Impedance 
     
     #%% Run simulation
     
@@ -1552,17 +1551,27 @@ def runSimulation(rmin):
     
     
     # run solver
-    an.solve(q_in, out_bc, out_args)
-    tt.toc() 
+    #an.solve(q_in, out_bc, out_args)
+    #tt.toc() 
     
     # redimensionalise
-    an.redimensionalise(rc, qc)
+    #an.redimensionalise(rc, qc)
     
-    file_name = 'VamPy_ST_rmin'+str(rmin) 
-    try:
-        an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
-    except:
-        an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project') 
+    file_name = 'VamPy_ST_rmin_' + str(rmin_val) 
+    #try:
+        #an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
+    #except:
+        #an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project') 
+    
+#%% Test Lrr iterations
 
-for rmin in [0.001,0.0001,0.0003, 0.00001]:
-    runSimulation(rmin)
+for rmin in [0,0.05,0.01,0.002,0.0004,0.0008]:
+    try:
+        runSimulation(rmin)
+        print (str(rmin) + ' completed')
+        
+        
+    except:
+        print(str(rmin)+ ' caused an error')
+        pass
+    

@@ -1564,7 +1564,7 @@ def runSimulation(rmin_val):
     
 #%% Test Lrr iterations
 
-for rmin in [0,0.05,0.1,0.2,0.4,0.8]:
+for rmin in [0,0.05,0.01,0.002,0.0004,0.0008]:
     try:
         runSimulation(rmin)
         print (str(rmin) + ' completed')
