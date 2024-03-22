@@ -107,25 +107,27 @@ class Artery(object):
         self._Z_term = Z_term
         self._lrr = lrr
         
-    def impedance_weights(self, r_root, dt , T, tc):
+    def impedance_weights(self, r_root, dt , T, tc,rc,qc,nu):
         acc = 1e-10 #numerical accuracy of impedance fcn
+        dt = dt *rc**3 / qc
+        r_root = r_root*rc
+        T= T *rc**3 / qc
         N = math.ceil(1/dt)
         eta = acc**(1/(2*N))
         empty_table = {}
         m = np.linspace(0,2*np.pi,(2*N)+1) #actual [0:2N-1] the size of 2N
         zeta = eta * np.exp(1j*m)
         Xi = 0.5*(zeta**2) - (2*zeta) + (3/2)
-        [Z_impedance, table] = Artery.impedance(self, Xi/dt, r_root, 0, 0, empty_table)
+        [Z_impedance, table] = Artery.impedance(self, Xi/dt, r_root, 0, 0, empty_table, rc,qc,nu)
         z_n = np.zeros((int(T/dt)*tc)+1, dtype = np.complex_)
         weighting = np.concatenate (([1], 2*np.ones(2*N-1),[1]))/ (4 * N) 
         for n in range(0,N+1): # actual range [0,N]
             z_n[n] = ((1/(eta**n))*np.sum(weighting*Z_impedance * np.exp(-1j*n*m)))
         z_n = np.real(z_n)
-
-
+        z_n = z_n * qc / (rho * rc **4)
         return z_n
     
-    def impedance(self, s, r_root, N_alpha, N_beta, table):
+    def impedance(self, s, r_root, N_alpha, N_beta, table, rc,qc,nu):
         ZL = np.zeros(np.size(s), dtype = np.complex_)
         r_0 = r_root * (self.alpha ** N_alpha) *(self.beta ** N_beta)
         if r_0 < self.r_min:
@@ -135,20 +137,21 @@ class Artery(object):
             try:
                 ZD1 = table[N_alpha + 1 , N_beta]
             except:
-                [ZD1, table] = Artery.impedance( self, s,r_root,N_alpha+1,N_beta,table)
+                [ZD1, table] = Artery.impedance( self, s,r_root,N_alpha+1,N_beta,table, rc,qc,nu)
             try:
                 ZD2 = table[N_alpha, N_beta +1,:]
             except:
-                [ZD2, table] = Artery.impedance(self, s, r_root, N_alpha, N_beta + 1, table)
+                [ZD2, table] = Artery.impedance(self, s, r_root, N_alpha, N_beta + 1, table, rc,qc,nu)
        
             ZL = (ZD1 * ZD2) / (ZD1 + ZD2)
         
-        Z0 = Artery.singleVesselImpedance(self, ZL,s,r_0)
+        Z0 = Artery.singleVesselImpedance(self, ZL,s,r_0, rc,qc,nu)
         table[N_alpha,N_beta] = Z0
         return [Z0, table]
                      
-    def singleVesselImpedance(self,ZL, s_range, r_0):
+    def singleVesselImpedance(self,ZL, s_range, r_0, rc,qc, nu):
         gamma = 2 #velocity profile 
+        nu = nu * qc / rc
         L = r_0 *self.lrr
         A0 = np.pi * (r_0 ** 2)
         Ehr = (2e7 *np.exp( -22.5*r_0) + 8.65e5) #Youngs Modulus * vessel thickness/radius
@@ -178,7 +181,7 @@ class Artery(object):
             i = i + 1
         return Z0
                            
-    def initial_conditions(self, u0, dt, dataframe, T, tc):
+    def initial_conditions(self, u0, dt, dataframe, T, tc,rc,qc, nu):
         """
         Initialises solution arrays with initial conditions.
         Checks if artery.mesh(dx) has been called first.
@@ -195,7 +198,7 @@ class Artery(object):
         
         #Want to rename from LW to a better title 
         if  dataframe.at[self.pos,'End Condition'] == 'LW':
-            zn = Artery.impedance_weights(self, self.Rd, dt, T, tc)
+            zn = Artery.impedance_weights(self, self.Rd, dt, T, tc,rc,qc,nu)
             self._zn = zn
             self._Qnk = np.zeros(int(T/dt)*tc)
         else:
@@ -776,14 +779,14 @@ class ArteryNetwork(object):
             self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr,rc)
 
                    
-    def initial_conditions(self, u0, dataframe):
+    def initial_conditions(self, u0, dataframe,rc,qc):
         """
         Invokes initial_conditions(u0) on each artery in the network.
         
         :param u0: Initial condition for U_1.
         """
         for artery in self.arteries:
-            artery.initial_conditions(u0, self.dt, dataframe, self.T, self.tc)
+            artery.initial_conditions(u0, self.dt, dataframe, self.T, self.tc,rc,qc, self.nu)
             
             
             
@@ -1541,7 +1544,7 @@ p0 =((85 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure
 dataframe = vessel_df
 alpha = 0.88
 beta =0.66
-lrr = 50
+lrr = 10
 r_min =0.025 #0.01< 0.001
 terminal_resistance = 0
 Z_term = 0 #Terminal Impedance 8
@@ -1555,7 +1558,7 @@ an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, alpha, beta, r_mi
 
 an.mesh(dx)
 an.set_time(dt, T, tc)
-an.initial_conditions(0, dataframe)
+an.initial_conditions(0, dataframe,rc,qc)
 
 
 
