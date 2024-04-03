@@ -5,7 +5,7 @@ from __future__ import division
 import scipy.optimize as optimize
 import numpy as np
 import os
-from runSimulationCorrected import runSimulation
+from RunSimulation_April import runSim
 import warnings
 
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -20,7 +20,7 @@ def findOptLambda():
     n_vessels = 2
     
     #Run optimization
-    results = optimize.least_squares(ModelError, 10 , max_nfev = 10, ftol = 1e-9, diff_step = 0.01, method = 'lm' )
+    results = optimize.least_squares(ModelError, 10 , max_nfev = 10, diff_step = 0.1 )
     
     #Parse results
     lambda_vals = results.x
@@ -41,7 +41,7 @@ def ModelError(lambda_vals):
     #Run simulation
     print('Current lambda val ' + str(lambda_vals))
     try:
-        runSimulation(lambda_vals)
+        runSim(lambda_vals)
         #Prep for error calcs !HARD CODED!
         v_number = [1,2] 
         EU = np.zeros ([50, 2]) #!HARD CODED! 2 = num vessles, 50 = number time steps
