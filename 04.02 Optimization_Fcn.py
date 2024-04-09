@@ -20,7 +20,7 @@ def findOptLambda():
     n_vessels = 2
     
     #Run optimization
-    results = optimize.least_squares(ModelError, 10 , max_nfev = 10, diff_step = 0.1 )
+    results = optimize.least_squares(ModelError, 6 , max_nfev = 10 )
     
     #Parse results
     lambda_vals = results.x
@@ -43,10 +43,10 @@ def ModelError(lambda_vals):
     try:
         runSim(lambda_vals)
         #Prep for error calcs !HARD CODED!
-        v_number = [1,2] 
-        EU = np.zeros ([50, 2]) #!HARD CODED! 2 = num vessles, 50 = number time steps
-        EP = np.zeros ([50, 2])
-        E = np.zeros([4,]) #4 = num vessels * 2 (for EU and EP)
+        v_number = [0,1,2] 
+        EU = np.zeros ([50, 3]) #!HARD CODED! 2 = num vessles, 50 = number time steps
+        EP = np.zeros ([50, 3])
+        E = np.zeros([6,]) #4 = num vessels * 2 (for EU and EP)
         #Load simulation data !CURRENTLY HARD CODED, EDIT LATER!
        
         for ii in v_number:
@@ -63,9 +63,9 @@ def ModelError(lambda_vals):
 
 
         #Load ground truth data !CURRENTLY HARD CODED, EDIT LATER!
-            os.chdir('C:\\Users\\Cassidy.Northway\\RemoteGit\\VamPy_3wk')
+            os.chdir('C:\\Users\\Cassidy.Northway\\RemoteGit\\VamPy_3wk_symm')
 
-            base_name = str(ii) + '_VamPy_3wk.csv'
+            base_name = str(ii) + '_VamPy_3wk_symm.csv'
             A_data = np.loadtxt('a' + base_name, delimiter=',')[:,-1]
             U_data = np.loadtxt('u' + base_name, delimiter=',')[:,-1]
             P_data = np.loadtxt('p' + base_name, delimiter=',')[:,-1]
@@ -82,7 +82,7 @@ def ModelError(lambda_vals):
             E[(2*ii)+1] = np.linalg.norm(EP[:,ii], ord =1)
     except:
         print('Error occured')
-        E=[100,100,100,100]
+        E=[100,100,100,100,100,100]
     
     
     

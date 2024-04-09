@@ -112,7 +112,7 @@ def runSim(lrr_value):
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.0025
+            dt_temp = 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -1551,8 +1551,8 @@ def runSim(lrr_value):
     k3 = 8.65e5 #g/s2 cm
     
     k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
-    out_args =[R1*rc**4/(qc*rho), R2*rc**4/(qc*rho), Ct*rho*qc**2/rc**7] # Windkessel parameters
-    out_bc = '3wk'
+    out_args =[0]#[R1*rc**4/(qc*rho), R2*rc**4/(qc*rho), Ct*rho*qc**2/rc**7] # Windkessel parameters
+    out_bc = 'ST'
     p0 =((85 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure
       
     
@@ -1585,10 +1585,9 @@ def runSim(lrr_value):
     # redimensionalise
     an.redimensionalise(rc, qc)
     
-    file_name = 'VamPy_3wk_symm'
+    file_name = 'VamPy_ST'
     try:
         an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
     except:
         an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project') 
 
-runSim([10])
