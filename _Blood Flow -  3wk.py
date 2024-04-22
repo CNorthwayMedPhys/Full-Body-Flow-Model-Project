@@ -1556,7 +1556,7 @@ tt.toc()
 # redimensionalise
 an.redimensionalise(rc, qc)
 
-file_name = 'VamPy_corrected3wk'
+file_name = 'VamPy_3wk'
 try:
     an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
 except:
