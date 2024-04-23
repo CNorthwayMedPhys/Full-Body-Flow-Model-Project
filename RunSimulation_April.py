@@ -20,7 +20,7 @@ warnings.filterwarnings('ignore')
 #tt.tic()
 np.seterr(all='ignore')
 
-def runSim(lrr_value):
+def runSim(lrr_values):
     #%% Utility functions
     
     def periodic(t, T):
@@ -785,11 +785,17 @@ def runSim(lrr_value):
             """
             
             #Creates all artery objects 
+            ii = 0
             for i in range(0,len(self.dataframe)):
                 Ru = self.dataframe.at[i,'Radius Values'][0] 
                 Rd = self.dataframe.at[i,'Radius Values'][1]
                 lam = self.dataframe.at[i,'lam']
-                self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr,rc)
+                cndt = self.dataframe.at[i,'End Condition']
+                if cndt == 'LW':
+                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr[ii],rc)
+                    ii = ii + 1
+                else:  
+                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, 0,rc)
     
                        
         def initial_conditions(self, u0, dataframe,rc,qc):
@@ -1559,7 +1565,7 @@ def runSim(lrr_value):
     dataframe = vessel_df
     alpha = 0.91
     beta = 0.58
-    lrr = lrr_value[0]
+    lrr = lrr_values
     r_min =0.0083 #0.01< 0.001
     #terminal_resistance = 0
     Z_term = 0 #Terminal Impedance 8

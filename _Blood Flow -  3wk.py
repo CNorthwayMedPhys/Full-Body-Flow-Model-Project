@@ -11,10 +11,7 @@ import sys
 import pandas as pd
 import math
 from scipy.interpolate import interp1d
-from pytictoc import TicToc
 
-tt = TicToc() #create instance of class
-tt.tic()
 
 #%% Load in vessel data frame
 
@@ -68,7 +65,7 @@ vessel_df.at[1,'Radius Values'] = [0.177, 0.17]
 vessel_df.at[2,'Radius Values'] = [0.177, 0.17]
 vessel_df.at[0, 'lam'] =56.22
 vessel_df.at[1, 'lam'] =100
-vessel_df.at[2, 'lam'] =100
+vessel_df.at[2, 'lam'] =99.44
 
 #%% Artery object 
 class Artery(object):
@@ -1551,7 +1548,7 @@ an.initial_conditions(0, dataframe)
 
 # run solver
 an.solve(q_in, out_bc, out_args)
-tt.toc() 
+
 
 # redimensionalise
 an.redimensionalise(rc, qc)
