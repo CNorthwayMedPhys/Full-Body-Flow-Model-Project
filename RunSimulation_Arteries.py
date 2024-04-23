@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
-"""
-Created on Wed Feb 14 13:43:34 2024
+""""
 @author: Cassidy.Northway
 """
 
@@ -11,16 +9,16 @@ import sys
 import pandas as pd
 import math
 from scipy.interpolate import interp1d
-#from pytictoc import TicToc
+from pytictoc import TicToc
 import warnings
-#import os
-#import matplotlib.pyplot as plt
+
 warnings.filterwarnings('ignore')
-#tt = TicToc() #create instance of class
-#tt.tic()
+tt = TicToc() 
+tt.tic()
 np.seterr(all='ignore')
 
 def runSim(lrr_values):
+    
     #%% Utility functions
     
     def periodic(t, T):
@@ -57,21 +55,14 @@ def runSim(lrr_values):
         return interp1d(t, q, kind='linear', bounds_error=False, fill_value=q[0])
     
     
+#%% Load dataframe
     
     try:
-        vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\larm.pkl')
+        vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\SysArteries.pkl')
     except:
-        vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\RemoteGit\\larm.pkl')
+        vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\RemoteGit\\SysArteries.pkl')
     
-    vessel_df = vessel_df.loc[0:2]
-    vessel_df.at[1,'End Condition'] = 'LW'
-    vessel_df.at[2,'End Condition'] = 'LW'
-    vessel_df.at[0,'Radius Values'] = [0.37, 0.37]
-    vessel_df.at[1,'Radius Values'] = [0.177, 0.17]
-    vessel_df.at[2,'Radius Values'] = [0.177, 0.17]
-    vessel_df.at[0, 'lam'] =56.22
-    vessel_df.at[1, 'lam'] =100
-    vessel_df.at[2, 'lam'] =99.44
+    
     
     #%% Artery object 
     class Artery(object):
@@ -209,8 +200,7 @@ def runSim(lrr_values):
             self.U0[0,:] = self.A0.copy()
             self.U0[1,:].fill(u0)
             
-            #Want to rename from LW to a better title 
-            if  dataframe.at[self.pos,'End Condition'] == 'LW':
+            if  dataframe.at[self.pos,'End Condition'] == 'ST':
                 zn = Artery.impedance_weights(self, self.Rd, dt, T, tc,rc,qc,nu)
                 self._zn = zn
                 self._Qnk = np.zeros(int(T/dt)*tc)
@@ -791,7 +781,7 @@ def runSim(lrr_values):
                 Rd = self.dataframe.at[i,'Radius Values'][1]
                 lam = self.dataframe.at[i,'lam']
                 cndt = self.dataframe.at[i,'End Condition']
-                if cndt == 'LW':
+                if cndt == 'ST':
                     self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr[ii],rc)
                     ii = ii + 1
                 else:  
@@ -1275,7 +1265,7 @@ def runSim(lrr_values):
                     end_condition = self.dataframe.at[index,'End Condition']
                        
                     #Decides if artery requires us to find it's daughters and then finds them 
-                    if end_condition != 'LW':
+                    if end_condition != 'ST':
                     
                         d1, d2 = self.get_daughters(artery)
                         x_out = ArteryNetwork.bifurcation(artery, d1, d2, self.dt)
@@ -1296,7 +1286,7 @@ def runSim(lrr_values):
                     
                     #Here based on depth determines the wk or constant pressure end condition EDIT HERE
                     
-                    if end_condition == 'LW':
+                    if end_condition == 'ST':
                         # outlet boundary condition
                         if out_bc == '3wk':
                             U_out = ArteryNetwork.outlet_wk3(artery, self.dt, *out_args)
@@ -1319,7 +1309,7 @@ def runSim(lrr_values):
                 self.timestep()
                 ii = ii + 1
                 self.print_status()
-                
+                tt.toc()
                 
         def dump_results(self, suffix, data_dir):
             """
@@ -1531,11 +1521,7 @@ def runSim(lrr_values):
     qc = 10 #cm3/s
     rho = 1.06 #g/cm3
     nu = 0.046 #cm2/s
-    R1 = 25300
-    R2 = 13900
-    Ct = 1.3384e-6
-        
-    
+
     T = 0.917 #s
     tc = 4 #Normally 4 #s
     dt = 1e-5 #normally 1e-5 #s
@@ -1557,17 +1543,15 @@ def runSim(lrr_values):
     k3 = 8.65e5 #g/s2 cm
     
     k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
-    out_args =[0]#[R1*rc**4/(qc*rho), R2*rc**4/(qc*rho), Ct*rho*qc**2/rc**7] # Windkessel parameters
+    out_args =[0]
     out_bc = 'ST'
     p0 =((85 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure
       
-    
     dataframe = vessel_df
     alpha = 0.91
     beta = 0.58
     lrr = lrr_values
     r_min =0.0083 #0.01< 0.001
-    #terminal_resistance = 0
     Z_term = 0 #Terminal Impedance 8
     
     #%% Run simulation
@@ -1591,9 +1575,15 @@ def runSim(lrr_values):
     # redimensionalise
     an.redimensionalise(rc, qc)
     
-    file_name = 'VamPy_ST'
+    file_name = 'Artery_Array'
     try:
         an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
     except:
         an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project') 
 
+#%% Handling of dictionary for lambda values 
+mirroring_dict = np.loadtxt('C:\\Users\\Cassidy.Northway\\RemoteGit\\MirroredVessels.txt')
+n_vessels = np.count_nonzero(mirroring_dict)
+intial_guess = 6*np.ones(n_vessels)
+runSim(intial_guess)
+tt.toc()
