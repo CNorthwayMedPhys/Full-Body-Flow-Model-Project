@@ -1118,47 +1118,54 @@ def runSim(lrr_values):
             :param dt: Time step size.
             :returns: Array containing the solution at the bifurcation boundary.
             """
-            
-            theta = dt/parent.dx
-            gamma = dt/2
-            U_p_np = (parent.U0[:,-1] + parent.U0[:,-2])/2 -\
-                    theta*(parent.F(parent.U0[:,-1], j=-1) - parent.F(parent.U0[:,-2], j=-2))/2 +\
-                    gamma*(parent.S(parent.U0[:,-1], j=-1) + parent.S(parent.U0[:,-2], j=-2))/2
-            U_d1_np = (d1.U0[:,1] + d1.U0[:,0])/2 -\
-                    theta*(d1.F(d1.U0[:,1], j=1) - d1.F(d1.U0[:,0], j=0))/2 +\
-                    gamma*(d1.S(d1.U0[:,1], j=1) + d1.S(d1.U0[:,0], j=0))/2
-            U_d2_np = (d2.U0[:,1] + d2.U0[:,0])/2 -\
-                    theta*(d2.F(d2.U0[:,1], j=1) - d2.F(d2.U0[:,0], j=0))/2 +\
-                    gamma*(d2.S(d2.U0[:,1], j=1) + d2.S(d2.U0[:,0], j=0))/2
-            x0 = U_p_np[1]
-            x1 = (parent.U0[1,-1] + parent.U0[1,-2])/2
-            x2 = parent.U0[1,-1]
-            x3 = U_d1_np[1]
-            x4 = (d1.U0[1,0] + d1.U0[1,1])/2
-            x5 = d1.U0[1,0]
-            x6 = U_d2_np[1]
-            x7 = (d2.U0[1,0] + d2.U0[1,1])/2
-            x8 = d2.U0[1,0]
-            x9 = U_p_np[0]
-            x10 = (parent.U0[0,-1] + parent.U0[0,-2])/2
-            x11 = parent.U0[0,-1]
-            x12 = U_d1_np[0]
-            x13 = (d1.U0[0,0] + d1.U0[0,1])/2
-            x14 = d1.U0[0,0]
-            x15 = U_d2_np[0]
-            x16 = (d2.U0[0,0] + d2.U0[0,1])/2   
-            x17 = d2.U0[0,0]
-            x = np.array([x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17])
-            k = 0
-            while k < 1000:
-                Dfr = ArteryNetwork.jacobian(x, parent, d1, d2, theta, gamma)
-                Dfr_inv = linalg.inv(Dfr)
-                fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
-                x1 = x - np.dot(Dfr_inv, fr)
-                if (abs(x1 - x) < 1e-12).all():
-                    break
-                k += 1
-                np.copyto(x, x1)
+            try:
+                theta = dt/parent.dx
+                gamma = dt/2
+                U_p_np = (parent.U0[:,-1] + parent.U0[:,-2])/2 -\
+                        theta*(parent.F(parent.U0[:,-1], j=-1) - parent.F(parent.U0[:,-2], j=-2))/2 +\
+                        gamma*(parent.S(parent.U0[:,-1], j=-1) + parent.S(parent.U0[:,-2], j=-2))/2
+                U_d1_np = (d1.U0[:,1] + d1.U0[:,0])/2 -\
+                        theta*(d1.F(d1.U0[:,1], j=1) - d1.F(d1.U0[:,0], j=0))/2 +\
+                        gamma*(d1.S(d1.U0[:,1], j=1) + d1.S(d1.U0[:,0], j=0))/2
+                U_d2_np = (d2.U0[:,1] + d2.U0[:,0])/2 -\
+                        theta*(d2.F(d2.U0[:,1], j=1) - d2.F(d2.U0[:,0], j=0))/2 +\
+                        gamma*(d2.S(d2.U0[:,1], j=1) + d2.S(d2.U0[:,0], j=0))/2
+                x0 = U_p_np[1]
+                x1 = (parent.U0[1,-1] + parent.U0[1,-2])/2
+                x2 = parent.U0[1,-1]
+                x3 = U_d1_np[1]
+                x4 = (d1.U0[1,0] + d1.U0[1,1])/2
+                x5 = d1.U0[1,0]
+                x6 = U_d2_np[1]
+                x7 = (d2.U0[1,0] + d2.U0[1,1])/2
+                x8 = d2.U0[1,0]
+                x9 = U_p_np[0]
+                x10 = (parent.U0[0,-1] + parent.U0[0,-2])/2
+                x11 = parent.U0[0,-1]
+                x12 = U_d1_np[0]
+                x13 = (d1.U0[0,0] + d1.U0[0,1])/2
+                x14 = d1.U0[0,0]
+                x15 = U_d2_np[0]
+                x16 = (d2.U0[0,0] + d2.U0[0,1])/2   
+                x17 = d2.U0[0,0]
+                x = np.array([x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17])
+                k = 0
+                while k < 1000:
+                    Dfr = ArteryNetwork.jacobian(x, parent, d1, d2, theta, gamma)
+                    Dfr_inv = linalg.inv(Dfr)
+                    fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
+                    x1 = x - np.dot(Dfr_inv, fr)
+                    if (abs(x1 - x) < 1e-12).all():
+                        break
+                    k += 1
+                    np.copyto(x, x1)
+            except:
+                print(parent.pos)
+                print(d1.pos)
+                print(d2.pos)
+                print(x)
+        
+                raise Exception('Error')
             return x
                     
         
@@ -1571,7 +1578,10 @@ def runSim(lrr_values):
     
     
     # run solver
-    an.solve(q_in, out_bc, out_args)
+    try:
+        an.solve(q_in, out_bc, out_args)
+    except:
+        raise Exception('Error')
     
     
     # redimensionalise

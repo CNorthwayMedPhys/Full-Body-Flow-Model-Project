@@ -37,7 +37,11 @@ def findOptLambda(mirror_dict):
 #%% Function to be Optimized 
 
 def ModelError(lambda_vals):
-    tuning_dict = np.loadtxt('C:\\Users\\Cassidy.Northway\\RemoteGit\\TuningVessels.txt')
+    path = os.getcwd()
+    new_path_ST = os.path.join(path,'VamPy_ST')
+    new_path_ADAN = os.path.join(path,'ADAN')
+    
+    tuning_dict = np.loadtxt('TuningVessels.txt')
     
     #Run simulation
     print('Current lambda val ' + str(lambda_vals))
@@ -52,11 +56,11 @@ def ModelError(lambda_vals):
         for i in range(0,v_number+1):
             
             vessel_ID = tuning_dict[i,0]
-            ADAN_ID = tuning_dict[i,1]
+            ADAN_ID = str(tuning_dict[i,1])
             location = tuning_dict[i,2]
             
             #Load simulation data
-            os.chdir('C:\\Users\\Cassidy.Northway\\RemoteGit\\VamPy_ST')    
+            os.chdir(new_path_ST)    
             base_name = str(vessel_ID) + '_VamPy_ST.csv'
             
             #Determine where along the length of the vessel we need to sample from.
@@ -75,19 +79,20 @@ def ModelError(lambda_vals):
             Q_sim = U_sim / A_sim
 
 
-        #Load ground truth data 
-        
-            #RENAME FOR APP FOLDER
-            os.chdir('C:\\Users\\Cassidy.Northway\\RemoteGit\\VamPy_3wk')
+        #Load tuning data 
+            os.chdir(new_path_ADAN)
+            
+            ADAN_folder = os.path.join(new_path_ADAN,ADAN_ID)
+            os.chdir(ADAN_folder)
 
             base_name = str(ADAN_ID) + '.csv'
-            A_data = np.loadtxt('a' + base_name, delimiter=',')[:]
-            U_data = np.loadtxt('u' + base_name, delimiter=',')[:]
-            P_data = np.loadtxt('p' + base_name, delimiter=',')[:]
+            A_data = np.loadtxt('a' + ADAN_ID, delimiter=',')[:]
+            U_data = np.loadtxt('u' + ADAN_ID, delimiter=',')[:]
+            P_data = np.loadtxt('p' + ADAN_ID, delimiter=',')[:]
             
             #Q data is the Velocity (cm/s)
             Q_data = U_data / A_data
-            os.chdir('C:\\Users\\Cassidy.Northway\\RemoteGit')
+            os.chdir(path)
         #Compute error 
             EU[:,i-1] =(Q_sim - Q_data) / np.linalg.norm(Q_data, ord =1)
             EP[:,i-1] =(P_sim - P_data) / np.linalg.norm(P_data, ord =1)
@@ -105,7 +110,7 @@ def ModelError(lambda_vals):
     return E 
 
 #%%
-mirroring_dict = np.loadtxt('C:\\Users\\Cassidy.Northway\\RemoteGit\\MirroredVessels.txt')
+mirroring_dict = np.loadtxt('MirroredVessels.txt')
 
 [lambda_vals,E] = findOptLambda(mirroring_dict)
 print(lambda_vals)
