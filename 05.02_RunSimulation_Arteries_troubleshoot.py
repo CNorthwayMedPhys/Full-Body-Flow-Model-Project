@@ -1163,7 +1163,8 @@ def runSim(lrr_values):
                 print(parent.pos)
                 print(d1.pos)
                 print(d2.pos)
-                print(abs(x1 - x))
+                print(x)
+        
                 raise Exception('Error')
             return x
                     
