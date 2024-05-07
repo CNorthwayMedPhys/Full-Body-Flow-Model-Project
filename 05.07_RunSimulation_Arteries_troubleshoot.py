@@ -1163,7 +1163,7 @@ def runSim(lrr_values):
                 print(parent.pos)
                 print(d1.pos)
                 print(d2.pos)
-                print(x1-x)
+                print(x)
         
                 raise Exception('Error')
             return x
@@ -1277,10 +1277,15 @@ def runSim(lrr_values):
                     if end_condition != 'ST':
                     
                         d1, d2 = self.get_daughters(artery)
-                        x_out = ArteryNetwork.bifurcation(artery, d1, d2, self.dt)
+                        try:
+                            x_out = ArteryNetwork.bifurcation(artery, d1, d2, self.dt)
+                        except:
+                            return [d1.pos,d2.pos]
                         U_out = np.array([x_out[9], x_out[0]])
                         bc_in[d1.pos] = np.array([x_out[15], x_out[6]])
                         bc_in[d2.pos] = np.array([x_out[12], x_out[3]])
+                        d1 = 0
+                        d2 = 0
                     
                     #If artery is the first one
                     if artery.pos == 0:
@@ -1578,10 +1583,8 @@ def runSim(lrr_values):
     
     
     # run solver
-    try:
-        an.solve(q_in, out_bc, out_args)
-    except:
-        raise Exception('Error')
+    [d1,d2] = an.solve(q_in, out_bc, out_args)
+
     
     
     # redimensionalise
@@ -1593,13 +1596,33 @@ def runSim(lrr_values):
     except:
         an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project') 
 
+    return [d1,d2]
 #%% Handling of dictionary for lambda values 
 mirroring_dict = np.loadtxt('C:\\Users\\Cassidy.Northway\\RemoteGit\\MirroredVessels.txt')
 n_vessels = np.count_nonzero(mirroring_dict)
-for k in [5,10,15,20,25]:
-    intial_guess = k*np.ones(n_vessels)
+intial_guess = 15*np.ones(n_vessels)
+[d1,d2] = [100,100]
+
+while ([d1,d2] != 0):
+    [d1,d2]=runSim(intial_guess)
+    print(d1)
+    print(d2)
+    
+    #Find d1 and d2 in the database
     try:
-        runSim(intial_guess)
+        vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\SysArteries.pkl')
     except:
-        print('Not')
+        vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\RemoteGit\\SysArteries.pkl')
+    
+    #Which are ST points?
+    flag = 0 
+    while flag == 0:
+        d1_EC = vessel_df.at[d1,'End Condition'] 
+        d2_EC = vessel_df.at[d2,'End Condition']
+        if 
+        
+    
+
+    
+
 tt.toc()
