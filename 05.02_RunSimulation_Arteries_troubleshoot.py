@@ -1155,15 +1155,16 @@ def runSim(lrr_values):
                     Dfr_inv = linalg.inv(Dfr)
                     fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
                     x1 = x - np.dot(Dfr_inv, fr)
-                    if (abs(x1 - x) < 1e-12).all():
+                    if (abs(x1 - x) < 1e-10 ).all():
                         break
                     k += 1
+                    print(abs(x1 - x))
                     np.copyto(x, x1)
             except:
                 print(parent.pos)
                 print(d1.pos)
                 print(d2.pos)
-                print(x1-x)
+                print(k)
         
                 raise Exception('Error')
             return x

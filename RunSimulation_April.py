@@ -757,7 +757,7 @@ def runSim(lrr_values):
         """
         
         
-        def __init__(self, rho, nu, p0, ntr, Re, k, dataframe, Z_term, alpha, beta, r_min, lrr,rc):
+        def __init__(self, rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr,rc):
             """
             ArteryNetwork constructor.
             """
@@ -770,9 +770,9 @@ def runSim(lrr_values):
             self._p0 = p0
             self._dataframe = dataframe 
             self._arteries = [0] * len(dataframe)
-            self.setup_arteries(Re, p0, k, alpha, beta, r_min, Z_term, lrr,rc)     
+            self.setup_arteries(Re, p0, k, r_min, Z_term, lrr,rc)     
             
-        def setup_arteries(self, Re, p0, k, alpha, beta, r_min, Z_term, lrr,rc):
+        def setup_arteries(self, Re, p0, k, r_min, Z_term, lrr,rc):
             """
             Creates Artery objects.
             
@@ -792,10 +792,28 @@ def runSim(lrr_values):
                 lam = self.dataframe.at[i,'lam']
                 cndt = self.dataframe.at[i,'End Condition']
                 if cndt == 'LW':
+                ############NEW CODE HERE##########################
+                    if Rd > 0.025:
+                        xi = 2.5
+                        zeta = 0.4
+                        lrr_intial = 10
+                    elif Rd <= 0.005:
+                        xi = 2.9
+                        zeta = 0.6
+                        lrr_intial = 30
+                    else:
+                        xi = 2.9
+                        zeta = 0.6
+                        lrr_intial = 30 
+                    alpha = (1+zeta**(xi/2))**(-1/xi)
+                    beta = alpha * np.sqrt(zeta)
+                    #############################################################
+                    
                     self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr[ii],rc)
                     ii = ii + 1
-                else:  
-                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, 0,rc)
+                else:
+      
+                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, 0, 0, r_min, Z_term, 0,rc)
     
                        
         def initial_conditions(self, u0, dataframe,rc,qc):
@@ -1563,8 +1581,6 @@ def runSim(lrr_values):
       
     
     dataframe = vessel_df
-    alpha = 0.91
-    beta = 0.58
     lrr = lrr_values
     r_min =0.0083 #0.01< 0.001
     #terminal_resistance = 0
@@ -1574,7 +1590,7 @@ def runSim(lrr_values):
     
     
     
-    an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, alpha, beta, r_min, lrr, rc)
+    an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr, rc)
     
     
     an.mesh(dx)

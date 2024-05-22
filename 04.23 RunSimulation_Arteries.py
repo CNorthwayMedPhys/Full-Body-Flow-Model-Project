@@ -1565,8 +1565,8 @@ def runSim(lrr_values, mirror_dict):
 
     T = 0.917 #s
     tc = 4 #Normally 4 #s
-    dt = 1e-5 #normally 1e-5 #s
-    dx = 0.1 #normally 0.1 #s
+    dt = 1e-7 #normally 1e-5 #s
+    dx = 0.001 #normally 0.1 #s
     
     q_in = inlet(qc, rc, 'example_inlet.csv')
     
@@ -1628,6 +1628,6 @@ try:
 except:
     mirroring_dict = np.loadtxt('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\MirroredVessels.txt')
 n_vessels = np.shape(mirroring_dict)[0]
-initial_guess = 6*np.ones(n_vessels)
+initial_guess = 10*np.ones(n_vessels)
 runSim(initial_guess, mirroring_dict)
 tt.toc()

@@ -18,7 +18,7 @@ def findOptLambda():
 
     #Define number of end vessels !WILL NEED TO EDIT LATER!!!!!CURRENTLY HARD CODED TO ASSUME ALL VESSELS HAVE THE SAME L-RR THIS WILL NEED TO BE UPDATED!!!
     n_vessels = 2
-    intial_guess = 6*np.ones(n_vessels)
+    intial_guess = 10*np.ones(n_vessels)
     #Run optimization
     results = optimize.least_squares(ModelError, intial_guess , max_nfev = 100 )
     
