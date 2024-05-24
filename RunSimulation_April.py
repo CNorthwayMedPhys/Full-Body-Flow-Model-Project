@@ -799,12 +799,12 @@ def runSim(lrr_values):
                         lrr_intial = 10
                     elif Rd <= 0.005:
                         xi = 2.9
-                        zeta = 0.6
+                        zeta = 0.9
                         lrr_intial = 30
                     else:
-                        xi = 2.9
+                        xi = 2.76
                         zeta = 0.6
-                        lrr_intial = 30 
+                        lrr_intial = 20 
                     alpha = (1+zeta**(xi/2))**(-1/xi)
                     beta = alpha * np.sqrt(zeta)
                     #############################################################
