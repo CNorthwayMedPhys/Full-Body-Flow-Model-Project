@@ -5,7 +5,7 @@ from __future__ import division
 import scipy.optimize as optimize
 import numpy as np
 import os
-from RunSimulation_Arteries_May import runSim
+from RunSimulation_Arteries_May_29 import runSim
 import warnings
 
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -17,7 +17,7 @@ def findOptLambda(mirror_dict):
     
 
     #Define number of end vessels !WILL NEED TO EDIT LATER!!!!!CURRENTLY HARD CODED TO ASSUME ALL VESSELS HAVE THE SAME L-RR THIS WILL NEED TO BE UPDATED!!!
-    n_vessels = np.shape(mirror_dict)[0]
+    #n_vessels = np.shape(mirror_dict)[0]
     intial_guess = np.loadtxt('intial_guess.txt')
     #Run optimization
     results = optimize.least_squares(ModelError, intial_guess , max_nfev = 100 )
