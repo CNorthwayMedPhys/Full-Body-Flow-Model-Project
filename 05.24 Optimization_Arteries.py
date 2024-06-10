@@ -20,7 +20,7 @@ def findOptLambda(mirror_dict):
     #n_vessels = np.shape(mirror_dict)[0]
     intial_guess = np.loadtxt('intial_guess.txt')
     #Run optimization
-    results = optimize.least_squares(ModelError, intial_guess , max_nfev = 1 )
+    results = optimize.least_squares(ModelError, intial_guess , max_nfev = 100 )
     
     #Parse results
     lambda_vals = results.x

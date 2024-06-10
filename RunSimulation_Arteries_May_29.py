@@ -103,7 +103,7 @@ def runSim(lrr_values, mirror_dict):
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.0005 #Was 0.0001
+            dt_temp = 0.01 #Was 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -193,7 +193,7 @@ def runSim(lrr_values, mirror_dict):
             """
             zn = Artery.impedance_weights(self, self.Rd, dt, T, tc,rc,qc,nu)
             self._zn = zn
-            self._Qnk = np.zeros(np.shape(zn)[0]-1)
+            self._Qnk = np.zeros(np.shape(zn)-1)
                                
         def initial_conditions(self, u0, dt, dataframe, mirror_dict, T, tc,rc,qc, nu, flag):
             """
@@ -1211,21 +1211,14 @@ def runSim(lrr_values, mirror_dict):
             x = np.array([x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17])
             k = 0
             while k < 1000:
-                try:
-                    Dfr = ArteryNetwork.jacobian(x, parent, d1, d2, theta, gamma)
-                    Dfr_inv = linalg.inv(Dfr)
-                    fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
-                    x1 = x - np.dot(Dfr_inv, fr)
-                    if (abs(x1 - x) < 1e-8).all():
-                        break      
-                    k += 1
-                    np.copyto(x, x1)
-                except:
-                    print(k)
-                    print(d1.pos)
-                    print(d2.pos)
-                    print(abs(x1 - x))
+                Dfr = ArteryNetwork.jacobian(x, parent, d1, d2, theta, gamma)
+                Dfr_inv = linalg.inv(Dfr)
+                fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
+                x1 = x - np.dot(Dfr_inv, fr)
+                if (abs(x1 - x) < 1e-12).all():
                     break
+                k += 1
+                np.copyto(x, x1)
             return x
                     
         
@@ -1362,8 +1355,8 @@ def runSim(lrr_values, mirror_dict):
                         if out_bc == 'p':
                             U_out = ArteryNetwork.outlet_p(artery, self.dt, *out_args)
                         elif out_bc == 'ST':
-
-                            artery.Qnk[:] = np.concatenate(([artery.U0[1,-1]], artery.Qnk[1:]))
+                            
+                            artery.Qnk = np.concatenate(artery.U0[1,-1],artery.Qnk[1:])       
                             U_out = ArteryNetwork.outlet_st(artery, self.dt, self.t)
                             
                     
@@ -1593,8 +1586,8 @@ def runSim(lrr_values, mirror_dict):
 
     T = 0.917 #s
     tc = 4 #Normally 4 #s
-    dt = 1e-10 #normally 1e-5 #s
-    dx = 0.0001 #normally 0.1 #s
+    dt = 1e-7 #normally 1e-5 #s
+    dx = 0.001 #normally 0.1 #s
     
     q_in = inlet(qc, rc, 'example_inlet.csv')
     
