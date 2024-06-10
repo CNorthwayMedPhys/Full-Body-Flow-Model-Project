@@ -51,7 +51,7 @@ def runSim(lrr_values, mirror_dict):
         """
         Q = np.loadtxt(f_inlet, delimiter=',')
         t = [(elem) * qc / rc**3 for elem in Q[:,0]]
-        q = [elem / qc for elem in Q[:,1]] #added that 10
+        q = [elem / qc for elem in Q[:,1]] 
         return interp1d(t, q, kind='linear', bounds_error=False, fill_value=q[0])
     
     
@@ -103,7 +103,7 @@ def runSim(lrr_values, mirror_dict):
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.01 #Was 0.0001
+            dt_temp = 0.001 #Was 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -193,7 +193,7 @@ def runSim(lrr_values, mirror_dict):
             """
             zn = Artery.impedance_weights(self, self.Rd, dt, T, tc,rc,qc,nu)
             self._zn = zn
-            self._Qnk = np.zeros(np.shape(zn)-1)
+            self._Qnk = np.zeros(np.shape(zn)[0]-1)
                                
         def initial_conditions(self, u0, dt, dataframe, mirror_dict, T, tc,rc,qc, nu, flag):
             """
@@ -1211,14 +1211,24 @@ def runSim(lrr_values, mirror_dict):
             x = np.array([x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17])
             k = 0
             while k < 1000:
-                Dfr = ArteryNetwork.jacobian(x, parent, d1, d2, theta, gamma)
-                Dfr_inv = linalg.inv(Dfr)
-                fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
-                x1 = x - np.dot(Dfr_inv, fr)
-                if (abs(x1 - x) < 1e-12).all():
-                    break
-                k += 1
-                np.copyto(x, x1)
+                #############Debugging###################
+                try:
+                    Dfr = ArteryNetwork.jacobian(x, parent, d1, d2, theta, gamma)
+                    Dfr_inv = linalg.inv(Dfr)
+                    fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
+                    x1 = x - np.dot(Dfr_inv, fr)
+                    if d1.pos == 141:
+                        print(abs(x1 - x))
+                    if (abs(x1 - x) < 1e-12).all():
+                        break
+                    k += 1
+                    np.copyto(x, x1)
+                except:
+                    print(d1.pos)
+                    print(d2.pos)
+                    print(k)
+                    sys.exit()
+                #################Debugging##################
             return x
                     
         
@@ -1356,7 +1366,7 @@ def runSim(lrr_values, mirror_dict):
                             U_out = ArteryNetwork.outlet_p(artery, self.dt, *out_args)
                         elif out_bc == 'ST':
                             
-                            artery.Qnk = np.concatenate(artery.U0[1,-1],artery.Qnk[1:])       
+                            artery.Qnk[:] = np.concatenate(([artery.U0[1,-1]],artery.Qnk[1:]))       
                             U_out = ArteryNetwork.outlet_st(artery, self.dt, self.t)
                             
                     
@@ -1584,12 +1594,12 @@ def runSim(lrr_values, mirror_dict):
     rho = 1.06 #g/cm3
     nu = 0.046 #cm2/s
 
-    T = 0.917 #s
+    T = 1 #s
     tc = 4 #Normally 4 #s
     dt = 1e-7 #normally 1e-5 #s
     dx = 0.001 #normally 0.1 #s
     
-    q_in = inlet(qc, rc, 'example_inlet.csv')
+    q_in = inlet(qc, rc, 'AorticFlow_inlet.csv')
     
     Re = qc/(nu*rc) 
     T = T * qc / rc**3 # time of one cycle
@@ -1611,7 +1621,7 @@ def runSim(lrr_values, mirror_dict):
       
     dataframe = vessel_df
     lrr = lrr_values
-    r_min =0.0083 #0.01< 0.001
+    r_min =0.003 #0.01< 0.001
     Z_term = 0 #Terminal Impedance 8
     
     #%% Run simulation
@@ -1641,12 +1651,3 @@ def runSim(lrr_values, mirror_dict):
     except:
         an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project') 
 
-#%% Handling of dictionary for lambda values 
-try:
-    mirroring_dict = np.loadtxt('C:\\Users\\Cassidy.Northway\\RemoteGit\\MirroredVessels.txt')
-except:
-    mirroring_dict = np.loadtxt('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\MirroredVessels.txt')
-n_vessels = np.shape(mirroring_dict)[0]
-initial_guess = 10*np.ones(n_vessels)
-runSim(initial_guess, mirroring_dict)
-tt.toc()
