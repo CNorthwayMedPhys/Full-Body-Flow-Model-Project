@@ -812,7 +812,7 @@ def runSim(lrr_values, mirror_dict):
                     self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, 0, 0, r_min, Z_term, 0,rc)
     
                        
-        def initial_conditions(self, u0, dataframe,mirror_dict, rc,qc):
+        def initial_conditions(self, intial_values, dataframe,mirror_dict, rc,qc):
             """
             Invokes initial_conditions(u0) on each artery in the network.
             
@@ -822,6 +822,7 @@ def runSim(lrr_values, mirror_dict):
                 flag = 0
                 index  = artery.pos
                 cndt = self.dataframe.at[index,'End Condition']
+                u0 = intial_values[index]
                 if cndt == 'ST':
                     [row_index, col_index] = np.where(mirror_dict == index)
                     if col_index == 0:
@@ -1625,14 +1626,20 @@ def runSim(lrr_values, mirror_dict):
     
     #%% Run simulation
     
-    
-    
+    #Need dataframe size
+    row , col = dataframe.shape 
+    intial_values = np.ones(row)
+    intial_values[0:16] = 2
+    intial_values[16:26] = 1
+    intial_values[26:59] =0.8
+    intial_values[59:300] =0.4
+    intial_values[300:] = 0.15
     an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr, rc, mirror_dict)
     
     
     an.mesh(dx)
     an.set_time(dt, T, tc)
-    an.initial_conditions(0.187, dataframe,mirror_dict, rc,qc)
+    an.initial_conditions(intial_values, dataframe,mirror_dict, rc,qc)
     
     
 
