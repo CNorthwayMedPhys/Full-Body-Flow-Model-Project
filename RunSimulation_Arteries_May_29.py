@@ -51,7 +51,7 @@ def runSim(lrr_values, mirror_dict):
         """
         Q = np.loadtxt(f_inlet, delimiter=',')
         t = [(elem) * qc / rc**3 for elem in Q[:,0]]
-        q = [((elem) * 10** 6) / qc for elem in Q[:,1]]  #Unit conversion to cm3/s
+        q = [elem / qc for elem in Q[:,1]] 
         return interp1d(t, q, kind='linear', bounds_error=False, fill_value=q[0])
     
     
@@ -103,7 +103,7 @@ def runSim(lrr_values, mirror_dict):
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.01 #Was 0.0001
+            dt_temp = 0.001 #Was 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -175,7 +175,7 @@ def runSim(lrr_values, mirror_dict):
         
             if s == 0:
                 Z0 = ZL + (2*(gamma +2)*nu_temp* self.lrr) / (np.pi * r_0**3)
-                
+                print('s=0')
                     
             else:
                 d_s = (A0/(C*rho*s*(s+delta_s)))**(0.5)
@@ -1217,12 +1217,13 @@ def runSim(lrr_values, mirror_dict):
                     Dfr_inv = linalg.inv(Dfr)
                     fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
                     x1 = x - np.dot(Dfr_inv, fr)
+                    if d1.pos == 141:
+                        print(abs(x1 - x))
                     if (abs(x1 - x) < 1e-12).all():
                         break
                     k += 1
                     np.copyto(x, x1)
                 except:
-                
                     print(d1.pos)
                     print(d2.pos)
                     print(k)
@@ -1370,14 +1371,14 @@ def runSim(lrr_values, mirror_dict):
                             
                     
                     artery.solve(lw, U_in, U_out, save, i-1)
-           
+                    
                    
                     if ArteryNetwork.cfl_condition(artery, self.dt, self.t) == False:
                         raise ValueError(
                                 "CFL condition not fulfilled at time %e. Reduce \
     time step size." % (self.t))
                         sys.exit(1)  
-                print('One done')        
+                        
                 self.timestep()
                 self.print_status()
                 tt.toc()
@@ -1632,7 +1633,7 @@ def runSim(lrr_values, mirror_dict):
     
     an.mesh(dx)
     an.set_time(dt, T, tc)
-    an.initial_conditions(0.187, dataframe,mirror_dict, rc,qc)
+    an.initial_conditions(0, dataframe,mirror_dict, rc,qc)
     
     
 
