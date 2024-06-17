@@ -116,43 +116,48 @@ for index in range(0,sheet.shape[0]):
         
         branch_files = []
         
+        
         for i in range(0,len(branches)):
             branch_row = sheet[sheet['Anatomy Name'].str.match(branches[i])].index.values[0]
             branch_file = sheet.at[sheet.index[branch_row],'Filename']
-            branch_file = branch_file + '_fitted_data.npy'
-
-            try:
-               branch_array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + branch_file)
-            except:
-               branch_array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + branch_file)
-           
-        #Find the nearest points
-            dist_array = scipy.spatial.distance.cdist(main_array[:,0:3],branch_array[:,0:3])
-            dist_array_a = dist_array[:,0]
-            dist_array_b = dist_array[:,-1]
-            if np.min(dist_array_b) < np.min(dist_array_a):
-                branch_array = np.flipud(branch_array)
-                np.save('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + branch_file, branch_array)
+            if branch_file != 'coronaries':
+                branch_file = branch_file + '_fitted_data.npy'
+            
+            
+                try:
+                   branch_array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + branch_file)
+                except:
+                   branch_array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + branch_file)
+               
+            #Find the nearest points
+                dist_array = scipy.spatial.distance.cdist(main_array[:,0:3],branch_array[:,0:3])
+                dist_array_a = dist_array[:,0]
+                dist_array_b = dist_array[:,-1]
+                if np.min(dist_array_b) < np.min(dist_array_a):
+                    branch_array = np.flipud(branch_array)
+                    np.save('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + branch_file, branch_array)
+                    
+                index_split = np.where (np.min(dist_array) == dist_array)[0]
+                seg_df.loc[len(seg_df)] = {'Branch Name': branches[i] , 'Index of Split': index_split[0], 'Dist': np.min(dist_array)}
+            
+        #######I want to include something here to ID the distance b/w the branch and the main vessel
+                if np.min(dist_array) >= 1:
+                    print('here')
+                #Sometimes segments have identical index values
+                match_index = seg_df.duplicated(subset = 'Index of Split', keep = False)
+                sub_df = seg_df[match_index]
                 
-            index_split = np.where (np.min(dist_array) == dist_array)[0]
-            seg_df.loc[len(seg_df)] = {'Branch Name': branches[i] , 'Index of Split': index_split[0], 'Dist': np.min(dist_array)}
-            
-    #######I want to include something here to ID the distance b/w the branch and the main vessel
-        if np.min(dist_array) >= 1:
-            print('here')
-        #Sometimes segments have identical index values
-        match_index = seg_df.duplicated(subset = 'Index of Split', keep = False)
-        sub_df = seg_df[match_index]
-            
-        if not sub_df.empty:
-            print(sub_df)
-            dist_col = sub_df['Dist'].idxmax()
-            intial_index = sub_df.at[dist_col,'Index of Split']
-            seg_df.at[dist_col,'Index of Split'] = (intial_index + 1)
-            
-        #Sometime segment index values are equal to zero
-        seg_df = seg_df.replace(0,1)
-            
+                if not sub_df.empty:
+                    print(sub_df)
+                    dist_col = sub_df['Dist'].idxmax()
+                    intial_index = sub_df.at[dist_col,'Index of Split']
+                    seg_df.at[dist_col,'Index of Split'] = (intial_index + 1)
+                
+            #Sometime segment index values are equal to zero
+                seg_df = seg_df.replace(0,1)
+            else:
+                seg_df.loc[len(seg_df)] = {'Branch Name': branches[i] , 'Index of Split': 0, 'Dist': 'n/a'}
+                
             
             
            #We now have the number of off branching vessels and where they branch so now we need to now save the segements and off branches and sort segment frame by distance along vessel
@@ -162,7 +167,13 @@ for index in range(0,sheet.shape[0]):
         intial_index = 0
         
         for i in range(0,len(seg_df)+1):
-            if i != len(seg_df):
+            if i == 0:
+                sub_name =  name + '_' + str(i)
+                Ru = 9.5
+                Rd =  Ru * np.power((self.Rd/self.Ru), X/self.L)
+                radius_array = [Ru, Rd]
+                tot_dist = 100
+            elif i != len(seg_df):
                 sub_name =  name + '_' + str(i)
                 final_index = seg_df.at [ i , 'Index of Split']
                 center_array = main_array[intial_index:final_index+1,0:3 ]

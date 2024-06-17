@@ -10,6 +10,7 @@ import pandas as pd
 import math
 from scipy.interpolate import interp1d
 from pytictoc import TicToc
+import matplotlib.pyplot as plt
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -1333,6 +1334,14 @@ def runSim(lrr_values, mirror_dict):
                     gamma = self.dt/2
                     lw = LaxWendroff(theta, gamma, artery.nx)
                     
+                    
+                    ############Troubleshooting##############
+                    if artery.pos in [2]:
+                        plt.plot(artery.U0[0,:], label = str(artery.pos))
+                        plt.legend()
+                        plt.title('Before')
+                                    
+                   ############################################
                     index = artery.pos
                     end_condition = self.dataframe.at[index,'End Condition']
                        
@@ -1371,8 +1380,15 @@ def runSim(lrr_values, mirror_dict):
                             
                     
                     artery.solve(lw, U_in, U_out, save, i-1)
-           
-                   
+                    
+                    ############Troubleshooting##############
+                    
+                    if artery.pos in [2]:
+                        plt.plot(artery.U0[0,:], label = str(artery.pos))
+                        plt.legend()
+                        plt.title('After')
+                                    
+                   ############################################
                     if ArteryNetwork.cfl_condition(artery, self.dt, self.t) == False:
                         raise ValueError(
                                 "CFL condition not fulfilled at time %e. Reduce \
@@ -1629,11 +1645,13 @@ def runSim(lrr_values, mirror_dict):
     #Need dataframe size
     row , col = dataframe.shape 
     intial_values = np.ones(row)
-    intial_values[0:16] = 2
+    intial_values[0:16] = 1
     intial_values[16:26] = 1
     intial_values[26:59] =0.8
     intial_values[59:300] =0.4
     intial_values[300:] = 0.15
+    
+    intial_values = intial_values * 0
     an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr, rc, mirror_dict)
     
     
