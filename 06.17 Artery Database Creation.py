@@ -72,35 +72,42 @@ for index in range(0,sheet.shape[0]):
     #If there are no branches add the vessel to the data frame
     if seg_tag == False:
         seg_name = name + '_0'
-        main_file = file_name + '_fitted_data.npy'
-        
-        #Load the file data
-        try:
-            array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + main_file)
-        except:
-            array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + main_file)
-        
-        #Extract geometeric info
-        center_array = array[:,0:3 ]
-        radius_values = array[:,3 ]
-        
-        #Determine radius values
-        index_rounding=     np.round(len(radius_values)*percent).astype(int)+1
-        Ru = np.mean(radius_values[0:index_rounding])
-        Rd = np.mean(radius_values[-index_rounding:-1])
-        radius_array = [Ru, Rd]
-        
-        #Determine the vessels length
-        tot_dist = 0
-        for i in range(0,np.shape(center_array)[0]-1):
-            dist = np.linalg.norm(center_array[i,:] - center_array[i+1,:])
-            tot_dist = tot_dist + dist    
-        lam_value = tot_dist / Ru 
-        
-        #Add to the dataframe
-        new_row = {'Name' : seg_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': final_cnd }
-        df.loc[len(df)] = new_row
-        
+        if seg_name != 'coronaries_0':
+            main_file = file_name + '_fitted_data.npy'
+            
+            #Load the file data
+            try:
+                array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + main_file)
+            except:
+                array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + main_file)
+            
+            #Extract geometeric info
+            center_array = array[:,0:3 ]
+            radius_values = array[:,3 ]
+            
+            #Determine radius values
+            index_rounding=     np.round(len(radius_values)*percent).astype(int)+1
+            Ru = np.mean(radius_values[0:index_rounding])
+            Rd = np.mean(radius_values[-index_rounding:-1])
+            radius_array = [Ru, Rd]
+            
+            #Determine the vessels length
+            tot_dist = 0
+            for i in range(0,np.shape(center_array)[0]-1):
+                dist = np.linalg.norm(center_array[i,:] - center_array[i+1,:])
+                tot_dist = tot_dist + dist    
+            lam_value = tot_dist / Ru 
+            
+            #Add to the dataframe
+            new_row = {'Name' : seg_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': final_cnd }
+            df.loc[len(df)] = new_row
+        else: 
+            Ru_c = np.sqrt(np.sqrt(2)*3.5**2) #1998_olufsen
+            Rd_c = np.sqrt(np.sqrt(2)*3**2)
+            R_c = [Ru_c, Rd_c]
+            lam_c = 100/Ru_c
+            new_row = {'Name':'coronaries_0', 'lam': lam_c, 'Radius Values': R_c, 'End Condition' : 'ST'}
+            df.loc[len(df)] = new_row
     #If the vessel does branch we need to subdivide it into segements via an additional data frame
     if seg_tag == True:
         seg_df = pd.DataFrame(columns=['Branch Name','Index of Split','Dist'])
@@ -167,45 +174,57 @@ for index in range(0,sheet.shape[0]):
         intial_index = 0
         
         for i in range(0,len(seg_df)+1):
-            if i == 0:
+            
+   
+            if i != len(seg_df):
+                
                 sub_name =  name + '_' + str(i)
-                Ru = 9.5
-                Rd =  Ru * np.power((self.Rd/self.Ru), X/self.L)
-                radius_array = [Ru, Rd]
-                tot_dist = 100
-            elif i != len(seg_df):
-                sub_name =  name + '_' + str(i)
-                final_index = seg_df.at [ i , 'Index of Split']
-                center_array = main_array[intial_index:final_index+1,0:3 ]
-                radius_values = main_array[intial_index:final_index,3 ]
-                end_cnd = [name + '_' + str(i+1), seg_df.at[i, 'Branch Name' ]+'_0' ]        
-                intial_index = final_index
+                if sub_name == 'aorta_0':
+                    Ru = 9.5
+                    Rd =  9.3
+                    radius_array = [Ru, Rd]
+                    tot_dist = 100
+                    lam_value = tot_dist / Ru 
+                    end_cnd = [name + '_' + str(i+1), seg_df.at[i, 'Branch Name' ]+'_0' ]       
+                    new_row = {'Name' : sub_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': end_cnd }
+                    df.loc[len(df)] = new_row
+                else:    
+                    final_index = seg_df.at [ i , 'Index of Split']
+                    center_array = main_array[intial_index:final_index+1,0:3 ]
+                    radius_values = main_array[intial_index:final_index,3 ]
+                    end_cnd = [name + '_' + str(i+1), seg_df.at[i, 'Branch Name' ]+'_0' ]        
+                    intial_index = final_index
                 
                 
-                #Determine radius values
-                index_rounding=     np.round(len(radius_values)*percent).astype(int)+1
-                Ru = np.mean(radius_values[0:index_rounding])
-                Rd = np.mean(radius_values[-index_rounding:-1])
-                radius_array = [Ru, Rd]
-                
-                #Sometimes the radius values are very minimal then we get nan values, catch and correct here.
-                if np.isnan(radius_array).any():
-                    if np.isnan(Ru):
-                        Ru = radius_values[0]
-                    else:
-                        Rd = radius_values[-1]
-                    radius_array = [Ru,Rd]    
-                
-                #Determine the vessels length
-                tot_dist = 0
-                for i in range(0,np.shape(center_array)[0]-1):
-                    dist = np.linalg.norm(center_array[i,:] - center_array[i+1,:])
-                    tot_dist = tot_dist + dist    
-                lam_value = tot_dist / Ru 
-                
-                #Add to the dataframe
-                new_row = {'Name' : sub_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': end_cnd }
-                df.loc[len(df)] = new_row
+                    #Determine radius values
+                    
+                    index_rounding=     np.round(len(radius_values)*percent).astype(int)+1
+                    if sub_name == 'aorta_1':
+                        Ru=9.3
+                       
+                    else:    
+                        Ru = np.mean(radius_values[0:index_rounding])
+                    Rd = np.mean(radius_values[-index_rounding:-1])
+                    radius_array = [Ru, Rd]
+                        
+                    #Sometimes the radius values are very minimal then we get nan values, catch and correct here.
+                    if np.isnan(radius_array).any():
+                        if np.isnan(Ru):
+                            Ru = radius_values[0]
+                        else:
+                            Rd = radius_values[-1]
+                        radius_array = [Ru,Rd]    
+                        
+                    #Determine the vessels length
+                    tot_dist = 0
+                    for i in range(0,np.shape(center_array)[0]-1):
+                        dist = np.linalg.norm(center_array[i,:] - center_array[i+1,:])
+                        tot_dist = tot_dist + dist    
+                    lam_value = tot_dist / Ru 
+                        
+                    #Add to the dataframe
+                    new_row = {'Name' : sub_name, 'lam': lam_value, 'Radius Values': radius_array, 'End Condition': end_cnd }
+                    df.loc[len(df)] = new_row
                 
             else:
                 sub_name =  name + '_' + str(i)
@@ -326,16 +345,6 @@ lam_f = dist/Ru_f
 df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_i]   
 df_ordered.at[index, 'lam'] = lam_f   
 
-#%% Hard code in coronaries
-
-#Create new row first
-Ru_c = np.sqrt(np.sqrt(2)*3.5**2) #1998_olufsen
-Rd_c = np.sqrt(np.sqrt(2)*3**2)
-R_c = [Ru_c, Rd_c]
-lam_c = 100/Ru_c
-df_c = pd.DataFrame ({'Name':'Coronaries_0', 'lam': lam_c, 'Radius Values': [R_c], 'End Condition' : 'ST'})
-df_temp = pd.concat([df_ordered[:1], df_c, df_ordered[1:]])
-df_temp = df_temp.reset_index(drop=True)
 
 #%%
 

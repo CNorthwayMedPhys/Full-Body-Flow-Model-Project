@@ -1228,6 +1228,7 @@ def runSim(lrr_values, mirror_dict):
                     print(d1.pos)
                     print(d2.pos)
                     print(k)
+                    
                     sys.exit()
                 #################Debugging##################
             return x
@@ -1336,10 +1337,10 @@ def runSim(lrr_values, mirror_dict):
                     
                     
                     ############Troubleshooting##############
-                    if artery.pos in [2]:
-                        plt.plot(artery.U0[0,:], label = str(artery.pos))
-                        plt.legend()
-                        plt.title('Before')
+                    # if artery.pos in [0,1,2]:
+                    #     plt.plot(artery.U0[0,:], label = str(artery.pos))
+                    #     plt.legend()
+                    #     plt.title('Before')
                                     
                    ############################################
                     index = artery.pos
@@ -1383,7 +1384,7 @@ def runSim(lrr_values, mirror_dict):
                     
                     ############Troubleshooting##############
                     
-                    if artery.pos in [2]:
+                    if artery.pos in [0,1,2]:
                         plt.plot(artery.U0[0,:], label = str(artery.pos))
                         plt.legend()
                         plt.title('After')
@@ -1613,7 +1614,7 @@ def runSim(lrr_values, mirror_dict):
     T = 1 #s
     tc = 4 #Normally 4 #s
     dt = 1e-7 #normally 1e-5 #s
-    dx = 0.001 #normally 0.1 #s
+    dx = 0.001 #normally 0.1 #cm
     
     q_in = inlet(qc, rc, 'AorticFlow_inlet.csv')
     
@@ -1644,14 +1645,14 @@ def runSim(lrr_values, mirror_dict):
     
     #Need dataframe size
     row , col = dataframe.shape 
-    intial_values = np.ones(row)
-    intial_values[0:16] = 1
-    intial_values[16:26] = 1
-    intial_values[26:59] =0.8
-    intial_values[59:300] =0.4
-    intial_values[300:] = 0.15
+    intial_values = np.zeros(row)
+    #intial_values[0:16] = 1
+    #intial_values[16:26] = 1
+    # intial_values[26:59] =0.8
+    # intial_values[59:300] =0.4
+    # intial_values[300:] = 0.15
     
-    intial_values = intial_values * 0
+    
     an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr, rc, mirror_dict)
     
     
