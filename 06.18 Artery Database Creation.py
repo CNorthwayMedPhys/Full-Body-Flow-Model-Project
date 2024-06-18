@@ -315,9 +315,50 @@ lam_f = dist/Ru_f
 df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_i]   
 df_ordered.at[index, 'lam'] = lam_f   
 
-#%%
+#%%% Hard code in aorta values
+index = df_ordered[ df_ordered['Name']== 'aorta_0'].index.values[0]   
+Ru_i,Rd_i = df_ordered.at[index, 'Radius Values' ]
+lam_i =  df_ordered.at[index, 'lam']
+dist = lam_i*Ru_i 
+Ru_f = 12.5 #(mm) from 2000_Olufsen
+Rd_f = 11.4
+lam_f = dist/Ru_f
 
+df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
+df_ordered.at[index, 'lam'] = lam_f   
 
+index = df_ordered[ df_ordered['Name']== 'aorta_1'].index.values[0]   
+Ru_i,Rd_i = df_ordered.at[index, 'Radius Values' ]
+lam_i =  df_ordered.at[index, 'lam']
+dist = lam_i*Ru_i 
+Ru_f = 11.4 #(mm) from 2000_Olufsen
+Rd_f = 11.1
+lam_f = 1.59
+
+df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
+df_ordered.at[index, 'lam'] = lam_f 
+
+index = df_ordered[ df_ordered['Name']== 'aorta_2'].index.values[0]   
+Ru_i,Rd_i = df_ordered.at[index, 'Radius Values' ]
+lam_i =  df_ordered.at[index, 'lam']
+dist = lam_i*Ru_i 
+Ru_f = 11.1 #(mm) from 2000_Olufsen
+Rd_f = 10.9
+lam_f = dist/Ru_f
+
+df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
+df_ordered.at[index, 'lam'] = lam_f 
+
+#%%Manually increase lam<0.1
+
+for i in range(0,len(df_ordered)):
+    lam_i = df_ordered.at[i,'lam']
+    Ru_i = df_ordered.at[i,'lam']
+    if lam_i*Ru_i<0.01:
+        L= 0.1
+        lam_f = L/Ru_i
+        print(lam_i,lam_f)
+        df_ordered.at[i,'lam'] = lam_f
 
 df_ordered.to_pickle('SysArteries.pkl')       
         

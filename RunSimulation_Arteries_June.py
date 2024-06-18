@@ -1189,9 +1189,11 @@ def runSim(lrr_values, mirror_dict):
             U_d1_np = (d1.U0[:,1] + d1.U0[:,0])/2 -\
                     theta*(d1.F(d1.U0[:,1], j=1) - d1.F(d1.U0[:,0], j=0))/2 +\
                     gamma*(d1.S(d1.U0[:,1], j=1) + d1.S(d1.U0[:,0], j=0))/2
+                   
             U_d2_np = (d2.U0[:,1] + d2.U0[:,0])/2 -\
                     theta*(d2.F(d2.U0[:,1], j=1) - d2.F(d2.U0[:,0], j=0))/2 +\
                     gamma*(d2.S(d2.U0[:,1], j=1) + d2.S(d2.U0[:,0], j=0))/2
+            
             x0 = U_p_np[1]
             x1 = (parent.U0[1,-1] + parent.U0[1,-2])/2
             x2 = parent.U0[1,-1]
@@ -1219,7 +1221,7 @@ def runSim(lrr_values, mirror_dict):
                     Dfr_inv = linalg.inv(Dfr)
                     fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
                     x1 = x - np.dot(Dfr_inv, fr)
-                    if (abs(x1 - x) < 1e-12).all():
+                    if (abs(x1 - x) < 1e-12).all(): #1e-12
                         break
                     k += 1
                     np.copyto(x, x1)
@@ -1354,6 +1356,7 @@ def runSim(lrr_values, mirror_dict):
                         U_out = np.array([x_out[9], x_out[0]])
                         bc_in[d1.pos] = np.array([x_out[15], x_out[6]])
                         bc_in[d2.pos] = np.array([x_out[12], x_out[3]])
+                        
                     
                     #If artery is the first one
                     if artery.pos == 0:
@@ -1363,9 +1366,9 @@ def runSim(lrr_values, mirror_dict):
                         else:
                             in_t = self.t
                         U_in = ArteryNetwork.inlet_bc(artery, q_in, in_t, self.dt)
+                        
                     else:
-                        U_in = bc_in[artery.pos]
-                    
+                        U_in = bc_in[artery.pos]   
                     #Here based on depth determines the wk or constant pressure end condition EDIT HERE
                     
                     if end_condition == 'ST':
@@ -1384,10 +1387,11 @@ def runSim(lrr_values, mirror_dict):
                     
                     ############Troubleshooting##############
                     
-                    if artery.pos in [0,1,2]:
+                    if artery.pos in [1]:
                         plt.plot(artery.U0[0,:], label = str(artery.pos))
                         plt.legend()
                         plt.title('After')
+                        #print(artery.U0)
                                     
                    ############################################
                     if ArteryNetwork.cfl_condition(artery, self.dt, self.t) == False:
@@ -1613,8 +1617,8 @@ def runSim(lrr_values, mirror_dict):
 
     T = 1 #s
     tc = 4 #Normally 4 #s
-    dt = 1e-7 #normally 1e-5 #s
-    dx = 0.001 #normally 0.1 #cm
+    dt = 1e-6 #normally 1e-5 #s
+    dx = 0.01 #normally 0.1 #cm 
     
     q_in = inlet(qc, rc, 'AorticFlow_inlet.csv')
     
@@ -1646,11 +1650,11 @@ def runSim(lrr_values, mirror_dict):
     #Need dataframe size
     row , col = dataframe.shape 
     intial_values = np.zeros(row)
-    #intial_values[0:16] = 1
+    intial_values[0:16] = 1
     #intial_values[16:26] = 1
-    # intial_values[26:59] =0.8
-    # intial_values[59:300] =0.4
-    # intial_values[300:] = 0.15
+    #intial_values[26:59] =0.8
+    #intial_values[59:300] =0.4
+    #intial_values[300:] = 0.15
     
     
     an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr, rc, mirror_dict)
