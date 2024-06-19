@@ -64,14 +64,14 @@ def runSim(lrr_values):
         vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\Remote Git\\larm.pkl')
     
     vessel_df = vessel_df.loc[0:2]
-    vessel_df.at[1,'End Condition'] = 'LW'
-    vessel_df.at[2,'End Condition'] = 'LW'
-    vessel_df.at[0,'Radius Values'] = [0.37, 0.37]
-    vessel_df.at[1,'Radius Values'] = [0.177, 0.17]
-    vessel_df.at[2,'Radius Values'] = [0.177, 0.17]
-    vessel_df.at[0, 'lam'] =56.22
-    vessel_df.at[1, 'lam'] =100
-    vessel_df.at[2, 'lam'] =99.44
+    vessel_df.at[1,'End Condition'] = 'ST'
+    vessel_df.at[2,'End Condition'] = 'ST'
+    vessel_df.at[0,'Radius Values'] = [12.5,11.4]
+    vessel_df.at[1,'Radius Values'] = [11.4, 11.1]
+    vessel_df.at[2,'Radius Values'] = [7, 7]
+    vessel_df.at[0, 'lam'] =5.6
+    vessel_df.at[1, 'lam'] = 1.58
+    vessel_df.at[2, 'lam'] =5
     
     #%% Artery object 
     class Artery(object):

@@ -61,7 +61,7 @@ def runSim(lrr_values, mirror_dict):
     try:
         vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\SysArteries.pkl')
     except:
-        vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\RemoteGit\\SysArteries.pkl')
+        vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\Remote Git\\SysArteries.pkl')
     
     
     
@@ -116,9 +116,6 @@ def runSim(lrr_values, mirror_dict):
             for ii in range(0,np.size(Xi)):
                 Z_impedance[ii] = Artery.getImpedance(self, Xi[ii]/(dt_temp), r_root,rc, qc ,nu)
     
-            
-            # Want to start be calculating 
-            
             z_n = np.zeros(np.size(Xi), dtype = np.complex_) 
             weighting = np.concatenate(([1],2*np.ones((2*N)-1),[1]))/ (4*N)
             for n in range(0,N+1): # actual range [0,N]

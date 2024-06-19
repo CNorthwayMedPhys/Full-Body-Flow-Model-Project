@@ -1634,7 +1634,7 @@ def runSim(lrr_values, mirror_dict):
 
 #%% Handling of dictionary for lambda values 
 try:
-    mirroring_dict = np.loadtxt('C:\\Users\\Cassidy.Northway\\RemoteGit\\MirroredVessels.txt')
+    mirroring_dict = np.loadtxt('C:\\Users\\Cassidy.Northway\\Remote Git\\MirroredVessels.txt')
 except:
     mirroring_dict = np.loadtxt('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\MirroredVessels.txt')
 n_vessels = np.shape(mirroring_dict)[0]
