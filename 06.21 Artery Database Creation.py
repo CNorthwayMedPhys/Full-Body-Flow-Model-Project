@@ -137,21 +137,33 @@ for index in range(0,sheet.shape[0]):
             index_split = np.where (np.min(dist_array) == dist_array)[0]
             seg_df.loc[len(seg_df)] = {'Branch Name': branches[i] , 'Index of Split': index_split[0], 'Dist': np.min(dist_array)}
             
-    #######I want to include something here to ID the distance b/w the branch and the main vessel
+#######I want to include something here to ID the distance b/w the branch and the main vessel
         # if np.min(dist_array) >= 3:
         #     print('main = ' + file_name)
         #     print('branch = ' + branches[i])
+               
+###########In addition if index are very close together I want to know that ####################
+        
         #Sometimes segments have identical index values
         match_index = seg_df.duplicated(subset = 'Index of Split', keep = False)
         sub_df = seg_df[match_index]
+        seg_df = seg_df.sort_values(by ='Index of Split')
+        
+        # for i in range(0,len(branches)):
+        #     prim_index = seg_df.at[i,'Index of Split']
+        #     all_index = seg_df['Index of Split'].to_numpy()
+            # diff = np.abs(all_index - prim_index)
             
+            #if (diff < 6).any() & (diff > 1).any():
+                
+                
         if not sub_df.empty:
-            print('main = ' + file_name)
-            print(sub_df)
+            #print('main = ' + file_name)
+            #print(sub_df)
             dist_col = sub_df['Dist'].idxmax()
             intial_index = sub_df.at[dist_col,'Index of Split']
             seg_df.at[dist_col,'Index of Split'] = (intial_index + 1)
-            
+            #print(seg_df)
         #Sometime segment index values are equal to zero
         seg_df = seg_df.replace(0,1)
             
@@ -317,7 +329,7 @@ lam_f = dist/Ru_f
 df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_i]   
 df_ordered.at[index, 'lam'] = lam_f   
 
-#%%% Hard code in aorta values
+#%%% Hard code in values
 index = df_ordered[ df_ordered['Name']== 'aorta_0'].index.values[0]   
 Ru_i,Rd_i = df_ordered.at[index, 'Radius Values' ]
 lam_i =  df_ordered.at[index, 'lam']
@@ -350,6 +362,17 @@ lam_f = dist/Ru_f
 
 df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
 df_ordered.at[index, 'lam'] = lam_f 
+
+index = df_ordered[ df_ordered['Name']== 'arteries_lleg25_0'].index.values[0]   
+Ru_i,Rd_i = df_ordered.at[index, 'Radius Values' ]
+lam_i =  df_ordered.at[index, 'lam']
+dist = lam_i*Ru_i 
+Ru_f = 1.5 #(mm) measured manually in mesh lab
+#Rd_f = 11.4
+lam_f = dist/Ru_f
+
+df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_i]   
+df_ordered.at[index, 'lam'] = lam_f   
 
 #%%Manually increase lam<0.1
 

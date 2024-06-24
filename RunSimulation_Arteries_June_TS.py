@@ -121,7 +121,7 @@ def runSim(lrr_values, mirror_dict):
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.0001 #Was 0.0001
+            dt_temp = 0.01 #Was 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -1306,10 +1306,23 @@ def runSim(lrr_values, mirror_dict):
                     k += 1
                     np.copyto(x, x1)
                 except:
-                
+                    print(parent.pos)
                     print(d1.pos)
                     print(d2.pos)
                     
+                    plt.figure()
+                    plt.plot(parent.U0[0,:], label = str(parent.pos))
+                    plt.legend()
+                   
+                    plt.figure()
+                    plt.plot(d1.U0[0,:], label = str(d1.pos))
+                    plt.legend()
+                    
+                    plt.figure()
+                    plt.plot(d2.U0[0,:], label = str(d2.pos))
+                    plt.legend()
+                    
+                    print(d2.U0[0,0:20])
                     
                     sys.exit()
                 #################Debugging##################
@@ -1398,7 +1411,7 @@ def runSim(lrr_values, mirror_dict):
             
             tr = np.linspace(self.tf-self.T, self.tf, self.ntr)
             i = 0
-          
+            it = 0
             
             self.print_status()
             self.timestep()       
@@ -1469,13 +1482,13 @@ def runSim(lrr_values, mirror_dict):
                     
                     ############Troubleshooting##############
                     
-                    # if artery.pos in [2]:
-                    #     #print(U_in)
-                    #     plt.figure()
-                    #     plt.plot(artery.U0[0,:], label = str(artery.pos))
-                    #     plt.legend()
-                    #     plt.title('After')
-                    #     #print(artery.U0[0,:])
+                    if artery.pos in [228]:
+                        #print(U_in)
+                        plt.figure()
+                        plt.plot(artery.U0[0,:], label = str(artery.pos))
+                        plt.legend()
+                        plt.title('After')
+                        #print(artery.U0[0,:])
                                     
                    ############################################
                     if ArteryNetwork.cfl_condition(artery, self.dt, self.t) == False:
@@ -1483,9 +1496,10 @@ def runSim(lrr_values, mirror_dict):
                                 "CFL condition not fulfilled at time %e. Reduce \
     time step size." % (self.t))
                         sys.exit(1)  
-                #print('One done')        
+                print('iterations = ' + str(it))        
                 self.timestep()
                 self.print_status()
+                it = it + 1
                 #tt.toc()
                 
         def dump_results(self, suffix, data_dir):
@@ -1700,7 +1714,7 @@ def runSim(lrr_values, mirror_dict):
     nu = 0.049 #cm2/s
 
     T = 1 #s
-    tc = 4 #Normally 4 #s
+    tc = 1 #Normally 4 #s
     dt = 1e-6 #normally 1e-5 #s
     dx = 0.01 #normally 0.1 #cm 
     
@@ -1734,11 +1748,11 @@ def runSim(lrr_values, mirror_dict):
     #Need dataframe size
     row , col = dataframe.shape 
     intial_values = np.zeros(row)
-    intial_values[0:3] = 15
-    intial_values[3:6] = 10
-    #intial_values[26:59] =0.8
-    #intial_values[59:300] =0.4
-    #intial_values[300:] = 0.15
+    # intial_values[0:3] = 15
+    # intial_values[3:26] = 10
+    # intial_values[26:59] =2
+    # intial_values[59:300] =2
+    # intial_values[300:] = 0.5
     
     
     an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr, rc, mirror_dict)
