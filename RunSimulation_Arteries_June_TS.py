@@ -1309,7 +1309,7 @@ def runSim(lrr_values, mirror_dict):
                     print(parent.pos)
                     print(d1.pos)
                     print(d2.pos)
-                    
+                    print(k)
                     plt.figure()
                     plt.plot(parent.U0[0,:], label = str(parent.pos))
                     plt.legend()
@@ -1322,7 +1322,7 @@ def runSim(lrr_values, mirror_dict):
                     plt.plot(d2.U0[0,:], label = str(d2.pos))
                     plt.legend()
                     
-                    print(d2.U0[0,0:20])
+                    #print(d2.U0[0,0:20])
                     
                     sys.exit()
                 #################Debugging##################
@@ -1482,13 +1482,13 @@ def runSim(lrr_values, mirror_dict):
                     
                     ############Troubleshooting##############
                     
-                    if artery.pos in [228]:
-                        #print(U_in)
-                        plt.figure()
-                        plt.plot(artery.U0[0,:], label = str(artery.pos))
-                        plt.legend()
-                        plt.title('After')
-                        #print(artery.U0[0,:])
+                    # if artery.pos in [228]:
+                    #     #print(U_in)
+                    #     plt.figure()
+                    #     plt.plot(artery.U0[0,:], label = str(artery.pos))
+                    #     plt.legend()
+                    #     plt.title('After')
+                    #     #print(artery.U0[0,:])
                                     
                    ############################################
                     if ArteryNetwork.cfl_condition(artery, self.dt, self.t) == False:
@@ -1715,8 +1715,8 @@ def runSim(lrr_values, mirror_dict):
 
     T = 1 #s
     tc = 1 #Normally 4 #s
-    dt = 1e-6 #normally 1e-5 #s
-    dx = 0.01 #normally 0.1 #cm 
+    dt = 0.25e-5 #normally 1e-5 #s
+    dx = 0.015 #normally 0.1 cm  (unitless)
     
     q_in = inlet(qc, rc, 'AorticFlow_inlet.csv')
     

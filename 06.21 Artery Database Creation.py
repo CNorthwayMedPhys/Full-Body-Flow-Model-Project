@@ -379,11 +379,12 @@ df_ordered.at[index, 'lam'] = lam_f
 for i in range(0,len(df_ordered)):
     lam_i = df_ordered.at[i,'lam']
     Ru_i = df_ordered.at[i,'lam']
-    if lam_i*Ru_i<0.01:
-        L= 0.1
+    if lam_i*Ru_i <= 0.01:
+        L= 0.05
         lam_f = L/Ru_i
-        #print(lam_i,lam_f)
+        print(lam_i,lam_f,lam_i*Ru_i)
         df_ordered.at[i,'lam'] = lam_f
+        print(i)
 
 df_ordered.to_pickle('SysArteries.pkl')       
         
