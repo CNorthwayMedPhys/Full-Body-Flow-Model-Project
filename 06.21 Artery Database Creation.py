@@ -25,7 +25,7 @@ warnings.filterwarnings('ignore')
 
 #Import excel sheet
 try:
-    arteries_sheet = pd.read_excel('C:\\Users\\Cassidy.Northway\\RemoteGit\\FlowTracker.xlsx', sheet_name = 0)
+    arteries_sheet = pd.read_excel('C:\\Users\\Cassidy.Northway\\Remote Git\\FlowTracker.xlsx', sheet_name = 0)
     #veins_sheet = pd.read_excel('C:\\Users\\Cassidy.Northway\\GitRemoteRepo\\FlowTracker.xlsx', sheet_name = 1)
 except:
     arteries_sheet = pd.read_excel('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FlowTracker.xlsx', sheet_name = 0)
@@ -76,7 +76,7 @@ for index in range(0,sheet.shape[0]):
         
         #Load the file data
         try:
-            array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + main_file)
+            array = np.load('C:\\Users\\Cassidy.Northway\\Remote Git\\FittedVesselsFiles\\' + main_file)
         except:
             array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + main_file)
         
@@ -109,7 +109,7 @@ for index in range(0,sheet.shape[0]):
         #Get the names of all the files and import data
         main_file = file_name + '_fitted_data.npy'
         try:
-            main_array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + main_file)
+            main_array = np.load('C:\\Users\\Cassidy.Northway\\Remote Git\\FittedVesselsFiles\\' + main_file)
         except:
             main_array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + main_file)
         
@@ -122,7 +122,7 @@ for index in range(0,sheet.shape[0]):
             branch_file = branch_file + '_fitted_data.npy'
 
             try:
-               branch_array = np.load('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + branch_file)
+               branch_array = np.load('C:\\Users\\Cassidy.Northway\\Remote Git\\FittedVesselsFiles\\' + branch_file)
             except:
                branch_array = np.load('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FittedVesselsFiles\\' + branch_file)
            
@@ -132,7 +132,7 @@ for index in range(0,sheet.shape[0]):
             dist_array_b = dist_array[:,-1]
             if np.min(dist_array_b) < np.min(dist_array_a):
                 branch_array = np.flipud(branch_array)
-                np.save('C:\\Users\\Cassidy.Northway\\RemoteGit\\FittedVesselsFiles\\' + branch_file, branch_array)
+                np.save('C:\\Users\\Cassidy.Northway\\Remote Git\\FittedVesselsFiles\\' + branch_file, branch_array)
                 
             index_split = np.where (np.min(dist_array) == dist_array)[0]
             seg_df.loc[len(seg_df)] = {'Branch Name': branches[i] , 'Index of Split': index_split[0], 'Dist': np.min(dist_array)}
@@ -147,7 +147,7 @@ for index in range(0,sheet.shape[0]):
         #Sometimes segments have identical index values
         match_index = seg_df.duplicated(subset = 'Index of Split', keep = False)
         sub_df = seg_df[match_index]
-        seg_df = seg_df.sort_values(by ='Index of Split')
+        
         
         # for i in range(0,len(branches)):
         #     prim_index = seg_df.at[i,'Index of Split']
@@ -373,6 +373,17 @@ lam_f = dist/Ru_f
 
 df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_i]   
 df_ordered.at[index, 'lam'] = lam_f   
+
+index = df_ordered[ df_ordered['Name']== 'left_external_iliac_artery_0'].index.values[0]   
+Ru_i,Rd_i = df_ordered.at[index, 'Radius Values' ]
+lam_i =  df_ordered.at[index, 'lam']
+dist = lam_i*Ru_i 
+Ru_f = 3.02 #(mm) matching Right
+Rd_f = 2.5 #median b/w 2.3 and 2.8
+lam_f = dist/Ru_f
+
+df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
+df_ordered.at[index, 'lam'] = lam_f 
 
 #%%Manually increase lam<0.1
 

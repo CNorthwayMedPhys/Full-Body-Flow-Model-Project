@@ -12,7 +12,7 @@ from scipy.interpolate import interp1d
 from pytictoc import TicToc
 import matplotlib.pyplot as plt
 import warnings
-
+import os
 warnings.filterwarnings('ignore')
 tt = TicToc() 
 tt.tic()
@@ -1294,7 +1294,7 @@ def runSim(lrr_values, mirror_dict):
             x17 = d2.U0[0,0]
             x = np.array([x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17])
             k = 0
-            while k < 40:#1000:
+            while k < 1000:
                 #############Debugging###################
                 try:
                     Dfr = ArteryNetwork.jacobian(x, parent, d1, d2, theta, gamma)
@@ -1305,11 +1305,24 @@ def runSim(lrr_values, mirror_dict):
                         break
                     k += 1
                     np.copyto(x, x1)
+                    
                 except:
                     print(parent.pos)
                     print(d1.pos)
                     print(d2.pos)
                     print(k)
+                    plt.figure()
+                    plt.plot(parent.U0[1,:], label = str(parent.pos))
+                    plt.legend()
+                   
+                    plt.figure()
+                    plt.plot(d1.U0[1,:], label = str(d1.pos))
+                    plt.legend()
+                    
+                    plt.figure()
+                    plt.plot(d2.U0[1,:], label = str(d2.pos))
+                    plt.legend()
+                    
                     plt.figure()
                     plt.plot(parent.U0[0,:], label = str(parent.pos))
                     plt.legend()
@@ -1321,7 +1334,6 @@ def runSim(lrr_values, mirror_dict):
                     plt.figure()
                     plt.plot(d2.U0[0,:], label = str(d2.pos))
                     plt.legend()
-                    
                     #print(d2.U0[0,0:20])
                     
                     sys.exit()
@@ -1482,13 +1494,13 @@ def runSim(lrr_values, mirror_dict):
                     
                     ############Troubleshooting##############
                     
-                    # if artery.pos in [228]:
-                    #     #print(U_in)
-                    #     plt.figure()
-                    #     plt.plot(artery.U0[0,:], label = str(artery.pos))
-                    #     plt.legend()
-                    #     plt.title('After')
-                    #     #print(artery.U0[0,:])
+                    if artery.pos in [0] and it%10 == 0:
+                        print(U_in)
+                        plt.figure()
+                        plt.plot(artery.U0[1,:], label = str(artery.pos))
+                        plt.legend()
+                        plt.title('After')
+                        #print(artery.U0[0,:])
                                     
                    ############################################
                     if ArteryNetwork.cfl_condition(artery, self.dt, self.t) == False:
@@ -1718,7 +1730,7 @@ def runSim(lrr_values, mirror_dict):
     dt = 0.25e-5 #normally 1e-5 #s
     dx = 0.015 #normally 0.1 cm  (unitless)
     
-    q_in = inlet(qc, rc, 'AorticFlow_inlet.csv')
+    q_in = inlet(qc, rc, 'AorticFlow_Blanco.csv')
     
     Re = qc/(nu*rc) 
     T = T * qc / rc**3 # time of one cycle
@@ -1748,11 +1760,11 @@ def runSim(lrr_values, mirror_dict):
     #Need dataframe size
     row , col = dataframe.shape 
     intial_values = np.zeros(row)
-    # intial_values[0:3] = 15
-    # intial_values[3:26] = 10
-    # intial_values[26:59] =2
-    # intial_values[59:300] =2
-    # intial_values[300:] = 0.5
+    intial_values[0:3] = 15
+    intial_values[3:26] = 10
+    intial_values[26:59] =2
+    intial_values[59:300] =2
+    intial_values[300:] = 0.5
     
     
     an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr, rc, mirror_dict)
