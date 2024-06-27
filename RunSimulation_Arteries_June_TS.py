@@ -52,7 +52,7 @@ def runSim(lrr_values, mirror_dict):
         """
         Q = np.loadtxt(f_inlet, delimiter=',')
         t = [(elem) * qc / rc**3 for elem in Q[:,0]]
-        q = [((elem) * 10** 6) / qc for elem in Q[:,1]]  #Unit conversion to cm3/s
+        q = [(elem)  / qc for elem in Q[:,1]]  
         return interp1d(t, q, kind='linear', bounds_error=False, fill_value=q[0])
     
     
@@ -1061,11 +1061,11 @@ def runSim(lrr_values, mirror_dict):
             """
             ####Added in K_loss modelled after Chambers_et__al_2020 from Olufsen Github [arteries.c]
             if d1.pos == 1:
-                LD_k = 0.75#/2
+                LD_k = 0.75/2
                 RD_k = 0
                
             elif d2.pos == 1:
-                RD_k =0.75/2
+                RD_k = 0.75/2
                 LD_k = 0
                
             else:
@@ -1760,11 +1760,11 @@ def runSim(lrr_values, mirror_dict):
     #Need dataframe size
     row , col = dataframe.shape 
     intial_values = np.zeros(row)
-    intial_values[0:3] = 15
-    intial_values[3:26] = 10
-    intial_values[26:59] =2
-    intial_values[59:300] =2
-    intial_values[300:] = 0.5
+    intial_values[0:6] = 15
+    # intial_values[6:26] = 10
+    # intial_values[26:59] =2
+    # intial_values[59:300] =2
+    # intial_values[300:] = 0.5
     
     
     an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr, rc, mirror_dict)
