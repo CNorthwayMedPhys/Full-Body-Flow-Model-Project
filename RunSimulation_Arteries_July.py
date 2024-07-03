@@ -101,7 +101,7 @@ def runSim(lrr_values, mirror_dict):
         """
             
             
-        def __init__(self, pos, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr,rc):
+        def __init__(self, pos, Ru, Rd, lam, k, Re, p0, r_min, Z_term, lrr,rc):
             """
             Artery constructor.
             """
@@ -112,8 +112,6 @@ def runSim(lrr_values, mirror_dict):
             self._k = k
             self._Re = Re
             self._p0 = p0
-            self._alpha = alpha
-            self._beta = beta
             self._r_min = r_min/rc
             self._Z_term = Z_term
             self._lrr = lrr
@@ -121,7 +119,7 @@ def runSim(lrr_values, mirror_dict):
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.01 #Was 0.0001
+            dt_temp = 0.0001 #Was 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -146,8 +144,8 @@ def runSim(lrr_values, mirror_dict):
             return z_n
         
         def getImpedance(self, s, r_root,rc, qc ,nu):
-            maxGens = math.ceil(math.log(self.r_min / r_root) / math.log(self.alpha)) + 1
-            empty_table = np.empty((maxGens, maxGens))
+            #maxGens = math.ceil(math.log(self.r_min / r_root) / math.log(self.alpha)) + 1
+            empty_table = np.empty((1000, 1000)) #replace max gen with 1000
             empty_table[:] = np.nan
             [Z, table] = Artery.impedance(self, s, r_root,0, 0, empty_table, rc, qc , nu)
             return Z
@@ -155,7 +153,22 @@ def runSim(lrr_values, mirror_dict):
             
         def impedance(self, s, r_root, N_alpha, N_beta, table, rc, qc , nu):
             
-            r_0 = r_root * (self.alpha ** (N_alpha)) *(self.beta ** (N_beta))
+            if r_root > 0.025:
+                xi = 2.5
+                zeta = 0.4
+                lrr = 10
+            elif r_root <= 0.005:
+                xi = 2.9
+                zeta = 0.9  
+                lrr = 30
+            else:
+                xi = 2.76
+                zeta = 0.6
+                lrr = 20
+            alpha = (1+zeta**(xi/2))**(-1/xi)
+            beta = alpha * np.sqrt(zeta)
+            
+            r_0 = r_root * (alpha ** (N_alpha)) *(beta ** (N_beta))
             
             if r_0 < self.r_min:
                 ZL = 0
@@ -172,15 +185,15 @@ def runSim(lrr_values, mirror_dict):
            
                 ZL = (ZD1 * ZD2) / (ZD1 + ZD2)
             
-            Z0 = Artery.singleVesselImpedance(self, ZL, s ,r_0 , rc, qc , nu)
+            Z0 = Artery.singleVesselImpedance(self, ZL, s ,r_0 , rc, qc , nu, lrr )
             table [N_alpha, N_beta] = Z0
             return [Z0, table]
                          
-        def singleVesselImpedance(self,ZL, s, r_0, rc,qc, nu):
+        def singleVesselImpedance(self,ZL, s, r_0, rc,qc, nu, lrr):
             
             gamma = 2 #velocity profile 
             nu_temp = nu * qc / rc 
-            L = r_0 * self.lrr
+            L = r_0 * lrr
             A0 = np.pi * (r_0 ** 2)
             Ehr = (2e7 *np.exp( -22.53*r_0) + 8.65e5) #Youngs Modulus * vessel thickness/radius
             C = (3/2) *(A0)/(Ehr) #complaince
@@ -189,7 +202,7 @@ def runSim(lrr_values, mirror_dict):
             
         
             if s == 0:
-                Z0 = ZL + (2*(gamma +2)*nu_temp* self.lrr) / (np.pi * r_0**3)
+                Z0 = ZL + (2*(gamma +2)*nu_temp* lrr) / (np.pi * r_0**3)
                 
                     
             else:
@@ -809,22 +822,10 @@ def runSim(lrr_values, mirror_dict):
                 #find position in mirroring dict of i, find row number == ii
             
                 if cndt == 'ST':
-                    ############NEW CODE HERE##########################
-                    if Rd > 0.025:
-                        xi = 2.5
-                        zeta = 0.4
-                    elif Rd <= 0.005:
-                        xi = 2.9
-                        zeta = 0.9          
-                    else:
-                        xi = 2.76
-                        zeta = 0.6
-                    alpha = (1+zeta**(xi/2))**(-1/xi)
-                    beta = alpha * np.sqrt(zeta)
                     [row_index, col_index] = np.where(mirror_dict == i)
-                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr[row_index[0]] ,rc)
+                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, r_min, Z_term, lrr[row_index[0]] ,rc)
                 else:  
-                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, 0, 0, r_min, Z_term, 0,rc)
+                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, r_min, Z_term, 0,rc)
     
                        
         def initial_conditions(self, intial_values, dataframe,mirror_dict, rc,qc):
@@ -964,6 +965,9 @@ def runSim(lrr_values, mirror_dict):
                 if abs(p_old - p_new) < 1e-7:
                     break
                 k += 1
+                if k == 999:
+                    print('k too big')
+                    
             return np.array([a_out, q_out])
         
         
@@ -1001,7 +1005,8 @@ def runSim(lrr_values, mirror_dict):
             :param t: Current time step, within the period, 0<=t<=T
             """
             
-            
+            if artery.pos == 266:
+                print()
             k_array = np.arange(0,t,dt) #actual range [0,t]
             n_value = np.size(k_array)
             
@@ -1041,6 +1046,8 @@ def runSim(lrr_values, mirror_dict):
                 if abs(p_old - p_new) < 1e-7:                
                     break
                 k += 1
+                if k == 999:
+                    print('st bomb')
             return np.array([a_out, q_out])
     
              #Do we want to reset k at t>T or do we want to have total t regardless of number of T
@@ -1754,7 +1761,7 @@ def runSim(lrr_values, mirror_dict):
       
     dataframe = vessel_df
     lrr = lrr_values
-    r_min =0.003 #0.01< 0.001
+    r_min =0.0003 #0.01< 0.001
     Z_term = 0 #Terminal Impedance 8
     
     #%% Run simulation
