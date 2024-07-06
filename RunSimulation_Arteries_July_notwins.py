@@ -62,25 +62,7 @@ def runSim(lrr_values, mirror_dict):
         vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\SysArteries.pkl')
     except:
         vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\Remote Git\\SysArteries.pkl')
-    
-    #2000_Olufsen
-    # vessel_df.at[0,'Radius Values'] = [12.5,11.4]
-    # vessel_df.at[1,'Radius Values'] = [11.4, 11.1]
-    # vessel_df.at[2,'Radius Values'] = [7, 7]
-    # vessel_df.at[3,'Radius Values'] = [1.11, 10.9]
-    # vessel_df.at[4,'Radius Values'] = [2.9, 2.8]
-    # vessel_df.at[7,'Radius Values'] = [10.9, 8.5]
-    # vessel_df.at[5,'Radius Values'] = [4.4, 2.8]
-    # vessel_df.at[6,'Radius Values'] = [2.9, 2.8]
-    
-    # vessel_df.at[0, 'lam'] =5.6
-    # vessel_df.at[1, 'lam'] = 1.58
-    # vessel_df.at[2, 'lam'] =5
-    # vessel_df.at[3, 'lam'] =0.9
-    # vessel_df.at[4, 'lam'] =65
-    # vessel_df.at[7, 'lam'] =17.2
-    # vessel_df.at[5, 'lam'] =97
-    # vessel_df.at[6, 'lam'] =58.6
+
    
     #%% Artery object 
     class Artery(object):
@@ -101,7 +83,7 @@ def runSim(lrr_values, mirror_dict):
         """
             
             
-        def __init__(self, pos, Ru, Rd, lam, k, Re, p0, r_min, Z_term, lrr,rc):
+        def __init__(self, pos, Ru, Rd, lam, k, Re, p0, r_min, Z_term, rc):
             """
             Artery constructor.
             """
@@ -114,12 +96,12 @@ def runSim(lrr_values, mirror_dict):
             self._p0 = p0
             self._r_min = r_min/rc
             self._Z_term = Z_term
-            self._lrr = lrr
+            
             
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.001 #Was 0.0001
+            dt_temp = 0.01 #Was 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -140,9 +122,7 @@ def runSim(lrr_values, mirror_dict):
     
             #z_n = z_n * qc / (rho * rc **4)
             #Testing has indicated this is ideal 
-            if self.pos == 266:
-                plt.figure()
-                plt.plot(z_n)
+
             return z_n
         
         def getImpedance(self, s, r_root,rc, qc ,nu):
@@ -176,7 +156,7 @@ def runSim(lrr_values, mirror_dict):
                 ZL = 0
             else:
                 if np.isnan(table[N_alpha + 1, N_beta]):
-                    [ZD1, table] = Artery.impedance( self, s,r_root,N_alpha+1 , N_beta,table, rc,qc,nu)
+                    [ZD1, table] = Artery.impedance( self, s, r_root, N_alpha+1 , N_beta,table, rc,qc,nu)
                 else:
                     ZD1 = table[N_alpha + 1, N_beta]
          
@@ -225,7 +205,7 @@ def runSim(lrr_values, mirror_dict):
             self._zn = zn
             self._Qnk = np.zeros(np.shape(zn)[0]-1)
                                
-        def initial_conditions(self, u0, dt, dataframe, mirror_dict, T, tc,rc,qc, nu, flag):
+        def initial_conditions(self, u0, dt, dataframe, mirror_dict, T, tc,rc,qc, nu):
             """
             Initialises solution arrays with initial conditions.
             Checks if artery.mesh(dx) has been called first.
@@ -240,9 +220,7 @@ def runSim(lrr_values, mirror_dict):
             self.U0[0,:] = self.A0.copy()
             self.U0[1,:].fill(u0)
             if dataframe.at[self.pos,'End Condition'] == 'ST':
-                if  flag == 1:
-                    Artery.determine_tree(self, dt, T, tc,rc,qc,nu)
-              
+                Artery.determine_tree(self, dt, T, tc,rc,qc,nu)
             else:
                 self._zn = 0
                 self._Qnk = 0
@@ -820,14 +798,8 @@ def runSim(lrr_values, mirror_dict):
                 Ru = self.dataframe.at[i,'Radius Values'][0] / 10 #From mm to cm 
                 Rd = self.dataframe.at[i,'Radius Values'][1] / 10 #From mm to cm 
                 lam = self.dataframe.at[i,'lam'] 
-                cndt = self.dataframe.at[i,'End Condition']
-                #find position in mirroring dict of i, find row number == ii
-            
-                if cndt == 'ST':
-                    [row_index, col_index] = np.where(mirror_dict == i)
-                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, r_min, Z_term, lrr[row_index[0]] ,rc)
-                else:  
-                    self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, r_min, Z_term, 0,rc)
+                self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, r_min, Z_term ,rc)
+               
     
                        
         def initial_conditions(self, intial_values, dataframe,mirror_dict, rc,qc):
@@ -837,38 +809,9 @@ def runSim(lrr_values, mirror_dict):
             :param u0: Initial condition for U_1.
             """
             for artery in self.arteries:
-                flag = 0
                 index  = artery.pos
-                cndt = self.dataframe.at[index,'End Condition']
                 u0 = intial_values[index]
-                if cndt == 'ST':
-                    [row_index, col_index] = np.where(mirror_dict == index)
-                    if col_index == 0:
-                        if mirror_dict[row_index,1]== 0:
-                            #If no mirrored vessels then go calculate the ST values!
-                            flag = 1
-                        elif mirror_dict[row_index,0] < mirror_dict[row_index,1]:
-                            #If we have yet to calcualte it's twins values then calc the ST
-                            flag = 1
-                                
-                        else: #mirror_dict[row_index,1]<mirror_dict[row_index,0] 
-                        #We have already calculated the st for it's twin thus we can call those values
-                            twin_index = int(mirror_dict[row_index,1])
-                            twin_artery =self.arteries[twin_index]
-                            artery._zn = twin_artery.zn
-                            artery._Qnk = np.zeros(np.shape(artery.zn)[0]-1)
-                    else: #col_index = 1
-                        if mirror_dict[row_index,0] > mirror_dict[row_index,1]:
-                            #We have not yet calculated it's twin
-                            flag = 1
-                        else: #mirror_dict[row_index,0] > mirror_dict[row_index,1]
-                        #We have calcualted it's twin
-                            twin_index = int(mirror_dict[row_index,0])
-                            twin_artery =self.arteries[twin_index]
-                            artery._zn = twin_artery.zn
-                            artery._Qnk = np.zeros(np.shape(artery.zn)[0]-1)
-
-                artery.initial_conditions(u0, self.dt, dataframe, mirror_dict, self.T, self.tc,rc,qc, self.nu, flag)
+                artery.initial_conditions(u0, self.dt, dataframe, mirror_dict, self.T, self.tc,rc,qc, self.nu)
                 
                 
                 
@@ -1496,7 +1439,7 @@ def runSim(lrr_values, mirror_dict):
                     
                     ############Troubleshooting##############
                     
-                    if artery.pos in [252] and it%100 == 0:
+                    if artery.pos in [268] and it%100 == 0:
                         #print(U_in)
                         plt.figure()
                         plt.plot(artery.U0[0,:], label = str(artery.pos))
@@ -1755,7 +1698,7 @@ def runSim(lrr_values, mirror_dict):
       
     dataframe = vessel_df
     lrr = lrr_values
-    r_min =0.0003 #0.01< 0.001
+    r_min =0.003 #2014_Cousins
     Z_term = 0 #Terminal Impedance 8
     
     #%% Run simulation
@@ -1763,7 +1706,7 @@ def runSim(lrr_values, mirror_dict):
     #Need dataframe size
     row , col = dataframe.shape 
     intial_values = np.zeros(row)
-    intial_values[0:6] = 15
+    #intial_values[0:6] = 15
     # intial_values[6:26] = 10
     # intial_values[26:59] =2
     # intial_values[59:300] =2
