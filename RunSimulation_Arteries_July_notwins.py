@@ -101,7 +101,7 @@ def runSim(lrr_values, mirror_dict):
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.01 #Was 0.0001
+            dt_temp = 0.25e-5 #0.005 #Was 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -1439,7 +1439,7 @@ def runSim(lrr_values, mirror_dict):
                     
                     ############Troubleshooting##############
                     
-                    if artery.pos in [268] and it%100 == 0:
+                    if artery.pos in [266] and it%100 == 0:
                         #print(U_in)
                         plt.figure()
                         plt.plot(artery.U0[0,:], label = str(artery.pos))
@@ -1709,8 +1709,8 @@ def runSim(lrr_values, mirror_dict):
     #intial_values[0:6] = 15
     # intial_values[6:26] = 10
     # intial_values[26:59] =2
-    # intial_values[59:300] =2
-    # intial_values[300:] = 0.5
+     #intial_values[59:300] =2
+     #intial_values[300:] = 0.5
     
     
     an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, lrr, rc, mirror_dict)
