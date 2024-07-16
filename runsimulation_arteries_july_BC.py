@@ -63,7 +63,10 @@ def runSim(lrr_values, mirror_dict):
     except:
         vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\Remote Git\\SysArteries.pkl')
 
-   
+    try:
+        BC_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\StBC.pkl')
+    except:
+        BC_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\Remote Git\\StBC.pkl')
     #%% Artery object 
     class Artery(object):
         """
@@ -98,114 +101,114 @@ def runSim(lrr_values, mirror_dict):
             self._Z_term = Z_term
             
             
-        def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
-            acc = 1e-12 #numerical accuracy of impedance fcn
-            r_root = r_root*rc
-            dt_temp = 0.01 #0.005 #Was 0.0001
-            N = math.ceil(1/dt_temp)
-            eta = acc**(1/(2*N))
+        # def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
+        #     acc = 1e-12 #numerical accuracy of impedance fcn
+        #     r_root = r_root*rc
+        #     dt_temp = 0.01 #0.005 #Was 0.0001
+        #     N = math.ceil(1/dt_temp)
+        #     eta = acc**(1/(2*N))
             
-            m = np.linspace(0,2*np.pi,(2*N)+1) #actual [0:2N-1] the size of 2N
-            zeta = eta * np.exp(1j*m)
-            Xi = 0.5*(zeta**2) - (2*zeta) + (3/2)
+        #     m = np.linspace(0,2*np.pi,(2*N)+1) #actual [0:2N-1] the size of 2N
+        #     zeta = eta * np.exp(1j*m)
+        #     Xi = 0.5*(zeta**2) - (2*zeta) + (3/2)
             
-            Z_impedance = np.zeros(np.size(Xi), dtype = np.complex_)
-            for ii in range(0,np.size(Xi)):
-                Z_impedance[ii] = Artery.getImpedance(self, Xi[ii]/(dt_temp), r_root,rc, qc ,nu)
+        #     Z_impedance = np.zeros(np.size(Xi), dtype = np.complex_)
+        #     for ii in range(0,np.size(Xi)):
+        #         Z_impedance[ii] = Artery.getImpedance(self, Xi[ii]/(dt_temp), r_root,rc, qc ,nu)
     
-            z_n = np.zeros(np.size(Xi), dtype = np.complex_) 
-            weighting = np.concatenate(([1],2*np.ones((2*N)-1),[1]))/ (4*N)
-            for n in range(0,N+1): # actual range [0,N]
-                z_n[n] = np.sum(weighting * Z_impedance * np.exp(-1j*n*m))
-                z_n[n] = z_n[n] / (eta ** n)
-            z_n = np.real(z_n)
+        #     z_n = np.zeros(np.size(Xi), dtype = np.complex_) 
+        #     weighting = np.concatenate(([1],2*np.ones((2*N)-1),[1]))/ (4*N)
+        #     for n in range(0,N+1): # actual range [0,N]
+        #         z_n[n] = np.sum(weighting * Z_impedance * np.exp(-1j*n*m))
+        #         z_n[n] = z_n[n] / (eta ** n)
+        #     z_n = np.real(z_n)
     
-            z_n = z_n * qc / (rho * rc **4) #effectively times 10 
-            #Testing has indicated this is ideal 
+        #     z_n = z_n * qc / (rho * rc **4) #effectively times 10 
+        #     #Testing has indicated this is ideal 
 
-            return z_n
+        #     return z_n
         
-        def getImpedance(self, s, r_root,rc, qc ,nu):
-            #maxGens = math.ceil(math.log(self.r_min / r_root) / math.log(self.alpha)) + 1
-            empty_table = np.empty((1000, 1000)) #replace max gen with 1000
-            empty_table[:] = np.nan
-            [Z, table] = Artery.impedance(self, s, r_root,0, 0, empty_table, rc, qc , nu)
-            return Z
+        # def getImpedance(self, s, r_root,rc, qc ,nu):
+        #     #maxGens = math.ceil(math.log(self.r_min / r_root) / math.log(self.alpha)) + 1
+        #     empty_table = np.empty((1000, 1000)) #replace max gen with 1000
+        #     empty_table[:] = np.nan
+        #     [Z, table] = Artery.impedance(self, s, r_root,0, 0, empty_table, rc, qc , nu)
+        #     return Z
             
             
-        def impedance(self, s, r_root, N_alpha, N_beta, table, rc, qc , nu):
+        # def impedance(self, s, r_root, N_alpha, N_beta, table, rc, qc , nu):
             
-            if r_root > 0.025:
-                xi = 2.5
-                zeta = 0.4
-                lrr = 10
-            elif r_root <= 0.005:
-                xi = 2.9
-                zeta = 0.9  
-                lrr = 30
-            else:
-                xi = 2.76
-                zeta = 0.6
-                lrr = 20
-            alpha = (1+zeta**(xi/2))**(-1/xi)
-            beta = alpha * np.sqrt(zeta)
+        #     if r_root > 0.025:
+        #         xi = 2.5
+        #         zeta = 0.4
+        #         lrr = 10
+        #     elif r_root <= 0.005:
+        #         xi = 2.9
+        #         zeta = 0.9  
+        #         lrr = 30
+        #     else:
+        #         xi = 2.76
+        #         zeta = 0.6
+        #         lrr = 20
+        #     alpha = (1+zeta**(xi/2))**(-1/xi)
+        #     beta = alpha * np.sqrt(zeta)
             
-            r_0 = r_root * (alpha ** (N_alpha)) *(beta ** (N_beta))
+        #     r_0 = r_root * (alpha ** (N_alpha)) *(beta ** (N_beta))
             
-            if r_0 < self.r_min:
-                ZL = 0
-            else:
-                if np.isnan(table[N_alpha + 1, N_beta]):
-                    [ZD1, table] = Artery.impedance( self, s, r_root, N_alpha+1 , N_beta,table, rc,qc,nu)
-                else:
-                    ZD1 = table[N_alpha + 1, N_beta]
+        #     if r_0 < self.r_min:
+        #         ZL = 0
+        #     else:
+        #         if np.isnan(table[N_alpha + 1, N_beta]):
+        #             [ZD1, table] = Artery.impedance( self, s, r_root, N_alpha+1 , N_beta,table, rc,qc,nu)
+        #         else:
+        #             ZD1 = table[N_alpha + 1, N_beta]
          
-                if np.isnan(table[N_alpha, N_beta +1]):
-                    [ZD2, table] = Artery.impedance( self, s,r_root,N_alpha , N_beta + 1,table, rc,qc,nu)
-                else:
-                    ZD2 = table[N_alpha , N_beta + 1]
+        #         if np.isnan(table[N_alpha, N_beta +1]):
+        #             [ZD2, table] = Artery.impedance( self, s,r_root,N_alpha , N_beta + 1,table, rc,qc,nu)
+        #         else:
+        #             ZD2 = table[N_alpha , N_beta + 1]
            
-                ZL = (ZD1 * ZD2) / (ZD1 + ZD2)
+        #         ZL = (ZD1 * ZD2) / (ZD1 + ZD2)
             
-            Z0 = Artery.singleVesselImpedance(self, ZL, s ,r_0 , rc, qc , nu, lrr )
-            table [N_alpha, N_beta] = Z0
-            return [Z0, table]
+        #     Z0 = Artery.singleVesselImpedance(self, ZL, s ,r_0 , rc, qc , nu, lrr )
+        #     table [N_alpha, N_beta] = Z0
+        #     return [Z0, table]
                          
-        def singleVesselImpedance(self,ZL, s, r_0, rc,qc, nu, lrr):
+        # def singleVesselImpedance(self,ZL, s, r_0, rc,qc, nu, lrr):
             
-            gamma = 2 #velocity profile 
-            nu_temp = nu * qc / rc 
-            L = r_0 * lrr
-            A0 = np.pi * (r_0 ** 2)
-            Ehr = (2e7 *np.exp( -22.53*r_0) + 8.65e5) #Youngs Modulus * vessel thickness/radius
-            C = (3/2) *(A0)/(Ehr) #complaince
-            delta_s = (2 * nu_temp*(gamma +2))/ (rho * (r_0**2))
+        #     gamma = 2 #velocity profile 
+        #     nu_temp = nu * qc / rc 
+        #     L = r_0 * lrr
+        #     A0 = np.pi * (r_0 ** 2)
+        #     Ehr = (2e7 *np.exp( -22.53*r_0) + 8.65e5) #Youngs Modulus * vessel thickness/radius
+        #     C = (3/2) *(A0)/(Ehr) #complaince
+        #     delta_s = (2 * nu_temp*(gamma +2))/ (rho * (r_0**2))
            
             
         
-            if s == 0:
-                Z0 = ZL + (2*(gamma +2)*nu_temp* lrr) / (np.pi * r_0**3)
+        #     if s == 0:
+        #         Z0 = ZL + (2*(gamma +2)*nu_temp* lrr) / (np.pi * r_0**3)
                 
                     
-            else:
-                d_s = (A0/(C*rho*s*(s+delta_s)))**(0.5)
-                num = ZL + ((np.tanh(L/d_s, dtype=np.longcomplex))/(s*d_s*C))
+        #     else:
+        #         d_s = (A0/(C*rho*s*(s+delta_s)))**(0.5)
+        #         num = ZL + ((np.tanh(L/d_s, dtype=np.longcomplex))/(s*d_s*C))
     
-                denom = s*d_s*C*ZL*np.tanh(L/d_s, dtype=np.longcomplex) + 1   
-                Z0 = num/denom
+        #         denom = s*d_s*C*ZL*np.tanh(L/d_s, dtype=np.longcomplex) + 1   
+        #         Z0 = num/denom
                                
-            return Z0
+        #     return Z0
         
-        def determine_tree(self, dt, T, tc,rc,qc,nu):
-            """
-            Intiate the tree calculcation for the artery
+        # def determine_tree(self, dt, T, tc,rc,qc,nu):
+        #     """
+        #     Intiate the tree calculcation for the artery
             
-            """
-            zn = Artery.impedance_weights(self, self.Rd, dt, T, tc,rc,qc,nu)
-            self._zn = zn
-            self._Qnk = np.zeros(np.shape(zn)[0]-1)
+        #     """
+        #     zn = Artery.impedance_weights(self, self.Rd, dt, T, tc,rc,qc,nu)
+        #     self._zn = zn
+        #     self._Qnk = np.zeros(np.shape(zn)[0]-1)
                                
-        def initial_conditions(self, u0, dt, dataframe, mirror_dict, T, tc,rc,qc, nu):
+        def initial_conditions(self, u0, dt,BC_df, dataframe, mirror_dict, T, tc,rc,qc, nu):
             """
             Initialises solution arrays with initial conditions.
             Checks if artery.mesh(dx) has been called first.
@@ -220,7 +223,9 @@ def runSim(lrr_values, mirror_dict):
             self.U0[0,:] = self.A0.copy()
             self.U0[1,:].fill(u0)
             if dataframe.at[self.pos,'End Condition'] == 'ST':
-                Artery.determine_tree(self, dt, T, tc,rc,qc,nu)
+                dict_item = BC_df[self.pos]
+                self._zn = dict_item[self.pos]
+                self._Qnk = np.zeros(np.shape(dict_item[self.pos])[0]-1)
             else:
                 self._zn = 0
                 self._Qnk = 0
@@ -802,7 +807,7 @@ def runSim(lrr_values, mirror_dict):
                
     
                        
-        def initial_conditions(self, intial_values, dataframe,mirror_dict, rc,qc):
+        def initial_conditions(self, intial_values, BC_df,dataframe,mirror_dict, rc,qc):
             """
             Invokes initial_conditions(u0) on each artery in the network.
             
@@ -811,7 +816,7 @@ def runSim(lrr_values, mirror_dict):
             for artery in self.arteries:
                 index  = artery.pos
                 u0 = intial_values[index]
-                artery.initial_conditions(u0, self.dt, dataframe, mirror_dict, self.T, self.tc,rc,qc, self.nu)
+                artery.initial_conditions(u0, self.dt, BC_df, dataframe, mirror_dict, self.T, self.tc,rc,qc, self.nu)
                 
                 
                 
@@ -1718,7 +1723,7 @@ def runSim(lrr_values, mirror_dict):
     
     an.mesh(dx)
     an.set_time(dt, T, tc)
-    an.initial_conditions(intial_values/qc, dataframe,mirror_dict, rc,qc)
+    an.initial_conditions(intial_values/qc, BC_df, dataframe,mirror_dict, rc,qc)
     
     
 

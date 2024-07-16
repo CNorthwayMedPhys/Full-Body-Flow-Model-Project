@@ -119,7 +119,7 @@ def runSim(lrr_values, mirror_dict):
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.001 #Was 0.0001
+            dt_temp = 0.01 #Was 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -138,7 +138,7 @@ def runSim(lrr_values, mirror_dict):
                 z_n[n] = z_n[n] / (eta ** n)
             z_n = np.real(z_n)
     
-            #z_n = z_n * qc / (rho * rc **4)
+            z_n = z_n * qc / (rho * rc **4)
             #Testing has indicated this is ideal 
             if self.pos == 266:
                 plt.figure()
