@@ -134,19 +134,19 @@ def runSim(lrr_values, mirror_dict):
             
             
         def impedance(self, s, r_root, N_alpha, N_beta, table, rc, qc , nu):
-            
+            factor = 0.7
             if r_root > 0.025:
                 xi = 2.5
                 zeta = 0.4
-                lrr = 10
+                lrr = 10 * factor
             elif r_root <= 0.005:
                 xi = 2.9
                 zeta = 0.9  
-                lrr = 30
+                lrr = 30 * factor
             else:
                 xi = 2.76
                 zeta = 0.6
-                lrr = 20
+                lrr = 20 * factor
             alpha = (1+zeta**(xi/2))**(-1/xi)
             beta = alpha * np.sqrt(zeta)
             
@@ -1674,7 +1674,7 @@ def runSim(lrr_values, mirror_dict):
     T = 1 #s
     tc = 1 #Normally 4 #s
     dt = 0.25e-5 #normally 1e-5 #s
-    dx = 0.015 #normally 0.1 cm  (unitless)
+    dx = 0.01 #normally 0.1 cm  (unitless)
     
     q_in = inlet(qc, rc, 'AorticFlow_Blanco.csv')
     

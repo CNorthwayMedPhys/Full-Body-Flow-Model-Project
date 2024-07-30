@@ -1699,8 +1699,8 @@ def runSim(lrr_values, mirror_dict):
     k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
     out_args =[0]
     out_bc = 'ST'
-    p0 =((85 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure intial 85 *
-      
+    p0 =((0 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure intial 85 *
+      #85
     dataframe = vessel_df
     lrr = lrr_values
     r_min =0.003 #2014_Cousins

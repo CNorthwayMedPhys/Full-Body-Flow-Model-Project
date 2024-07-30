@@ -5,7 +5,7 @@ from __future__ import division
 import scipy.optimize as optimize
 import numpy as np
 import os
-from runsimulation_arteries_july_BC import runSim
+from RunSimulation_Arteries_July_notwins import runSim
 import warnings
 
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
