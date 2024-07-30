@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#############################BROKEN###################################
+
 """
 Created on Wed Feb 14 13:43:34 2024
 @author: Cassidy.Northway
@@ -14,7 +14,7 @@ from scipy.interpolate import interp1d
 #from pytictoc import TicToc
 import warnings
 #import os
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 warnings.filterwarnings('ignore')
 #tt = TicToc() #create instance of class
 #tt.tic()
@@ -85,7 +85,7 @@ class Artery(object):
     """
         
         
-    def __init__(self, pos, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr,rc):
+    def __init__(self, pos, Ru, Rd, lam, k, Re, p0, r_min, Z_term, rc):
         """
         Artery constructor.
         """
@@ -96,95 +96,118 @@ class Artery(object):
         self._k = k
         self._Re = Re
         self._p0 = p0
-        self._alpha = alpha
-        self._beta = beta
         self._r_min = r_min/rc
         self._Z_term = Z_term
         self._lrr = lrr
         
     def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
-        acc = 1e-12 #numerical accuracy of impedance fcn
-        r_root = r_root*rc
-        dt_temp = 0.0001
-        N = math.ceil(1/dt_temp)
-        eta = acc**(1/(2*N))
-        
-        m = np.linspace(0,2*np.pi,(2*N)+1) #actual [0:2N-1] the size of 2N
-        zeta = eta * np.exp(1j*m)
-        Xi = 0.5*(zeta**2) - (2*zeta) + (3/2)
-        
-        Z_impedance = np.zeros(np.size(Xi), dtype = np.complex_)
-        for ii in range(0,np.size(Xi)):
-            Z_impedance[ii] = Artery.getImpedance(self, Xi[ii]/(dt_temp), r_root,rc, qc ,nu)
+     acc = 1e-12 #numerical accuracy of impedance fcn
+     r_root = r_root*rc
+     dt_temp = 0.01 #0.005 #Was 0.0001
+     N = math.ceil(1/dt_temp)
+     eta = acc**(1/(2*N))
+     
+     m = np.linspace(0,2*np.pi,(2*N)+1) #actual [0:2N-1] the size of 2N
+     zeta = eta * np.exp(1j*m)
+     Xi = 0.5*(zeta**2) - (2*zeta) + (3/2)
+     
+     Z_impedance = np.zeros(np.size(Xi), dtype = np.complex_)
+     for ii in range(0,np.size(Xi)):
+         Z_impedance[ii] = Artery.getImpedance(self, Xi[ii]/(dt_temp), r_root,rc, qc ,nu)
 
+     z_n = np.zeros(np.size(Xi), dtype = np.complex_) 
+     weighting = np.concatenate(([1],2*np.ones((2*N)-1),[1]))/ (4*N)
+     for n in range(0,N+1): # actual range [0,N]
+         z_n[n] = np.sum(weighting * Z_impedance * np.exp(-1j*n*m))
+         z_n[n] = z_n[n] / (eta ** n)
+     z_n = np.real(z_n)
 
-        z_n = np.zeros((int(T/dt)*tc)+1, dtype = np.complex_)
-        weighting = np.concatenate(([1],2*np.ones((2*N)-1),[1]))/ (4*N)
-        for n in range(0,N+1): # actual range [0,N]
-            z_n[n] = np.sum(weighting * Z_impedance * np.exp(-1j*n*m))
-            z_n[n] = z_n[n] / (eta ** n)
-        z_n = np.real(z_n)
+     z_n = z_n * qc / (rho * rc **4) #effectively times 10 
+     #Testing has indicated this is ideal 
 
-        #z_n = z_n * qc / (rho * rc **4)
-        #Testing has indicated this is ideal 
-        
-        return z_n
-    
+     return z_n
+ 
     def getImpedance(self, s, r_root,rc, qc ,nu):
-        maxGens = math.ceil(math.log(self.r_min / r_root) / math.log(self.alpha)) + 1
-        empty_table = np.empty((maxGens, maxGens))
-        empty_table[:] = np.nan
-        [Z, table] = Artery.impedance(self, s, r_root,0, 0, empty_table, rc, qc , nu)
-        return Z
+     #maxGens = math.ceil(math.log(self.r_min / r_root) / math.log(self.alpha)) + 1
+     empty_table = np.empty((1000, 1000)) #replace max gen with 1000
+     empty_table[:] = np.nan
+     [Z, table] = Artery.impedance(self, s, r_root,r_root,0, 0, empty_table, rc, qc , nu)
+     return Z   
+     
+    def impedance(self, s, r_root,r_0, N_alpha, N_beta, table, rc, qc , nu):
+        factor = 0.02
+        if r_0 > 0.025:
+            xi = 2.5
+            zeta = 0.4
+            lrr = 10 *factor
+        elif r_0 <= 0.005:
+            xi = 2.9
+            zeta = 0.9  
+            lrr = 30 *factor
+        else:
+            xi = 2.76
+            zeta = 0.6
+            lrr = 20 *factor
+        alpha = (1+zeta**(xi/2))**(-1/xi)
+        beta = alpha * np.sqrt(zeta)
         
-        
-    def impedance(self, s, r_root, N_alpha, N_beta, table, rc, qc , nu):
-        
-        r_0 = r_root * (self.alpha ** (N_alpha)) *(self.beta ** (N_beta))
+        r_0 = r_root * (alpha ** (N_alpha)) *(beta ** (N_beta))
         
         if r_0 < self.r_min:
             ZL = 0
         else:
             if np.isnan(table[N_alpha + 1, N_beta]):
-                [ZD1, table] = Artery.impedance( self, s,r_root,N_alpha+1 , N_beta,table, rc,qc,nu)
+                [ZD1, table] = Artery.impedance( self, s, r_root,r_0, N_alpha+1 , N_beta,table, rc,qc,nu)
             else:
                 ZD1 = table[N_alpha + 1, N_beta]
      
             if np.isnan(table[N_alpha, N_beta +1]):
-                [ZD2, table] = Artery.impedance( self, s,r_root,N_alpha , N_beta + 1,table, rc,qc,nu)
+                [ZD2, table] = Artery.impedance( self, s, r_root,r_0 ,N_alpha , N_beta + 1,table, rc,qc,nu)
             else:
                 ZD2 = table[N_alpha , N_beta + 1]
        
             ZL = (ZD1 * ZD2) / (ZD1 + ZD2)
-        
-        Z0 = Artery.singleVesselImpedance(self, ZL, s ,r_0 , rc, qc , nu)
+            
+        Z0 = Artery.singleVesselImpedance(self, ZL, s , r_0 , rc, qc , nu, lrr )
         table [N_alpha, N_beta] = Z0
         return [Z0, table]
-                     
-    def singleVesselImpedance(self,ZL, s, r_0, rc,qc, nu):
-        
-        gamma = 2 #velocity profile 
-        nu_temp = nu * qc / rc 
-        L = r_0 * self.lrr
-        A0 = np.pi * (r_0 ** 2)
-        Ehr = (2e7 *np.exp( -22.53*r_0) + 8.65e5) #Youngs Modulus * vessel thickness/radius
-        C = (3/2) *(A0)/(Ehr) #complaince
-        delta_s = (2 * nu_temp*(gamma +2))/ (rho * (r_0**2))
-       
-        
     
-        if s == 0:
-            Z0 = ZL + (2*(gamma +2)*nu_temp* self.lrr) / (np.pi * r_0**3)
-            print('s=0')
-                
-        else:
-            d_s = (A0/(C*rho*s*(s+delta_s)))**(0.5)
-            num = ZL + ((np.tanh(L/d_s, dtype=np.longcomplex))/(s*d_s*C))
+    
+          
+    def singleVesselImpedance(self,ZL, s, r_0, rc,qc, nu, lrr):
+     
+     gamma = 2 #velocity profile 
+     nu_temp = nu * qc / rc 
+     L = r_0 * lrr
+     A0 = np.pi * (r_0 ** 2)
+     Ehr = (2e7 *np.exp( -22.53*r_0) + 8.65e5) #Youngs Modulus * vessel thickness/radius
+     C = (3/2) *(A0)/(Ehr) #complaince
+     delta_s = (2 * nu_temp*(gamma +2))/ (rho * (r_0**2))
+    
+     
+ 
+     if s == 0:
+         Z0 = ZL + (2*(gamma +2)*nu_temp* lrr) / (np.pi * r_0**3)
+         
+             
+     else:
+         d_s = (A0/(C*rho*s*(s+delta_s)))**(0.5)
+         num = ZL + ((np.tanh(L/d_s, dtype=np.longcomplex))/(s*d_s*C))
 
-            denom = s*d_s*C*ZL*np.tanh(L/d_s, dtype=np.longcomplex) + 1   
-            Z0 = num/denom
-                           
-        return Z0
+         denom = s*d_s*C*ZL*np.tanh(L/d_s, dtype=np.longcomplex) + 1   
+         Z0 = num/denom
+                        
+     return Z0
+ 
+    def determine_tree(self, dt, T, tc,rc,qc,nu):
+     """
+     Intiate the tree calculcation for the artery
+     
+     """
+     zn = Artery.impedance_weights(self, self.Rd, dt, T, tc,rc,qc,nu)
+     self._zn = zn
+     self._Qnk = np.zeros(np.shape(zn)[0]-1)
+     
                            
     def initial_conditions(self, u0, dt, dataframe, T, tc,rc,qc, nu):
         """
@@ -201,10 +224,11 @@ class Artery(object):
         self.U0[0,:] = self.A0.copy()
         self.U0[1,:].fill(u0)
         
-        #Want to rename from LW to a better title 
-        zn = Artery.impedance_weights(self, self.Rd, dt, T, tc,rc,qc,nu)
-        self._zn = zn
-        self._Qnk = np.zeros(int(T/dt)*tc)
+        if dataframe.at['End Condition'] == 'ST':
+            Artery.determine_tree(self, dt, T, tc,rc,qc,nu)
+        else:
+            self._zn = 0
+            self._Qnk = 0
         
     def mesh(self, dx, ntr):
         """
@@ -761,49 +785,24 @@ class ArteryNetwork(object):
         self.setup_arteries(Re, p0, k, r_min, Z_term, lrr,rc)     
         
     def setup_arteries(self, Re, p0, k, r_min, Z_term, lrr,rc):
-        """
-        Creates Artery objects.
-        
-        :param Ru: Iterable containing upstream radii.
-        :param Rd: Iterable containing downstream radii.
-        :param lam: Iterable containing length-to-radius ratios.
-        :param k: Iterable containing elasticity parameters.
-        :param Re: Reynolds number.
-        :param Z_term: 
-        """
-        
-        #Creates all artery objects 
-        ii = 0
-        
-        Ru = 1 
-        Rd = 0.39971352632675666
-        lam = 27
-        cndt = 'LW'
-        if cndt == 'LW':
-            factor = 1 
-        ############NEW CODE HERE##########################
-            if Rd > 0.025:
-                xi = 2.5
-                zeta = 0.4
-                lrr_intial = 10 *factor
-            elif Rd <= 0.005:
-                xi = 2.9
-                zeta = 0.9
-                lrr_intial = 30 *factor
-            else:
-                xi = 2.76
-                zeta = 0.6
-                lrr_intial = 20 *factor
-            alpha = (1+zeta**(xi/2))**(-1/xi)
-            beta = alpha * np.sqrt(zeta)
-            #############################################################
-            
-            self.arteries[0] = Artery(0, Ru, Rd, lam, k, Re, p0, alpha, beta, r_min, Z_term, lrr[ii],rc)
-            
-        else:
-  
-            self.arteries[0] = Artery(0,Ru, Rd, lam, k, Re, p0, 0, 0, r_min, Z_term, 0,rc)
-
+         """
+         Creates Artery objects.
+         
+         :param Ru: Iterable containing upstream radii.
+         :param Rd: Iterable containing downstream radii.
+         :param lam: Iterable containing length-to-radius ratios.
+         :param k: Iterable containing elasticity parameters.
+         :param Re: Reynolds number.
+         :param Z_term: 
+         """
+         
+         #Creates all artery objects 
+         
+         
+         Ru = self.dataframe.at['Radius Values'][0] / 10 #From mm to cm 
+         Rd = self.dataframe.at['Radius Values'][1] / 10 #From mm to cm 
+         lam = self.dataframe.at['lam'] 
+         self.arteries[0] = Artery(0, Ru, Rd, lam, k, Re, p0, r_min, Z_term, rc)
                    
     def initial_conditions(self, u0, dataframe,rc,qc):
         """
@@ -949,8 +948,12 @@ class ArteryNetwork(object):
         """
         k_array = np.arange(0,t,dt) #actual range [0,t]
         n_value = np.size(k_array) 
-        zk_array = artery.zn[0:n_value+1]
-        Qnk_array = np.flip(artery.Qnk[0:n_value])
+        if n_value+1 < np.size(artery.zn):
+            zk_array = artery.zn[0:n_value+1]
+            Qnk_array = artery.Qnk[0:n_value]
+        else:
+            zk_array = artery.zn
+            Qnk_array = artery.Qnk
         #Need to have stored Q values for every time step up to this point
         #for k = 0 to n (n=current number of time steps)
         #p_out = np.sum(zk_array*Qnk_array)  #pressure at nth time step with constant time steps dt          
@@ -1259,12 +1262,12 @@ time step size." % (t))
         
         tr = np.linspace(self.tf-self.T, self.tf, self.ntr)
         i = 0
-        ii=0
+        
         
         self.print_status()
         self.timestep()       
         bc_in = np.zeros((len(self.arteries), 2))
-        
+        it = 0
         while self.t < self.tf:
             save = False  
             
@@ -1278,11 +1281,11 @@ time step size." % (t))
                 gamma = self.dt/2
                 lw = LaxWendroff(theta, gamma, artery.nx)
                 
-                index = artery.pos
-                end_condition = self.dataframe.at[index,'End Condition']
+                
+                end_condition = self.dataframe.at['End Condition']
                    
                 #Decides if artery requires us to find it's daughters and then finds them 
-                if end_condition != 'LW':
+                if end_condition != 'ST':
                 
                     d1, d2 = self.get_daughters(artery)
                     x_out = ArteryNetwork.bifurcation(artery, d1, d2, self.dt)
@@ -1303,19 +1306,27 @@ time step size." % (t))
                 
                 #Here based on depth determines the wk or constant pressure end condition EDIT HERE
                 
-                if end_condition == 'LW':
+                if end_condition == 'ST':
                     # outlet boundary condition
                     if out_bc == '3wk':
                         U_out = ArteryNetwork.outlet_wk3(artery, self.dt, *out_args)
                     if out_bc == 'p':
                         U_out = ArteryNetwork.outlet_p(artery, self.dt, *out_args)
                     elif out_bc == 'ST':
-                        artery.Qnk[ii] = artery.U0[1,-1]            
+                        artery.Qnk[:] = (np.concatenate(([artery.U0[1,-1]],artery.Qnk[:])))[:-1]         
                         U_out = ArteryNetwork.outlet_st(artery, self.dt, self.t)
                         
                 
                 artery.solve(lw, U_in, U_out, save, i-1)
                 
+                if artery.pos in [0] and it%10000 == 0:
+                    #print(U_in)
+                    plt.figure()
+                    plt.plot(artery.U0[0,:], label = str(artery.pos))
+                    plt.legend()
+                    plt.title('After')
+                    
+                    #print(artery.U0[0,:])
                
                 if ArteryNetwork.cfl_condition(artery, self.dt, self.t) == False:
                     raise ValueError(
@@ -1324,9 +1335,11 @@ time step size." % (self.t))
                     sys.exit(1)  
                     
             self.timestep()
-            ii = ii + 1
-            self.print_status()
             
+            self.print_status()
+            it = it + 1
+            if it == 100000:
+                sys.exit()
             
     def dump_results(self, suffix, data_dir):
         """
@@ -1545,8 +1558,8 @@ Ct = 1.3384e-6
 
 T = 0.917 #s
 tc = 4 #Normally 4 #s
-dt = 1e-5 #normally 1e-5 #s
-dx = 0.1 #normally 0.1 #s
+dt = 0.25e-5 #normally 1e-5 #s
+dx = 0.015 #normally 0.1 #s
 
 q_in = inlet(qc, rc, 'example_inlet.csv')
 
@@ -1571,7 +1584,7 @@ p0 =((85 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure
 
 dataframe = vessel_df
 lrr = [0]
-r_min =0.0083 #0.01< 0.001
+r_min =0.003 #0.01< 0.001
 #terminal_resistance = 0
 Z_term = 0 #Terminal Impedance 8
 
