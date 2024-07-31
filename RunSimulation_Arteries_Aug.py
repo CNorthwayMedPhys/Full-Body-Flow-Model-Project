@@ -1258,7 +1258,7 @@ def runSim(lrr_values):
                     Dfr_inv = linalg.inv(Dfr)
                     fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
                     x1 = x - np.dot(Dfr_inv, fr)
-                    if (abs(x1 - x) < 1e-12).all(): #1e-12
+                    if (abs(x1 - x) < 1e-10).all(): #1e-12
                         break
                     k += 1
                     np.copyto(x, x1)
@@ -1448,12 +1448,12 @@ def runSim(lrr_values):
                     
                     ############Troubleshooting##############
                     
-                    if artery.pos in [266] and it%100 == 0:
-                        #print(U_in)
-                        plt.figure()
-                        plt.plot(artery.U0[0,:], label = str(artery.pos))
-                        plt.legend()
-                        plt.title('After')
+                    # if artery.pos in [274] and it%100 == 0:
+                    #     #print(U_in)
+                    #     plt.figure()
+                    #     plt.plot(artery.U0[0,:], label = str(artery.pos))
+                    #     plt.legend()
+                    #     plt.title('After')
                         
                         #print(artery.U0[0,:])
                                     
