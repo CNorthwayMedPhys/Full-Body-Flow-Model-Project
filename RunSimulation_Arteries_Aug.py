@@ -1448,12 +1448,12 @@ def runSim(lrr_values):
                     
                     ############Troubleshooting##############
                     
-                    if artery.pos in [266] and it%100 == 0:
-                        #print(U_in)
-                        plt.figure()
-                        plt.plot(artery.U0[0,:], label = str(artery.pos))
-                        plt.legend()
-                        plt.title('After')
+                    # if artery.pos in [274] and it%100 == 0:
+                    #     #print(U_in)
+                    #     plt.figure()
+                    #     plt.plot(artery.U0[0,:], label = str(artery.pos))
+                    #     plt.legend()
+                    #     plt.title('After')
                         
                         #print(artery.U0[0,:])
                                     
