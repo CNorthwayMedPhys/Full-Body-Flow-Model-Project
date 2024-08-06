@@ -55,7 +55,7 @@ def inlet(qc, rc, f_inlet):
 try:
     vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\larm.pkl')
 except:
-    vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\Remote Git\\larm.pkl')
+    vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\RemoteGit\\larm.pkl')
 
 vessel_df = vessel_df.loc[0:2]
 vessel_df.at[1,'End Condition'] = 'LW'
@@ -1489,8 +1489,8 @@ class LaxWendroff(object):
 
 
 #%% Define parameters
-rc = 1 # usually 1  
-qc = 10  
+rc = 1  
+qc = 10 
 rho = 1.06
 nu = 0.046
 R1 = 25300
@@ -1553,8 +1553,8 @@ an.solve(q_in, out_bc, out_args)
 # redimensionalise
 an.redimensionalise(rc, qc)
 
-file_name = 'VamPy_3wk_rc'
+file_name = 'VamPy_3wk'
 try:
-    an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\Remote Git')
+    an.dump_results(file_name,'C:\\Users\\Cassidy.Northway\\RemoteGit')
 except:
     an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project') 

@@ -1448,14 +1448,14 @@ def runSim(lrr_values):
                     
                     ############Troubleshooting##############
                     
-                    # if artery.pos in [274] and it%100 == 0:
+                    if artery.pos in [0]: #and it%100 == 0:
                     #     #print(U_in)
-                    #     plt.figure()
-                    #     plt.plot(artery.U0[0,:], label = str(artery.pos))
-                    #     plt.legend()
-                    #     plt.title('After')
+                         plt.figure()
+                         plt.plot(artery.U0[0,:], label = str(artery.pos))
+                         plt.legend()
+                         plt.title('After')
                         
-                        #print(artery.U0[0,:])
+                         #print(artery.U0[0,:])
                                     
                    ############################################
                     if ArteryNetwork.cfl_condition(artery, self.dt, self.t) == False:
@@ -1675,15 +1675,15 @@ def runSim(lrr_values):
     
     
     #%% Define parameters
-    rc = 1  #cm
-    qc = 10 #cm3/s
+    rc = 0.01  #cm normally 1 
+    qc = 0.00001 #cm3/s
     rho = 1.055 #g/cm3
     nu = 0.049 #cm2/s
 
     T = 1 #s
     tc = 1 #Normally 4 #s
-    dt = 0.25e-5 #normally 1e-5 #s
-    dx = 0.015 #normally 0.1 cm  (unitless)
+    dt = 1e-7 #normally 0.25e-5 #s
+    dx = 0.001 #normally 0.015 cm  
     
     q_in = inlet(qc, rc, 'AorticFlow_Blanco.csv')
     
