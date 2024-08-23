@@ -326,7 +326,29 @@ for i in range (0,len(df_ordered)):
                     
                 replacement.append(index)
             df_ordered.at[i,'End Condition'] = replacement 
-            
+
+#%% Round every thing to two decimal places
+for i in range (0, len(df_ordered)):
+    Ru_i,Rd_i = df_ordered.at[i, 'Radius Values' ]
+    lam_i = df_ordered.at[i, 'lam']
+    dist = lam_i*Ru_i 
+    Ru_f = np.round(Ru_i,decimals=2)
+    Rd_f = np.round(Rd_i,decimals=2)
+    lam_f = np.round(dist,decimals=2)/Ru_f
+    if Rd_f>Ru_f:
+        Rd_f=Ru_f
+    if dist < 0.1:
+        dist = 0.1
+        lam_f = 0.1/Ru_f
+    df_ordered.at[i, 'Radius Values' ] = [Ru_f,Rd_f]   
+    df_ordered.at[i, 'lam'] = lam_f   
+    
+#I want to ID the smallest Rd values
+# for i in range(0,len(df_ordered)):
+#     Ru_i,Rd_i = df_ordered.at[i, 'Radius Values' ]
+#     if Rd_i < 0.2:
+#         df_ordered.at[i, 'Radius Values' ] = [Ru_i,0.2]
+#         print(str(i))            
 #%% Harded coded solutions for right subclavian artery Ru
 
 index = df_ordered[ df_ordered['Name']== 'right_subclavian_artery_0'].index.values[0]   
@@ -462,6 +484,29 @@ lam_f = dist/Ru_f
 df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
 df_ordered.at[index, 'lam'] = lam_f
 
+index = df_ordered[ df_ordered['Name']== 'arteries_lleg28_0'].index.values[0]   
+Ru_i,Rd_i = df_ordered.at[index, 'Radius Values' ]
+lam_i =  df_ordered.at[index, 'lam']
+dist = lam_i*Ru_i 
+Ru_f = 0.38 #(mm) equal to inital value of prior vessel Rd
+Rd_f = 0.38 
+lam_f = dist/Ru_f
+
+df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
+df_ordered.at[index, 'lam'] = lam_f
+
+
+index = df_ordered[ df_ordered['Name']== 'right_subclavian_artery_2'].index.values[0]   
+Ru_i,Rd_i = df_ordered.at[index, 'Radius Values' ]
+lam_i =  df_ordered.at[index, 'lam']
+dist = lam_i*Ru_i 
+Ru_f = 2.5 #(mm) guess
+Rd_f = Rd_i
+lam_f = dist/Ru_f
+
+df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
+df_ordered.at[index, 'lam'] = lam_f
+
 #%%Manually increase l<0.1
 
 # BROKEN for i in range(0,len(df_ordered)):
@@ -474,12 +519,7 @@ df_ordered.at[index, 'lam'] = lam_f
 #         df_ordered.at[i,'lam'] = lam_f
 #         print(i)
 
-#I want to ID the smallest Rd values
-for i in range(0,len(df_ordered)):
-    Ru_i,Rd_i = df_ordered.at[i, 'Radius Values' ]
-    if Rd_i < 0.2:
-        df_ordered.at[i, 'Radius Values' ] = [Ru_i,0.2]
-        print(str(i))
+
  
     
  

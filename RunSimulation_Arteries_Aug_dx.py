@@ -101,7 +101,7 @@ def runSim(lrr_values):
         def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
             acc = 1e-12 #numerical accuracy of impedance fcn
             r_root = r_root*rc
-            dt_temp = 0.01 #0.005 #Was 0.0001
+            dt_temp = 0.025 #0.005 #Was 0.0001
             N = math.ceil(1/dt_temp)
             eta = acc**(1/(2*N))
             
@@ -227,12 +227,17 @@ def runSim(lrr_values):
                 self._Qnk = 0
        
             
-        def mesh(self, dx, ntr):
+        def mesh(self, ntr, rc):
             """
             Meshes an artery using spatial step size dx.
             
             :param dx: Spatial step size
             """
+            length = self.L*rc
+            if length < 0.1:
+                dx = 0.002/rc
+            else:
+                dx = length/(70 *rc)
             self._dx = dx
             self._nx = int(self.L/dx)+1
             if self.nx-1 != self.L/dx:
@@ -824,14 +829,14 @@ def runSim(lrr_values):
                 
                 
                 
-        def mesh(self, dx):
+        def mesh(self, rc):
             """
             Invokes mesh(nx) on each artery in the network
             
             :param dx: Spatial step size
             """
             for artery in self.arteries:
-                artery.mesh(dx, self.ntr)
+                artery.mesh( self.ntr, rc)
                 
                 
         def set_time(self, dt, T, tc=1):
@@ -1092,7 +1097,8 @@ def runSim(lrr_values):
                 
                 
             if np.isnan(Dfr).any():
-                print('nan')
+                print('Dfr has a nan value')
+                print(Dfr)
             return Dfr
             
     
@@ -1322,6 +1328,12 @@ def runSim(lrr_values):
             right = 1/np.absolute(v)
             try:
                 cfl = False if (left > right).any() else True
+                if cfl == False:
+                    print(np.min(right))
+                    print(left)
+                    print(artery.pos)
+                    print(artery.dx)
+                    print('wow')
             except ValueError:
                 raise ValueError("CFL condition not fulfilled at time %e. Reduce \
     time step size." % (t))
@@ -1450,8 +1462,8 @@ def runSim(lrr_values):
                     artery.solve(lw, U_in, U_out, save, i-1)
                     
                     ############Troubleshooting##############
-                    #Problem artery of the back of the leg
-                    if artery.pos in [252] and it%150 == 0:
+
+                    if artery.pos in [9] and it%150 == 0:
                          plt.figure()
                          plt.plot(artery.U0[0,:], label = str(artery.pos))
                          plt.legend()
@@ -1680,15 +1692,15 @@ def runSim(lrr_values):
     
     
     #%% Define parameters
-    rc = 0.01 #cm normally 
-    qc = 0.01 #cm3/s
+    rc = 1 #cm normally 
+    qc = 100 #cm3/s
     rho = 1.055 #g/cm3
     nu = 0.049 #cm2/s
 
     T = 1 #s
     tc = 1 #Normally 4 #s
-    dt = 1e-7 #normally 0.25e-5 #s
-    dx = 0.001 #normally 0.015 cm  
+    dt = 1e-6 #normally 0.25e-5 #s
+    #dx = 0.001 #normally 0.015 cm  
     
     q_in = inlet(qc, rc, 'AorticFlow_Blanco.csv')
     
@@ -1697,7 +1709,7 @@ def runSim(lrr_values):
     tc = tc # number of cycles to simulate
     dt = dt * qc / rc**3 # time step size
     ntr = 50 # number of time steps to be stored
-    dx = dx / rc # spatial step size
+    #dx = dx / rc # spatial step size
     nu = nu*rc/qc # viscosity
     
     kc = rho*qc**2/rc**4
@@ -1730,7 +1742,7 @@ def runSim(lrr_values):
     an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, rc)
     
     
-    an.mesh(dx)
+    an.mesh(rc)
     an.set_time(dt, T, tc)
     an.initial_conditions(intial_values/qc, dataframe,lrr_factors, rc,qc)
     

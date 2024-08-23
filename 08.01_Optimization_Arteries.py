@@ -5,7 +5,7 @@ from __future__ import division
 import scipy.optimize as optimize
 import numpy as np
 import os
-from RunSimulation_Arteries_Aug import runSim
+from RunSimulation_Arteries_Aug_dx import runSim
 import warnings
 
 warnings.simplefilter(action='ignore', category=RuntimeWarning)
@@ -22,6 +22,7 @@ def findOptLambda():
     E = results.fun
     print(E)
     print(lambda_vals)
+    
     
     
     
