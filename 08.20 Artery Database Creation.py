@@ -507,6 +507,17 @@ lam_f = dist/Ru_f
 df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
 df_ordered.at[index, 'lam'] = lam_f
 
+index = df_ordered[ df_ordered['Name']== 'right_subclavian_artery_1'].index.values[0]   
+Ru_i,Rd_i = df_ordered.at[index, 'Radius Values' ]
+lam_i =  df_ordered.at[index, 'lam']
+dist = lam_i*Ru_i 
+Ru_f = Ru_i #(mm) guess
+Rd_f =2.7
+lam_f = dist/Ru_f
+
+df_ordered.at[index, 'Radius Values' ] = [Ru_f,Rd_f]   
+df_ordered.at[index, 'lam'] = lam_f
+
 #%%Manually increase l<0.1
 
 # BROKEN for i in range(0,len(df_ordered)):
