@@ -1713,9 +1713,9 @@ def runSim(lrr_values):
     nu = nu*rc/qc # viscosity
     
     kc = rho*qc**2/rc**4
-    k1 = 2.0e7 #g/s2 cm
-    k2 = -22.53 # 1/cm 
-    k3 = 8.65e5 #g/s2 cm
+    k1 = 5e6 #g/s2 cm
+    k2 = -25 # 1/cm 
+    k3 = 6e5 #g/s2 cm
     
     k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
     out_args =[0]
