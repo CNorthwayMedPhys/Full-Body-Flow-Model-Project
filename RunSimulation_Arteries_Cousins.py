@@ -99,9 +99,9 @@ class Artery(object):
         
     
     def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
-        acc = 1e-12 #numerical accuracy of impedance fcn
+        acc = 1e-10 #numerical accuracy of impedance fcn
         r_root = r_root*rc
-        dt_temp = 0.01 #0.005 #Was 0.0001
+        dt_temp = 1e-3 #0.005 #Was 0.0001
         N = math.ceil(1/dt_temp)
         eta = acc**(1/(2*N))
         
@@ -138,15 +138,15 @@ class Artery(object):
         if r_0 > 0.025:
             xi = 2.5
             zeta = 0.4
-            lrr = 10 * factor
+            lrr = 10 #* factor
         elif r_0 <= 0.005:
             xi = 2.9
             zeta = 0.9  
-            lrr = 30 * factor
+            lrr = 30 #* factor
         else:
             xi = 2.76
             zeta = 0.6
-            lrr = 20 * factor
+            lrr = 20  #* factor
         alpha = (1+zeta**(xi/2))**(-1/xi)
         beta = alpha * np.sqrt(zeta)
         
@@ -803,8 +803,8 @@ class ArteryNetwork(object):
         #Creates all artery objects 
         
         for i in range(0,len(self.dataframe)):
-            Ru = self.dataframe.at[i,'Radius Values'][0] / 10 #From mm to cm 
-            Rd = self.dataframe.at[i,'Radius Values'][1] / 10 #From mm to cm 
+            Ru = self.dataframe.at[i,'Radius Values'][0]/10
+            Rd = self.dataframe.at[i,'Radius Values'][1]/10  
             lam = self.dataframe.at[i,'lam'] 
             self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, r_min, Z_term , rc)
            
@@ -1018,7 +1018,7 @@ class ArteryNetwork(object):
         """
         ####Added in K_loss modelled after Chambers_et__al_2020 from Olufsen Github [arteries.c]
         if d1.pos == 1:
-            LD_k = 0#0.75/2
+            LD_k = 0.75/2
             RD_k = 0
            
         elif d2.pos == 1:
@@ -1086,13 +1086,7 @@ class ArteryNetwork(object):
             Dfr [15,1] = x[1]/(x[10]**2)*(-2*RD_k)
             Dfr[14,10] = zeta7 +(2*LD_k)*(x[1]**2 / x[10]**3)
             Dfr[15,10] = zeta7 +(2*RD_k)*(x[1]**2 / x[10]**3)
-        
-   
-                
-            
-            
-        if np.isnan(Dfr).any():
-            print('nan')
+
         return Dfr
         
 
@@ -1256,8 +1250,6 @@ class ArteryNetwork(object):
             #############Debugging###################
             try:
                 Dfr = ArteryNetwork.jacobian(x, parent, d1, d2, theta, gamma)
-                if np.isnan(Dfr).any():
-                    print(x)
                 Dfr_inv = linalg.inv(Dfr)
                 fr = ArteryNetwork.residuals(x, parent, d1, d2, theta, gamma, U_p_np, U_d1_np, U_d2_np)
                 x1 = x - np.dot(Dfr_inv, fr)
@@ -1271,7 +1263,7 @@ class ArteryNetwork(object):
                 print(parent.pos)
                 print(d1.pos)
                 print(d2.pos)
-                #print(k)
+                
                 plt.figure()
                 plt.plot(parent.U0[1,:], label = str(parent.pos) + 'q')
                 plt.legend()
@@ -1295,7 +1287,7 @@ class ArteryNetwork(object):
                 plt.figure()
                 plt.plot(d2.U0[0,:], label = str(d2.pos) + 'a')
                 plt.legend()
-                #print(d2.U0[0,0:20])
+               
                 
                 sys.exit()
             #################Debugging##################
@@ -1451,15 +1443,15 @@ time step size." % (t))
                 
                 ############Troubleshooting##############
                 #Problem artery of the back of the leg
-                if artery.pos in [252] and it%150 == 0:
-                     plt.figure()
-                     plt.plot(artery.U0[0,:], label = str(artery.pos))
-                     plt.legend()
-                     plt.title('After')
+                # if artery.pos in [252] and it%150 == 0:
+                #      plt.figure()
+                #      plt.plot(artery.U0[0,:], label = str(artery.pos))
+                #      plt.legend()
+                #      plt.title('After')
 
                        
-                if np.isnan(artery.U0).any():
-                    print(str(artery.pos) + ' has a nan')
+                #if np.isnan(artery.U0).any():
+                    #print(str(artery.pos) + ' has a nan')
 
                    
                ############################################
@@ -1681,14 +1673,14 @@ class LaxWendroff(object):
 
 #%% Define parameters
 rc = 1 #cm normally 
-qc = 10 #cm3/s
-rho = 1.055 #g/cm3
+qc = 1 #cm3/s normally 10
+rho = 1.06 #g/cm3
 nu = 0.049 #cm2/s
 
 T = 1 #s
 tc = 1 #Normally 4 #s
-dt = 5e-6 #normally 0.25e-5 #s
-dx = 0.01 #normally 0.015 cm  
+dt = 1e-5 #normally 0.25e-5 #s
+dx = 0.1 #normally 0.015 cm  
 
 q_in = inlet(qc, rc, 'AorticFlow_Blanco.csv')
 
@@ -1708,7 +1700,7 @@ k3 = 8.65e5 #g/s2 cm
 k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
 out_args =[0]
 out_bc = 'ST'
-p0 =((85 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure intial 85 *
+p0 =((45 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure intial 85 *
 dataframe = vessel_df
 
 r_min =0.003 #2014_Cousins cm
