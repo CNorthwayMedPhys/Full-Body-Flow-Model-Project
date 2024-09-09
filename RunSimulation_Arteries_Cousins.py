@@ -134,19 +134,19 @@ class Artery(object):
         
         
     def impedance(self, s, r_root,r_0, N_alpha, N_beta, table, rc, qc , nu):
-        factor = self.factor
+        factor = self.factor[0][0]
         if r_0 > 0.025:
             xi = 2.5
             zeta = 0.4
-            lrr = 10 #* factor
+            lrr = 10 * factor
         elif r_0 <= 0.005:
             xi = 2.9
             zeta = 0.9  
-            lrr = 30 #* factor
+            lrr = 30 * factor
         else:
             xi = 2.76
             zeta = 0.6
-            lrr = 20  #* factor
+            lrr = 20  * factor
         alpha = (1+zeta**(xi/2))**(-1/xi)
         beta = alpha * np.sqrt(zeta)
         
@@ -810,7 +810,7 @@ class ArteryNetwork(object):
            
 
                    
-    def initial_conditions(self, intial_values, dataframe, rc,qc):
+    def initial_conditions(self, intial_values, dataframe, lrr_factors, rc,qc):
         """
         Invokes initial_conditions(u0) on each artery in the network.
         
@@ -819,7 +819,7 @@ class ArteryNetwork(object):
         for artery in self.arteries:
             index  = artery.pos
             u0 = intial_values[index]
-            lrr = 0.6
+            lrr = lrr_factors[np.where(lrr_factors[:,0]==index),1]
             artery.initial_conditions(u0, self.dt, dataframe, lrr, self.T, self.tc,rc,qc, self.nu)
             
             
@@ -1017,12 +1017,12 @@ class ArteryNetwork(object):
         :returns: The Jacobian for Newton's method.
         """
         ####Added in K_loss modelled after Chambers_et__al_2020 from Olufsen Github [arteries.c]
-        if d1.pos == 1:
-            LD_k = 0.75/2
+        if d1.pos == 2:
+            LD_k = 0#0.75/2
             RD_k = 0
            
-        elif d2.pos == 1:
-            RD_k = 0.75/2
+        elif d2.pos == 2:
+            RD_k = 0#0.75/2
             LD_k = 0
            
         else:
@@ -1111,7 +1111,7 @@ class ArteryNetwork(object):
         """
         ####Added in K_loss modelled after Chambers_et__al_2020 from Olufsen Github [arteries.c]
         if d1.pos == 1:
-            LD_k = 0.75#/2
+            LD_k = 0.75/2
             RD_k = 0
         elif d2.pos == 1:
             RD_k =0.75/2
@@ -1702,8 +1702,10 @@ out_args =[0]
 out_bc = 'ST'
 p0 =((45 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure intial 85 *
 dataframe = vessel_df
+intial_guess = np.loadtxt('lrr_factor_CA.txt')
+lrr_factors = intial_guess
 
-r_min =0.003 #2014_Cousins cm
+r_min =0.001 #2014_Cousins cm
 Z_term = 0 #Terminal Impedance 8
 
 #%% Run simulation
@@ -1715,7 +1717,7 @@ intial_values = np.zeros(row)
 an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, rc)
 an.mesh(dx)
 an.set_time(dt, T, tc)
-an.initial_conditions(intial_values/qc, dataframe, rc,qc)
+an.initial_conditions(intial_values/qc, dataframe,lrr_factors, rc,qc)
 
 
 
