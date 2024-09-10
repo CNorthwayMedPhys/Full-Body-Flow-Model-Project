@@ -18,10 +18,10 @@ def findOptLambda(vessel_dict):
 
     #Define number of end vessels !WILL NEED TO EDIT LATER!!!!!CURRENTLY HARD CODED TO ASSUME ALL VESSELS HAVE THE SAME L-RR THIS WILL NEED TO BE UPDATED!!!
     n_vessels = np.shape(vessel_dict)[0]
-    intial_guess = 50*np.ones(n_vessels)
+    intial_guess = 40*np.ones(n_vessels)
     
     #Run optimization
-    results = optimize.least_squares(ModelError, intial_guess , max_nfev = 100 )
+    results = optimize.least_squares(ModelError, intial_guess ,  bounds=(10, 60), max_nfev = 100 )
     
     #Parse results
     lambda_vals = results.x
@@ -47,18 +47,20 @@ def ModelError(lambda_vals):
         index_d1 = 0
         index_d2 = 0
         try: 
-            index_d1 = np.where(vessel_dict[:,0]== d1)
+            index_d1 = np.where(vessel_dict[:,0]== d1)[0][0]
         except: 
-            index_d2 = np.where(vessel_dict[:,0]== d2)
+            index_d2 = np.where(vessel_dict[:,0]== d2)[0][0]
         try:
-            index_d2 = np.where(vessel_dict[:,0]== d2)
+            index_d2 = np.where(vessel_dict[:,0]== d2)[0][0]
         except:
-            index_d1 = np.where(vessel_dict[:,0]== d1) 
+            index_d1 = np.where(vessel_dict[:,0]== d1)[0][0]
             
     if index_d1> 0:
-        E[index_d1]=10
+        E[index_d1]=100
     if index_d2 > 0:
-        E[index_d2]=10
+        E[index_d2]=100
+    print(E)
+    print(lambda_vals)
     return E 
 
 #%%
