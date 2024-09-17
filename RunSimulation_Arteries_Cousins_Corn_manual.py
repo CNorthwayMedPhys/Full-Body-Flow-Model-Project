@@ -83,14 +83,14 @@ class Artery(object):
     """
         
         
-    def __init__(self, pos, Ru, Rd, lam, k, Re, p0, r_min, Z_term, rc):
+    def __init__(self, pos, Ru, Rd, L, k, Re, p0, r_min, Z_term, rc):
         """
         Artery constructor.
         """
         self._pos = pos
         self._Ru = Ru/rc
         self._Rd = Rd/rc
-        self._L = (Ru/rc)*lam
+        self._L = L/rc
         self._k = k
         self._Re = Re
         self._p0 = p0
@@ -134,25 +134,21 @@ class Artery(object):
         
         
     def impedance(self, s, r_root,r_0, N_alpha, N_beta, table, rc, qc , nu):
-        factor = self.factor[0][0]
-        if r_0 > 0.025:
-            xi = 2.5
-            zeta = 0.4
-            lrr = 10 * factor
-        elif r_0 <= 0.005:
-            xi = 2.9
-            zeta = 0.9  
-            lrr = 30 * factor
-        else:
-            xi = 2.76
-            zeta = 0.6
-            lrr = 20  * factor
-        alpha = (1+zeta**(xi/2))**(-1/xi)
-        beta = alpha * np.sqrt(zeta)
+        
+        alpha = 0.9
+        beta = 0.6
         
         r_0 = r_root * (alpha ** (N_alpha)) *(beta ** (N_beta))
+        pos = self.pos
         
-        if r_0 < self.r_min:
+        if pos == [1,13,14,19,20,27,32,34,35,36,37,38]:
+            r_min = 0.01/rc
+        elif pos == [6,10,15,17,21,23,25]:
+            r_min = 0.02/rc
+        else:
+            r_min = 0.03 /rc
+            
+        if r_0 < r_min:
             ZL = 0
         else:
             if np.isnan(table[N_alpha + 1, N_beta]):
@@ -175,7 +171,7 @@ class Artery(object):
         
         gamma = 2 #velocity profile 
         nu_temp = nu * qc / rc 
-        L = r_0 * lrr
+        L = r_0 * 50
         A0 = np.pi * (r_0 ** 2)
         Ehr = (2e7 *np.exp( -22.53*r_0) + 8.65e5) #Youngs Modulus * vessel thickness/radius
         C = (3/2) *(A0)/(Ehr) #complaince
@@ -803,10 +799,10 @@ class ArteryNetwork(object):
         #Creates all artery objects 
         
         for i in range(0,len(self.dataframe)):
-            Ru = self.dataframe.at[i,'Radius Values'][0]/10
-            Rd = self.dataframe.at[i,'Radius Values'][1]/10  
-            lam = self.dataframe.at[i,'lam'] 
-            self.arteries[i] = Artery(i, Ru, Rd, lam, k, Re, p0, r_min, Z_term , rc)
+            Ru = self.dataframe.at[i,'Radius Values'][0]
+            Rd = self.dataframe.at[i,'Radius Values'][1]
+            L = self.dataframe.at[i,'L'] 
+            self.arteries[i] = Artery(i, Ru, Rd, L, k, Re, p0, r_min, Z_term , rc)
            
 
                    
@@ -952,7 +948,7 @@ class ArteryNetwork(object):
     
 
     @staticmethod
-    def outlet_st(artery, dt, t):
+    def outlet_st(artery, dt, t, p_term):
         """
         :param t: Current time step, within the period, 0<=t<=T
         """
@@ -979,7 +975,7 @@ class ArteryNetwork(object):
         U0_2 = artery.U0[:,-2] # m = M-1
         U0_3 = artery.U0[:,-3] # m = M-2
         a_n, q_n = U0_1
-        p_new = artery.p(a_n, j=-1) # initial guess for p_out
+        p_new = artery.f[-1] * (1 - np.sqrt(artery.A0[-1]/a_n)) + p_term # initial guess for p_out
         U_np_mp = (U0_1 + U0_2)/2 +\
                 gamma * (-(artery.F(U0_1, j=-1) - artery.F(U0_2, j=-2))/artery.dx +\
                         (artery.S(U0_1, j=-1) + artery.S(U0_2, j=-2))/2)
@@ -994,7 +990,7 @@ class ArteryNetwork(object):
             p_old = p_new
             q_out = (p_old - np.sum(zk_array[1:]*Qnk_array))/zk_array[0]
             a_out = a_n - theta * (q_out - U_mm[1])
-            p_new = artery.p(a_out, j=-1)
+            p_new = artery.f[-1] * (1 - np.sqrt(artery.A0[-1]/a_out)) + p_term
             if abs(p_old - p_new) < 1e-7:                
                 break
             k += 1
@@ -1017,11 +1013,11 @@ class ArteryNetwork(object):
         :returns: The Jacobian for Newton's method.
         """
         ####Added in K_loss modelled after Chambers_et__al_2020 from Olufsen Github [arteries.c]
-        if d1.pos == 2:
+        if d1.pos == 4:
             LD_k = 0#0.75/2
             RD_k = 0
            
-        elif d2.pos == 2:
+        elif d2.pos == 4:
             RD_k = 0#0.75/2
             LD_k = 0
            
@@ -1110,11 +1106,11 @@ class ArteryNetwork(object):
 
         """
         ####Added in K_loss modelled after Chambers_et__al_2020 from Olufsen Github [arteries.c]
-        if d1.pos == 1:
-            LD_k = 0.75/2
+        if d1.pos == 4:
+            LD_k = 0#0.75/2
             RD_k = 0
-        elif d2.pos == 1:
-            RD_k =0.75/2
+        elif d2.pos == 4:
+            RD_k = 0#0.75/2
             LD_k = 0
         else:
             RD_k = 0
@@ -1365,7 +1361,7 @@ time step size." % (t))
             artery.U[1,:,:] = artery.U[1,:,:] * qc
             
     
-    def solve(self, q_in, out_bc, out_args):
+    def solve(self, q_in, out_bc,p_term, out_args):
         """
         ArteryNetwork solver. Assigns boundary conditions to Artery object in the arterial tree and calls their solvers.
         
@@ -1437,17 +1433,17 @@ time step size." % (t))
                         U_out = ArteryNetwork.outlet_p(artery, self.dt, *out_args)
                     elif out_bc == 'ST':
                         artery.Qnk[:] = (np.concatenate(([artery.U0[1,-1]],artery.Qnk[:])))[:-1] 
-                        U_out = ArteryNetwork.outlet_st(artery, self.dt, self.t)
+                        U_out = ArteryNetwork.outlet_st(artery, self.dt, self.t, p_term)
                        
                 artery.solve(lw, U_in, U_out, save, i-1)
                 
                 ############Troubleshooting##############
                 #Problem artery of the back of the leg
-                # if artery.pos in [252] and it%150 == 0:
-                #      plt.figure()
-                #      plt.plot(artery.U0[0,:], label = str(artery.pos))
-                #      plt.legend()
-                #      plt.title('After')
+                if artery.pos in [21] and it%150 == 0:
+                      plt.figure()
+                      plt.plot(artery.U0[0,:], label = str(artery.pos))
+                      plt.legend()
+                      plt.title('After')
 
                        
                 #if np.isnan(artery.U0).any():
@@ -1673,13 +1669,13 @@ class LaxWendroff(object):
 
 #%% Define parameters
 rc = 1 #cm normally 
-qc = 1 #cm3/s normally 10
+qc = 10 #cm3/s normally 10
 rho = 1.06 #g/cm3
 nu = 0.049 #cm2/s
 
 T = 1 #s
 tc = 1 #Normally 4 #s
-dt = 1e-5 #normally 0.25e-5 #s
+dt = 5e-5 #normally 0.25e-5 #s
 dx = 0.1 #normally 0.015 cm  
 
 q_in = inlet(qc, rc, 'AorticFlow_Blanco.csv')
@@ -1700,12 +1696,12 @@ k3 = 8.65e5 #g/s2 cm
 k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
 out_args =[0]
 out_bc = 'ST'
-p0 =((45 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure intial 85 *
+p0 =((80  * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure intial 85 *
 dataframe = vessel_df
 intial_guess = np.loadtxt('lrr_factor_CA_corn.txt')
 lrr_factors = intial_guess
-
-r_min =0.001 #2014_Cousins cm
+p_term = ((45 * 1333.22365) * rc**4/(rho*qc**2))
+r_min =0.003 #2014_Cousins cm
 Z_term = 0 #Terminal Impedance 8
 
 #%% Run simulation
@@ -1723,7 +1719,7 @@ an.initial_conditions(intial_values/qc, dataframe,lrr_factors, rc,qc)
 
 
 # run solver
-an.solve(q_in, out_bc, out_args)
+an.solve(q_in, out_bc, p_term, out_args)
 
 
 # redimensionalise
