@@ -12,7 +12,7 @@ from scipy.interpolate import interp1d
 from pytictoc import TicToc
 import matplotlib.pyplot as plt
 import warnings
-import os
+
 warnings.filterwarnings('ignore')
 tt = TicToc() 
 tt.tic()
@@ -59,11 +59,12 @@ def inlet(qc, rc, f_inlet):
 #%% Load dataframe
 
 try:
-    vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\CousinsArray_Coronary.pkl')
+    vessel_df = pd.read_pickle ('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\Nektar_array.pkl')
 except:
-    vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\Remote Git\\CousinsArray_Coronary.pkl')
+    vessel_df = pd.read_pickle ('C:\\Users\\Cassidy.Northway\\Remote Git\\Nektar_array.pkl')
+    
 
-   
+
 #%% Artery object 
 class Artery(object):
     """
@@ -100,7 +101,7 @@ class Artery(object):
     
     def impedance_weights(self, r_root, dt, T, tc, rc, qc, nu):
         acc = 1e-10 #numerical accuracy of impedance fcn
-        r_root = r_root*rc
+        r_root = r_root * rc
         dt_temp = 0.05 #0.005 #Was 0.0001
         N = math.ceil(1/dt_temp)
         eta = acc**(1/(2*N))
@@ -137,18 +138,19 @@ class Artery(object):
         
         alpha = 0.9
         beta = 0.6
-        
-        r_0 = r_root * (alpha ** (N_alpha)) *(beta ** (N_beta))
         pos = self.pos
-        
-        if pos == [1,13,14,19,20,27,32,34,35,36,37,38]:
-            r_min = 0.01/rc
-        elif pos == [6,10,15,17,21,23,25]:
+
+        if pos in [5,11,12,19,33,35,37]:
             r_min = 0.02/rc
         else:
-            r_min = 0.03 /rc
+            r_min = 0.01 /rc
             
         if r_0 < r_min:
+            ZL = 0
+        
+        r_0 = r_root * (alpha ** (N_alpha)) *(beta ** (N_beta))
+        
+        if r_0 < self.r_min:
             ZL = 0
         else:
             if np.isnan(table[N_alpha + 1, N_beta]):
@@ -171,7 +173,7 @@ class Artery(object):
         
         gamma = 2 #velocity profile 
         nu_temp = nu * qc / rc 
-        L = r_0 * 50
+        L = r_0 * lrr
         A0 = np.pi * (r_0 ** 2)
         Ehr = (2e7 *np.exp( -22.53*r_0) + 8.65e5) #Youngs Modulus * vessel thickness/radius
         C = (3/2) *(A0)/(Ehr) #complaince
@@ -952,9 +954,9 @@ class ArteryNetwork(object):
         """
         :param t: Current time step, within the period, 0<=t<=T
         """
-        
-        
-            
+        theta = dt/artery.dx
+        gamma = dt/2
+          
         k_array = np.arange(0,t,dt) #actual range [0,t]
         n_value = np.size(k_array)
         
@@ -965,35 +967,29 @@ class ArteryNetwork(object):
             zk_array = artery.zn
             Qnk_array = artery.Qnk
 
-        #Need to have stored Q values for every time step up to this point
-        #for k = 0 to n (n=current number of time steps)
-        #p_out = np.sum(zk_array*Qnk_array)  #pressure at nth time step with constant time steps dt          
-        #Here I take the outlet_3wk code from above and attempt to modify for my needs
-        theta = dt/artery.dx
-        gamma = dt/2
         U0_1 = artery.U0[:,-1] # m = M
         U0_2 = artery.U0[:,-2] # m = M-1
         U0_3 = artery.U0[:,-3] # m = M-2
         a_n, q_n = U0_1
-        p_new = artery.f[-1] * (1 - np.sqrt(artery.A0[-1]/a_n)) + p_term # initial guess for p_out
+        p_new = artery.p(a_n, j=-1) #Intial guess for P
         U_np_mp = (U0_1 + U0_2)/2 +\
-                gamma * (-(artery.F(U0_1, j=-1) - artery.F(U0_2, j=-2))/artery.dx +\
-                        (artery.S(U0_1, j=-1) + artery.S(U0_2, j=-2))/2)
+                 gamma * (-(artery.F(U0_1, j=-1) - artery.F(U0_2, j=-2))/artery.dx +\
+                         (artery.S(U0_1, j=-1) + artery.S(U0_2, j=-2))/2)
         U_np_mm = (U0_2 + U0_3)/2 +\
-                gamma * (-(artery.F(U0_2, j=-2) - artery.F(U0_3, j=-3))/artery.dx +\
-                        (artery.S(U0_2, j=-2) + artery.S(U0_3, j=-3))/2)
+                 gamma * (-(artery.F(U0_2, j=-2) - artery.F(U0_3, j=-3))/artery.dx +\
+                         (artery.S(U0_2, j=-2) + artery.S(U0_3, j=-3))/2)
         U_mm = U0_2 - theta*(artery.F(U_np_mp, j=-2) - artery.F(U_np_mm, j=-2)) +\
                 gamma*(artery.S(U_np_mp, j=-2) + artery.S(U_np_mm, j=-2))
         k = 0
-        
         while k < 1000:
             p_old = p_new
             q_out = (p_old - np.sum(zk_array[1:]*Qnk_array))/zk_array[0]
             a_out = a_n - theta * (q_out - U_mm[1])
-            p_new = artery.f[-1] * (1 - np.sqrt(artery.A0[-1]/a_out)) + p_term
+            p_new = artery.p(a_out, j=-1)
             if abs(p_old - p_new) < 1e-7:                
                 break
             k += 1
+
         return np.array([a_out, q_out])
 
          #Do we want to reset k at t>T or do we want to have total t regardless of number of T
@@ -1013,12 +1009,12 @@ class ArteryNetwork(object):
         :returns: The Jacobian for Newton's method.
         """
         ####Added in K_loss modelled after Chambers_et__al_2020 from Olufsen Github [arteries.c]
-        if d1.pos == 4:
-            LD_k = 0#0.75/2
+        if d1.pos == 1:
+            LD_k = 0.75/2
             RD_k = 0
            
-        elif d2.pos == 4:
-            RD_k = 0#0.75/2
+        elif d2.pos == 1:
+            RD_k = 0.75/2
             LD_k = 0
            
         else:
@@ -1049,7 +1045,7 @@ class ArteryNetwork(object):
        
         Dfr[2,8] = 2*theta*x[8]/x[17] + gamma*d2.dFdxi1(D2_12, x[17])
         
-        Dfr[2,17] = theta * (-x[8]**2/x[17]**2 + d2.dBdxi(D2_12,x[17])) +\
+        Dfr[2,17] == theta * (-x[8]**2/x[17]**2 + d2.dBdxi(D2_12,x[17])) +\
                     gamma * (d2.dFdxi2(D2_12, x[8], x[17]) +\
                             d2.dBdxdxi(D2_12, x[17]))
        
@@ -1062,13 +1058,13 @@ class ArteryNetwork(object):
         
         ####K_loss implementation
         if x[0] > 0:
-            Dfr[16,0] = (x[0]/(x[9])**2)+(2*LD_k)
-            Dfr[17,0] = (x[0]/(x[9])**2)+(2*RD_k)
+            Dfr[16,0] = (x[0]/(x[9])**2)*(2*LD_k)
+            Dfr[17,0] = (x[0]/(x[9])**2)*(2*RD_k)
             Dfr[16,9] = zeta10 +(-2*LD_k)*(x[0]**2 / x[9]**3)
             Dfr[17,9] = zeta10 +(-2*RD_k)*(x[0]**2 / x[9]**3)
         else:
-            Dfr[16,0] = (x[0]/(x[9])**2)+(-2*LD_k)
-            Dfr[17,0] = (x[0]/(x[9])**2)+(-2*RD_k)
+            Dfr[16,0] = (x[0]/(x[9])**2)*(-2*LD_k)
+            Dfr[17,0] = (x[0]/(x[9])**2)*(-2*RD_k)
             Dfr[16,9] = zeta10 +(2*LD_k)*(x[0]**2 / x[9]**3)
             Dfr[17,9] = zeta10 +(2*RD_k)*(x[0]**2 / x[9]**3)
             
@@ -1106,11 +1102,11 @@ class ArteryNetwork(object):
 
         """
         ####Added in K_loss modelled after Chambers_et__al_2020 from Olufsen Github [arteries.c]
-        if d1.pos == 4:
-            LD_k = 0#0.75/2
+        if d1.pos == 1:
+            LD_k = 0.75/2
             RD_k = 0
-        elif d2.pos == 4:
-            RD_k = 0#0.75/2
+        elif d2.pos == 1:
+            RD_k = 0.75/2
             LD_k = 0
         else:
             RD_k = 0
@@ -1252,8 +1248,7 @@ class ArteryNetwork(object):
                 if (abs(x1 - x) < 1e-12).all(): #1e-12
                     break
                 k += 1
-                np.copyto(x, x1)
-            
+                np.copyto(x, x1)     
             except:
                 print(x)
                 print(parent.pos)
@@ -1286,8 +1281,8 @@ class ArteryNetwork(object):
                
                 
                 sys.exit()
-            #################Debugging##################
-        return x
+            # #################Debugging##################
+            return x
                 
     
     @staticmethod
@@ -1421,7 +1416,7 @@ time step size." % (t))
                         in_t = periodic(self.t, self.T)
                     else:
                         in_t = self.t
-                    U_in = ArteryNetwork.inlet_bc(artery, q_in, in_t, self.dt)    
+                    U_in = ArteryNetwork.inlet_bc(artery, q_in, in_t, self.dt)  
                 else:
                     U_in = bc_in[artery.pos]   
                
@@ -1432,23 +1427,28 @@ time step size." % (t))
                     if out_bc == 'p':
                         U_out = ArteryNetwork.outlet_p(artery, self.dt, *out_args)
                     elif out_bc == 'ST':
-                        artery.Qnk[:] = (np.concatenate(([artery.U0[1,-1]],artery.Qnk[:])))[:-1] 
                         U_out = ArteryNetwork.outlet_st(artery, self.dt, self.t, p_term)
-                       
-                artery.solve(lw, U_in, U_out, save, i-1)
                 
+                artery.solve(lw, U_in, U_out, save, i-1)
+
+                if end_condition == 'ST':
+                    artery.Qnk[:] = (np.concatenate(([artery.U0[1,-1]],artery.Qnk[:])))[:-1] 
                 ############Troubleshooting##############
                 #Problem artery of the back of the leg
-                if artery.pos in [29] and it%50 == 0:
+                if artery.pos in [2] and it%10000 == 0:
                       plt.figure()
-                      plt.plot(artery.U0[0,:], label = str(artery.pos) + 'q')
+                      plt.plot(artery.U0[1,:], label = str(artery.pos))
                       plt.legend()
-                      plt.title('After')
-
+                      plt.title('Flowrate')
+                      
+                      
                        
-                #if np.isnan(artery.U0).any():
-                    #print(str(artery.pos) + ' has a nan')
-
+                if np.isnan(artery.U0).any():
+                    print(str(artery.pos) + ' has a nan')
+                    print(artery.U0)
+                    print(U_in)
+                    print(U_out)
+                    sys.exit()
                    
                ############################################
                 if ArteryNetwork.cfl_condition(artery, self.dt, self.t) == False:
@@ -1639,6 +1639,13 @@ class LaxWendroff(object):
         U1[:,1:-1] = U0[:,1:-1] -\
             self.theta*(F(U_np_mp, j=1, k=-1)-F(U_np_mm, j=1, k=-1)) +\
             self.gamma*(S(U_np_mp, j=1, k=-1)+S(U_np_mm, j=1, k=-1))
+        #adresses nan in the middle of the plot
+        if np.isnan(U1).any():
+             print(U_in)
+             print(U_out)
+             print(U0)
+             print(U1)
+             sys.exit()
         return U1
         
         
@@ -1669,16 +1676,16 @@ class LaxWendroff(object):
 
 #%% Define parameters
 rc = 1 #cm normally 
-qc = 10 #cm3/s normally 10
+qc = 100 #cm3/s normally 10
 rho = 1.06 #g/cm3
 nu = 0.049 #cm2/s
 
 T = 1 #s
 tc = 1 #Normally 4 #s
-dt = 5e-5 #normally 0.25e-5 #s
+dt = 1e-7 #normally 0.25e-5 #s
 dx = 0.1 #normally 0.015 cm  
 
-q_in = inlet(qc, rc, 'AorticFlow_Blanco.csv')
+q_in = inlet(qc, rc, 'AorticFlow_Blanco_modified.csv')
 
 Re = qc/(nu*rc) 
 T = T * qc / rc**3 # time of one cycle
@@ -1696,20 +1703,34 @@ k3 = 8.65e5 #g/s2 cm
 k = (k1/kc, k2*rc, k3/kc) # elasticity model parameters (Eh/r) 
 out_args =[0]
 out_bc = 'ST'
-p0 =((80  * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure intial 85 *
+p0 =((80 * 1333.22365) * rc**4/(rho*qc**2)) # zero transmural pressure intial 85 *
 dataframe = vessel_df
 intial_guess = np.loadtxt('lrr_factor_CA_corn.txt')
 lrr_factors = intial_guess
 p_term = ((45 * 1333.22365) * rc**4/(rho*qc**2))
-r_min =0.003 #2014_Cousins cm
+r_min =0.003 
+ #2014_Cousins cm
 Z_term = 0 #Terminal Impedance 8
 
 #%% Run simulation
 
 #Need dataframe size
 row , col = dataframe.shape 
-intial_values = np.zeros(row)
-
+intial_values = np.ones(row)*0
+# for x in [0]:
+#     intial_values[x] = 400
+# for x in [1,2]:
+#     intial_values[x] = 200
+# if x in [3,4,13,14]:
+#     intial_values[x] = 100   
+# if x in [5,6,11,12,17,18,15,16]:
+#     intial_values[x] = 50 
+# if x in [7,8,19,20,25,26]:
+#     intial_values[x] = 25
+# if x in [9,10,21,22,27,28]:
+#     intial_values = 12.5
+# if x in [23,24,33,34,29,30]: 
+#     intial_values = 6.25   
 an = ArteryNetwork(rho, nu, p0, ntr, Re, k, dataframe, Z_term, r_min, rc)
 an.mesh(dx)
 an.set_time(dt, T, tc)
@@ -1731,3 +1752,4 @@ try:
 except:
     an.dump_results(file_name,'C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project') 
 
+##Assumption of Qp = qd1 + qd2, this leads to dramatically diving negative values over time evently becoming so negative the pressure drops dramatically and area goes to zero, it's almost like i need to prime the pump in a way I dont't understand 
