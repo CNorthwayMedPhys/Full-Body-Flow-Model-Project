@@ -546,8 +546,8 @@ class Artery(object):
         else:
             f_l = self.f[0]   
             A0_l = self.A0[0]
-        return -f_l/2 * np.sqrt(A0_l/xi**3)
-        #ADD THE NEGATIVE
+        return f_l/2 * np.sqrt(A0_l/xi**3)
+        #ADD THE NEGATIVE, removed again
         
     def solve(self, lw, U_in, U_out, save, i):
         """
@@ -1439,7 +1439,7 @@ time step size." % (t))
                     artery.Qnk[:] = (np.concatenate(([artery.U0[1,-1]],artery.Qnk[:])))[:-1] 
                 ############Troubleshooting##############
                 #Problem artery of the back of the leg
-                if artery.pos in [2] and it%10000 == 0:
+                if artery.pos in [2] and it%1000000 == 0:
                       plt.figure()
                       plt.plot(artery.U0[1,:], label = str(artery.pos))
                       plt.legend()
@@ -1680,13 +1680,13 @@ class LaxWendroff(object):
 
 #%% Define parameters
 rc = 1 #cm normally 
-qc = 100 #cm3/s normally 10
+qc = 10 #cm3/s normally 10
 rho = 1.06 #g/cm3
 nu = 0.049 #cm2/s
 
 T = 1 #s
 tc = 1 #Normally 4 #s
-dt = 1e-7 #normally 0.25e-5 #s
+dt = 5e-9 #normally 0.25e-5 #s
 dx = 0.1 #normally 0.015 cm  
 
 q_in = inlet(qc, rc, 'AorticFlow_Blanco_modified.csv')
