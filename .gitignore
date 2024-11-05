@@ -1,2 +1,4 @@
 *.ini
 StBC.pkl
+*.his
+*.mat

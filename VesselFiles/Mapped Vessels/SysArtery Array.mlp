@@ -1,0 +1,168 @@
+<!DOCTYPE MeshLabDocument>
+<MeshLabProject>
+ <MeshGroup>
+  <MLMesh label="dias_aorta.stl" filename="../dias_aorta.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_larm2.stl" filename="arteries_larm2.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_larm10.stl" filename="arteries_larm10.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_larm12.stl" filename="arteries_larm12.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_rarm2.stl" filename="arteries_rarm2.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_rarm10.stl" filename="arteries_rarm10.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_rarm13.stl" filename="arteries_rarm13.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries0.stl" filename="arteries0.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries1.stl" filename="arteries1.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries2.stl" filename="arteries2.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries4.stl" filename="arteries4.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries5.stl" filename="arteries5.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries11.stl" filename="arteries11.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries37.stl" filename="arteries37.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries41.stl" filename="arteries41.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries42.stl" filename="arteries42.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_lleg6.stl" filename="arteries_lleg6.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_lleg17.stl" filename="arteries_lleg17.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_lleg22.stl" filename="arteries_lleg22.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_rleg1.stl" filename="arteries_rleg1.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_rleg18.stl" filename="arteries_rleg18.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries_rleg23.stl" filename="arteries_rleg23.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries9.stl" filename="arteries9.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries24.stl" filename="arteries24.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="arteries27.stl" filename="arteries27.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="lkidney_arteries0.stl" filename="lkidney_arteries0.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000000000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh label="rkidney_arteries6.stl" filename="rkidney_arteries6.stl" visible="1" idInFile="-1">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption wireColor="64 64 64 255" pointColor="252 233 79 255" wireWidth="1" boxColor="234 234 234 255" solidColor="192 192 192 255" pointSize="3">100001000000000000000100000001010100000010100000000010111011110000001001</RenderingOption>
+  </MLMesh>
+ </MeshGroup>
+ <RasterGroup/>
+</MeshLabProject>

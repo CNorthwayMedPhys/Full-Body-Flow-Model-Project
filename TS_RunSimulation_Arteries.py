@@ -1107,10 +1107,10 @@ class ArteryNetwork(object):
         """
         ####Added in K_loss modelled after Chambers_et__al_2020 from Olufsen Github [arteries.c]
         if d1.pos == 1:
-            LD_k = 0.75/2
+            LD_k = 0
             RD_k = 0
         elif d2.pos == 1:
-            RD_k = 0.75/2
+            RD_k = 0
             LD_k = 0
         else:
             RD_k = 0
@@ -1309,11 +1309,15 @@ class ArteryNetwork(object):
         right = 1/np.absolute(v)
         try:
             cfl = False if (left > right).any() else True
+            if cfl == False:
+                print(left)
+                print(right)
         except ValueError:
             raise ValueError("CFL condition not fulfilled at time %e. Reduce \
 time step size." % (t))
             sys.exit(1) 
         return cfl
+    
         
     #Needs to be modified to get daughters based on my INDEXING    
     def get_daughters(self, parent):
@@ -1439,7 +1443,7 @@ time step size." % (t))
                     artery.Qnk[:] = (np.concatenate(([artery.U0[1,-1]],artery.Qnk[:])))[:-1] 
                 ############Troubleshooting##############
                 #Problem artery of the back of the leg
-                if artery.pos in [2] and it%1000000 == 0:
+                if artery.pos in [0] and it%100 == 0:
                       plt.figure()
                       plt.plot(artery.U0[1,:], label = str(artery.pos))
                       plt.legend()
@@ -1686,7 +1690,7 @@ nu = 0.049 #cm2/s
 
 T = 1 #s
 tc = 1 #Normally 4 #s
-dt = 5e-9 #normally 0.25e-5 #s
+dt = 1e-5 #normally 0.25e-5 #s
 dx = 0.1 #normally 0.015 cm  
 
 q_in = inlet(qc, rc, 'AorticFlow_Blanco_modified.csv')
