@@ -1,0 +1,78 @@
+<!DOCTYPE MeshLabDocument>
+<MeshLabProject>
+ <MeshGroup>
+  <MLMesh visible="1" idInFile="-1" label="dias_inf_vc.stl" filename="dias_inf_vc.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="liver_veins_hep16.stl" filename="liver_veins_hep16.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="liver_veins_hep31.stl" filename="liver_veins_hep31.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="liver_veins_hep36.stl" filename="liver_veins_hep36.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="lkidney_veins0.stl" filename="lkidney_veins0.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="rkidney_veins0.stl" filename="rkidney_veins0.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="veins_lleg9.stl" filename="veins_lleg9.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="veins_lleg17.stl" filename="veins_lleg17.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="veins_rleg16.stl" filename="veins_rleg16.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="veins_rleg27.stl" filename="veins_rleg27.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="veins19.stl" filename="veins19.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+  <MLMesh visible="1" idInFile="-1" label="veins31.stl" filename="veins31.stl">
+   <MLMatrix44>
+1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 
+</MLMatrix44>
+   <RenderingOption boxColor="234 234 234 255" pointColor="252 233 79 255" pointSize="3" wireColor="64 64 64 255" solidColor="192 192 192 255" wireWidth="1">100001000000000000000000000001010100000010100000000100111011110000001001</RenderingOption>
+  </MLMesh>
+ </MeshGroup>
+ <RasterGroup/>
+</MeshLabProject>

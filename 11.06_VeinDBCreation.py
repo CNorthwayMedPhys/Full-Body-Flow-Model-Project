@@ -139,7 +139,6 @@ for index in range(0,sheet.shape[0]):
         seg_df = seg_df.replace(0,1)
                      
         #We now have the number of off branching vessels and where they branch so now we need to now save the segements and off branches and sort segment frame by distance along vessel
-    
         seg_df = seg_df.sort_values(by ='Index of Split')
         seg_df = seg_df.reset_index(drop=True)
         intial_index = 0
