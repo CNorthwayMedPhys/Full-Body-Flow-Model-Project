@@ -24,7 +24,7 @@ warnings.filterwarnings('ignore')
 
 
 #Import excel sheet
-sheet = pd.read_excel('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FlowTracker.xlsx', sheet_name = 2)
+sheet = pd.read_excel('C:\\Users\\cbnor\\Documents\\Full Body Flow Model Project\\FlowTracker.xlsx', sheet_name = 5)
 
 #Define the data frame
 df = pd.DataFrame(columns=['Name', 'lam', 'Radius Values', 'End Condition']) 
@@ -274,7 +274,7 @@ for i in range (0, len(df_ordered)):
 #         print(str(i))            
 
  
-df_ordered.to_pickle('InfVeins.pkl')       
+df_ordered.to_pickle('Pulmonary.pkl')       
         
                 
     
