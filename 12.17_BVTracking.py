@@ -4,6 +4,31 @@ Created on Tue Dec 17 11:46:42 2024
 
 @author: cbnor
 """
+"""
+"""
+
+
+#%% Utility functions
+def periodic(t, T):
+    """
+    Returns equivalent time of the first period if more than one period is simulated.
+    
+    :param t: Time.
+    :param T: Period length.
+    """
+    while t/T > 1.0:
+        t = t - T
+    return t
+        
+def extrapolate(x0, x, y):
+    """
+    Returns extrapolated data point given two adjacent data points.
+    
+    :param x0: Data point to be extrapolated to.
+    :param x: x-coordinates of known data points.
+    :param y: y-coordinates of known data points.
+    """
+    return y[0] + (y[1]-y[0]) * (x0 - x[0])/(x[1] - x[0])
 
 #%% Start by defining BV class
 
@@ -33,8 +58,7 @@ class BloodVolume (object):
         """
         return self._ID
     
-#%%
-    
+#%%   
 class Network (object):
     """
     """
@@ -44,6 +68,7 @@ class Network (object):
         self._BVcount = 0
         self._volume = volume
         self._BVs = []
+        
         
     def intializeBV(self, ID):
         self.BVs.append(BloodVolume(ID, self.volume, 0, 0, 0, 0))
@@ -72,10 +97,64 @@ class Network (object):
                 
                 #If in vessel sample the flow rate
             self.timestep()
+      def set_time(self, dt, T, tc=1):
+          """
+          Sets timing parameters for the artery network and invokes
+          boundary_layer_thickness(T) in each artery.
+          
+          :param dt: Time step size.
+          :param T: Length of one periodic cycle.
+          :param tc: Number of cycles.
+          """
+          self._dt = dt
+          self._tf = T*tc
+          self._dtr = self.tf/self.ntr
+          self._T = T
+          self._tc = tc
+          for artery in self.arteries:
+              artery.boundary_layer_thickness(self.nu, T)
+              
+              
+      def timestep(self):
+          """
+          Increases time by dt.
+          """
+          self._t += self.dt       
             
-            
+          @staticmethod
+          def _printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, barLength = 100):
+              formatStr       = "{0:." + str(decimals) + "f}"
+              percents        = formatStr.format(100 * (iteration / float(total)))
+              filledLength    = int(round(barLength * iteration / float(total)))
+              bar             = '█' * filledLength + '-' * (barLength - filledLength)
+              sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix)),
+              if iteration == total:
+                  sys.stdout.write('\n')
+              sys.stdout.flush()
+             
+                def print_status(self):
+                    """
+                    Prints a status bar to the terminal in 2% increments.
+                    """
+                    it = 2
+                    if self.t % (self.tf/(100/it)) < self.dt:
+                        ArteryNetwork._printProgress(self.progress, 100,
+                                prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+                        self.progress += it    
+    
+        tr = np.linspace(self.tf-self.T, self.tf, self.ntr)
+        i = 0
+        ii=0
+        
+        self.print_status()
+        self.timestep()       
+        bc_in = np.zeros((len(self.arteries), 2))
         
         
+        self.timestep()
+        ii = ii + 1
+        self.print_status()
+        tt.toc()
     @property
     def dt(self):
         """
@@ -110,6 +189,10 @@ class Network (object):
         Array containing all BVs
         """
         return self._BVs
+ 
+    
+ 
+    
 #%%
 volume = 1 #mL
 sys_time = 0 #sec
