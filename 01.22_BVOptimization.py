@@ -12,9 +12,9 @@ from BVTrackingforOpt import BVsim
 
 def findOptDT():
 
-    intial_guess = np.ones(7)*100
+    intial_guess = np.ones(7)
     #Run optimization
-    results = optimize.least_squares(ModelError, intial_guess ,bounds=([0, 1500]), max_nfev = 100, diff_step = 1, xtol = None, verbose = 2 )
+    results = optimize.least_squares(ModelError, intial_guess , max_nfev = 10 )
     
     #Parse results
     DT_modifiers = results.x
@@ -52,8 +52,8 @@ def ModelError(DT_modifiers):
     gt = np.array(gt)
         
 
-    #Compute percintile error 
-    E = (np.abs(sim - gt) / gt) * 100
+    #Compute error 
+    E = (sim - gt) / np.linalg.norm(gt, ord =1)
 
     return E 
 
