@@ -298,7 +298,9 @@ def BVsim(DTmodifier):
             self._BVcount += 1
                  
         def runNT (self):
-            
+            oDict = {}
+            nDict = {}
+            diffArray = []
             #Run until we have completed the desired number of cycles
             while self.Nettime < self.tf:
                 
@@ -357,9 +359,29 @@ def BVsim(DTmodifier):
                                 BV._dwelltime = 0
                     BV._tottime += self.dt    
                 
+                #If all BVs have entered the simulation
+                if self.BVcount >= BV_num:
+                    if not oDict:
+                        oDict = self.binBVs()
+                    else:
+                        nDict = self.binBVs()
+                        nDist = []
+                        oDist = []
+                        for item in nDict:
+                            nDist.append(nDict[item])
+                            oDist.append(oDict[item])
+                        nDist = np.array(nDist)
+                        oDist = np.array(oDist)
+                            
+
+                        #Compute percintile error 
+                        diff = np.sum((np.abs(oDist - nDist) / oDist) * 100)
+                        diffArray.append(diff)
+                
+                
                 self.timestep()
                 self.print_status()
-                       
+            return diffArray               
         def setTime(self, T, tc):
             """
             Sets timing parameters for the network 
@@ -528,12 +550,10 @@ def BVsim(DTmodifier):
     nt.setTime(T, tc)
     nt.intializeLocations(DTmodifier)
     
-    nt.runNT()
-    
-    BVdict = nt.binBVs()
+    diffArray = nt.runNT()
     print('Complete!')
 
-    return BVdict    
+    return diffArray   
 
 import numpy as np
 bvdict=BVsim(np.asarray([1.2087016,  1.42629566, 0.93820084, 1.63654127, 1.45394325, 1.33489885,
