@@ -26,6 +26,10 @@ def BVsim(DTmodifier):
     import numpy as np
     import sys
     import random
+    from pytictoc import TicToc
+    t = TicToc()
+
+       
     
     #%% Utility functions
     
@@ -291,21 +295,27 @@ def BVsim(DTmodifier):
                     location.IntFlowData()
                 if location.splittingratiokey != '0':
                     location.IntSplittingRatio (SRdf)
-            #print('Location intialization complete')     
+            print('Location intialization complete')     
             
         def intializeBV(self):
             self.BVs.append(BloodVolume(self.BVcount, 1))
             self._BVcount += 1
                  
         def runNT (self):
-            
+            tag = 0
             #Run until we have completed the desired number of cycles
             while self.Nettime < self.tf:
                 
                 #Check to see if we have the desired number of BVs. 
                 #If not release another BV into the system 
                 while self.BVcount < BV_num:
-                    self.intializeBV()  
+                    self.intializeBV()
+                if self.BVcount == BV_num and tag == 0:
+                    tag = 1
+                    print("BV intialized")
+                    t.toc()
+
+                        
                 
                 #Calculate the t w/in the period for table look ups
                 pt = periodic(self.Nettime, self.T) 
@@ -357,8 +367,8 @@ def BVsim(DTmodifier):
                     BV._tottime += self.dt    
                 
                 self.timestep()
-                #self.print_status()
-                       
+                self.print_status()
+             
         def setTime(self, T, tc):
             """
             Sets timing parameters for the network 
@@ -522,21 +532,25 @@ def BVsim(DTmodifier):
     T = 0.955 #Length of one period (s)
     tc = 60 #Number of cycles to be simulated
     BV_num = 1e5 #total number BV
-    
+    t.tic()
     nt = Network(dt, dx, BV_num)
     nt.setTime(T, tc)
-    nt.intializeLocations(DTmodifier/100)
-    
+    nt.intializeLocations(DTmodifier)
+    t.toc()
     nt.runNT()
     
-    BVdict = nt.binBVs()
-    #print('Complete!')
+    #BVdict = nt.binBVs()
+    
+    t.toc()
+    #return BVdict    
 
-    return BVdict    
-    
-#bvdict=BVsim([1.2087016,  1.42629566, 0.93820084, 1.63654127, 1.45394325, 1.33489885,
- #2.17137418])
-    
+from pytictoc import TicToc
+t = TicToc()
+
+t.tic()    
+BVsim([1.2087016,  1.42629566, 0.93820084, 1.63654127, 1.45394325, 1.33489885,
+ 2.17137418])
+   
         
         
         
