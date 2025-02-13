@@ -301,14 +301,17 @@ def BVsim(DTmodifier):
             oDict = {}
             nDict = {}
             diffArray = []
+            flag = 0
             #Run until we have completed the desired number of cycles
             while self.Nettime < self.tf:
                 
                 #Check to see if we have the desired number of BVs. 
                 #If not release another BV into the system 
-                if self.BVcount < BV_num:
-                    for i in range(0,100): #Intialize 100 BV
-                        self.intializeBV()  
+                while self.BVcount < BV_num:
+                    self.intializeBV()
+                if self.BVcount == BV_num and flag == 0:
+                    print('BV Intialized')
+                    flag = 1
                 
                 #Calculate the t w/in the period for table look ups
                 pt = periodic(self.Nettime, self.T) 
@@ -359,24 +362,32 @@ def BVsim(DTmodifier):
                                 BV._dwelltime = 0
                     BV._tottime += self.dt    
                 
-                #If all BVs have entered the simulation
-                if self.BVcount >= BV_num:
-                    if not oDict:
-                        oDict = self.binBVs()
-                    else:
-                        nDict = self.binBVs()
-                        nDist = []
-                        oDist = []
-                        for item in nDict:
-                            nDist.append(nDict[item])
-                            oDist.append(oDict[item])
-                        nDist = np.array(nDist)
-                        oDist = np.array(oDist)
-                            
 
-                        #Compute percintile error 
-                        diff = np.sum((np.abs(oDist - nDist) / oDist) * 100)
-                        diffArray.append(diff)
+            #Compute percintile error
+                if self.Nettime == 0:
+                    oDist = self.binBVs()
+                
+                if pt / self.dt == 477:
+                    print('Period Passed')
+                    nDict = self.binBVs()
+                    nDist = []
+                    oDist = []
+                    for item in nDict:
+                        nDist.append(nDict[item])
+                        oDist.append(oDict[item])
+                    nDist = np.array(nDist)
+                    oDist = np.array(oDist)
+                    compArray=[]
+                    for index in range(0,np.shape(oDist)[0]):
+                        oValue = oDist[index]
+                        nValue = nDist[index]
+                        if oValue == 0:
+                            compArray.append(0)
+                        else:
+                            compArray.append((np.abs(oValue - nValue) / oValue) * 100)
+
+                    diff = np.sum(compArray)
+                    diffArray.append(diff)
                 
                 
                 self.timestep()
@@ -544,7 +555,7 @@ def BVsim(DTmodifier):
     dt = 0.002 #Time step size (s)
     T = 0.955 #Length of one period (s)
     tc = 60 #Number of cycles to be simulated
-    BV_num = 1e6 #total number BV
+    BV_num = 1e5 #total number BV
     
     nt = Network(dt, dx, BV_num)
     nt.setTime(T, tc)
@@ -556,10 +567,13 @@ def BVsim(DTmodifier):
     return diffArray   
 
 import numpy as np
-bvdict=BVsim(np.asarray([1.2087016,  1.42629566, 0.93820084, 1.63654127, 1.45394325, 1.33489885,
- 2.17137418]))
+import matplotlib.pyplot as plt
+diffArray=BVsim(np.asarray([1,  1,1, 1,1,1,1]))
     
-        
+plt.plot(diffArray)
+plt.ylabel('some numbers')
+plt.xlabel('Periods')
+    
         
         
                 
