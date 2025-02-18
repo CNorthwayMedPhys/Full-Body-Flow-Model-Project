@@ -383,9 +383,10 @@ def BVsim(DTmodifier):
                     oDist = np.array(oDist)
                     compArray=[]
                     compArray= np.abs(oDist - nDist)
-                    if np.size(diffArray) % 20 == 0:
+                    if np.size(diffArray) % 10 == 0:
                         print(np.max(compArray))
-                    diffArray.append(np.max(compArray))
+                    diff = np.max(compArray)
+                    diffArray.append(diff)
                 
                 
                 self.timestep()
