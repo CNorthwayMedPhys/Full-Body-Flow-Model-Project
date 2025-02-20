@@ -386,7 +386,7 @@ def BVsim(DTmodifier):
                     if np.size(diffArray) % 20 == 0:
                         print(np.max(compArray))
                     diffArray.append(np.max(compArray))
-                
+                    oDict = nDict
                 
                 self.timestep()
                 self.print_status()

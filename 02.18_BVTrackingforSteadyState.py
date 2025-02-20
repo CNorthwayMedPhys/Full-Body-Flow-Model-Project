@@ -27,6 +27,8 @@ def BVsim(DTmodifier):
     import sys
     import random
     
+    
+    
     #%% Utility functions
     
     def colToExcel(col): # col is 1 based
@@ -295,7 +297,7 @@ def BVsim(DTmodifier):
                     location.IntFlowData()
                 if location.splittingratiokey != '0':
                     location.IntSplittingRatio (SRdf)
-            print('Location intialization complete')     
+            print('\n Location intialization complete')     
             
         def intializeBV(self):
             self.BVs.append(BloodVolume(self.BVcount, 28))
@@ -304,9 +306,9 @@ def BVsim(DTmodifier):
         def runNT (self):
             oDict = {}
             nDict = {}
-            diffArray = []
+            maxArray = []
             flag = 0
-          
+            k = 0
             #Run until we have completed the desired number of cycles
             while self.Nettime < self.tf:
                 
@@ -316,7 +318,7 @@ def BVsim(DTmodifier):
                     for i in range(0,100):    
                         self.intializeBV()
                 if self.BVcount == BV_num and flag == 0:
-                    print('BV Intialized')
+                    print('\n BV Intialized')
                     flag = 1
                 
                 #Calculate the t w/in the period for table look ups
@@ -371,8 +373,8 @@ def BVsim(DTmodifier):
             #Compute percintile error
                 if self.Nettime == 0:
                     oDict = self.binBVs()
-
-                if pt == 0.955:
+                    j= 0
+                if k == 191 and self.Nettime != 0:
                     nDict = self.binBVs()
                     nDist = []
                     oDist = []
@@ -381,17 +383,17 @@ def BVsim(DTmodifier):
                         oDist.append(oDict[item])
                     nDist = np.array(nDist)
                     oDist = np.array(oDist)
-                    compArray=[]
-                    compArray= np.abs(oDist - nDist)
-                    if np.size(diffArray) % 10 == 0:
-                        print(np.max(compArray))
-                    diff = np.max(compArray)
-                    diffArray.append(diff)
-                
+                    maxArray.append(np.max(np.abs(nDist-oDist)))
+       
+                    oDict = nDict
+                    j += 1
+                    k = 0
                 
                 self.timestep()
-                self.print_status()
-            return diffArray               
+                k +=1
+                #self.print_status()
+            print(self.Nettime)    
+            return maxArray              
         def setTime(self, T, tc):
             """
             Sets timing parameters for the network 
@@ -405,7 +407,7 @@ def BVsim(DTmodifier):
                      
         def timestep(self):
             self._Nettime += self.dt   
-              
+            self._Nettime = np.round(self._Nettime, decimals =3)  
         @staticmethod
         def _printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, barLength = 100):
             formatStr       = "{0:." + str(decimals) + "f}"
@@ -560,19 +562,20 @@ def BVsim(DTmodifier):
     nt.setTime(T, tc)
     nt.intializeLocations(DTmodifier)
     
-    diffArray = nt.runNT()
+    maxArray= nt.runNT()
     print('Complete!')
 
-    return diffArray   
+    return maxArray
+
 
 import numpy as np
 import matplotlib.pyplot as plt
-diffArray=BVsim(np.asarray([1,  1,1, 1,1,1,1]))
+
+maxArray=BVsim(np.asarray([1,  1,1, 1,1,1,1]))
     
-plt.plot(diffArray)
-plt.ylabel('some numbers')
+plt.plot(maxArray, 'bo')
+plt.ylabel('Max Diff')
 plt.xlabel('Periods')
+plt.show()
     
-        
-        
-                
+    

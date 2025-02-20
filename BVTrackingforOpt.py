@@ -7,16 +7,6 @@ Created on Tue Dec 17 11:46:42 2024
 """
 Notes to self
 
-15/01/2025 
-I think I'll want a location class which will include all the values in FlowTracker.xlsx,
-the flow data and the splitting data. 
-
-I'll need to load in the splitting ratio data some where to pass to
-the intializer fcn
-
-21/01/25
-I want to determine the where all the BVs all so let's write a fcn for
-the network to bin them into the categories from legget
 """
 def BVsim(DTmodifier):
     #%%Import
@@ -84,8 +74,13 @@ def BVsim(DTmodifier):
         index = np.searchsorted(timearray,time,side = 'right')
         aSR = splittingratios[:,1]
         bSR = splittingratios[:,2]
-        pa = interp(time,timearray[index-1],timearray[index],aSR[index-1],aSR[index])
-        pb = interp(time,timearray[index-1],timearray[index],bSR[index-1],bSR[index])
+        if index == 478:
+            pa = float(aSR[-1])
+            pb = float(bSR[-1])
+            print('/n path selector modification required')
+        else:
+            pa = interp(time,timearray[index-1],timearray[index],aSR[index-1],aSR[index])
+            pb = interp(time,timearray[index-1],timearray[index],bSR[index-1],bSR[index])
         
         if num <= pa:
             key = outflow[0]
@@ -294,10 +289,11 @@ def BVsim(DTmodifier):
             #print('Location intialization complete')     
             
         def intializeBV(self):
-            self.BVs.append(BloodVolume(self.BVcount, 1))
+            self.BVs.append(BloodVolume(self.BVcount, 28))
             self._BVcount += 1
                  
         def runNT (self):
+            flag  = 0
             
             #Run until we have completed the desired number of cycles
             while self.Nettime < self.tf:
@@ -305,7 +301,11 @@ def BVsim(DTmodifier):
                 #Check to see if we have the desired number of BVs. 
                 #If not release another BV into the system 
                 while self.BVcount < BV_num:
-                    self.intializeBV()  
+                    for i in range(0,100):    
+                        self.intializeBV()
+                    if self.BVcount == BV_num and flag == 0:
+                        print('\n BV Intialized')
+                        flag = 1  
                 
                 #Calculate the t w/in the period for table look ups
                 pt = periodic(self.Nettime, self.T) 
@@ -530,7 +530,6 @@ def BVsim(DTmodifier):
     nt.runNT()
     
     BVdict = nt.binBVs()
-    #print('Complete!')
 
     return BVdict    
     
