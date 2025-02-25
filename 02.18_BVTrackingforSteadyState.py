@@ -383,7 +383,7 @@ def BVsim(DTmodifier):
                         oDist.append(oDict[item])
                     nDist = np.array(nDist)
                     oDist = np.array(oDist)
-                    maxArray.append(np.max(np.abs(nDist-oDist)))
+                    maxArray.append(np.nanmean(np.abs(nDist-oDist)))
        
                     oDict = nDict
                     j += 1
@@ -391,8 +391,8 @@ def BVsim(DTmodifier):
                 
                 self.timestep()
                 k +=1
-                #self.print_status()
-            print(self.Nettime)    
+                self.print_status()
+               
             return maxArray              
         def setTime(self, T, tc):
             """
@@ -555,7 +555,7 @@ def BVsim(DTmodifier):
     dx = 1e-4 # Distance step size (m)
     dt = 0.005 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    tc = 200 #Number of cycles to be simulated
+    tc = 175 #Number of cycles to be simulated
     BV_num = 1e5 #total number BV
     
     nt = Network(dt, dx, BV_num)
@@ -571,11 +571,13 @@ def BVsim(DTmodifier):
 import numpy as np
 import matplotlib.pyplot as plt
 
-maxArray=BVsim(np.asarray([1,  1,1, 1,1,1,1]))
+maxArray=BVsim(np.asarray([1,1,1, 1,1,1,1]))
     
 plt.plot(maxArray, 'bo')
-plt.ylabel('Max Diff')
+plt.ylabel('Mean Diff % in BV Distribution')
 plt.xlabel('Periods')
+plt.axvline(x = 6, color = 'b', label = 'Entrance of all BVs')
+plt.axhline(y = 0.5, color = 'r', label= "1% Change value")
 plt.show()
     
     

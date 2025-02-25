@@ -1,7 +1,7 @@
 #Installations and Functions
 
 
-import matplotlib.pyplot as plt
+import os
 import scipy.optimize as optimize
 import numpy as np
 import multiprocessing as mp
@@ -35,7 +35,8 @@ def findOptDT():
 #%% Function to be Optimized 
 def mp_handler(DT_modifiers):
     BVnum = 1e5
-    p = mp.Pool(processes=4)
+    ncpus = int(os.environ.get('SLURM_CPUS_PER_TASK',default=1))
+    p = mp.Pool(processes=ncpus)
     iterations = int(BVnum/100)
     BVsimPart = partial (BVsim, DTmodifier = DT_modifiers)
     BVlocations = p.map(BVsimPart , range(iterations))
