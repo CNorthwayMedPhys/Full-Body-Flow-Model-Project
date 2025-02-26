@@ -6,11 +6,10 @@ Created on Tue Dec 17 11:46:42 2024
 """
 """
 Notes to self
-
+Tracks and runs 100 BVs. 
 """
-def BVsim(DTmodifier):
+def BVsim(m,DTmodifier):
     #%%Import
-    
     import pandas as pd
     import os
     import numpy as np
@@ -25,7 +24,6 @@ def BVsim(DTmodifier):
         while div:
             (div, mod) = divmod(div-1, 26) # will return (x, 0 .. 25)
             excelCol = chr(mod + 65) + excelCol
-    
         return excelCol
     
     def periodic(t, T):
@@ -116,8 +114,6 @@ def BVsim(DTmodifier):
             df = pd.read_excel(path, header = None)
             self._flowdata = df.to_numpy()
     
-                
-            
         def IntSplittingRatio (self, SRdf):
             SRarray = np.array(SRdf.loc[2:,'A'],dtype = float, ndmin=2).T
             SRdata = SRdf.loc[2:,self.splittingratiokey]
@@ -239,6 +235,7 @@ def BVsim(DTmodifier):
             if np.isnan(value):
                 print('nan value for distance')
             self._distance = value 
+            
     #%% Define Network Class
     
     class Network (object):
@@ -294,20 +291,15 @@ def BVsim(DTmodifier):
             self._BVcount += 1
                  
         def runNT (self):
-            flag  = 0
-            
+            BVlocations = []
             #Run until we have completed the desired number of cycles
             while self.Nettime < self.tf:
                 
-                #Check to see if we have the desired number of BVs. 
-                #If not release another BV into the system 
-                while self.BVcount < BV_num:
-                    for i in range(0,50):    
+                #Release 100 BV into the system 
+                if self.BVcount < BV_num:
+                    for i in range(0,100):
                         self.intializeBV()
-                    if self.BVcount == BV_num and flag == 0:
-                        print('\n BV Intialized')
-                        flag = 1  
-                
+                    
                 #Calculate the t w/in the period for table look ups
                 pt = periodic(self.Nettime, self.T) 
                 
@@ -324,7 +316,7 @@ def BVsim(DTmodifier):
                        
                        #Update position and exp time
                        newdistance = velocity * self.dt + BV.distance
-    
+
                        #Determine wether the BV is in the vessel
                        if newdistance > clocation.flowdata[0,-1]: 
                            
@@ -359,7 +351,10 @@ def BVsim(DTmodifier):
                 
                 self.timestep()
                 #self.print_status()
-                       
+            for BV in self.BVs:
+                BVlocations.append(BV.location)
+            return BVlocations
+                
         def setTime(self, T, tc):
             """
             Sets timing parameters for the network 
@@ -521,21 +516,20 @@ def BVsim(DTmodifier):
     dx = 1e-4 # Distance step size (m)
     dt = 0.005 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    tc = 150 #Number of cycles to be simulated
-    BV_num = 1e5 #total number BV
+    tc = 350 #Number of cycles to be simulated
+    BV_num = 100 #total number BV
     
     nt = Network(dt, dx, BV_num)
     nt.setTime(T, tc)
     nt.intializeLocations(DTmodifier/100)
     
-    nt.runNT()
-    
-    BVdict = nt.binBVs()
+    #This is the part where I want everything to seperate
+    # and pass the new BV locations into one big lis
+    BVlocations = nt.runNT()
 
-    return BVdict    
-    
-#bvdict=BVsim([1.2087016,  1.42629566, 0.93820084, 1.63654127, 1.45394325, 1.33489885,
- #2.17137418])
+    return BVlocations    
+
+
     
         
         

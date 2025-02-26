@@ -555,7 +555,7 @@ def BVsim(DTmodifier):
     dx = 1e-4 # Distance step size (m)
     dt = 0.005 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    tc = 175 #Number of cycles to be simulated
+    tc = 250 #Number of cycles to be simulated
     BV_num = 1e5 #total number BV
     
     nt = Network(dt, dx, BV_num)
@@ -567,17 +567,27 @@ def BVsim(DTmodifier):
 
     return maxArray
 
-
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 
 maxArray=BVsim(np.asarray([1,1,1, 1,1,1,1]))
-    
-plt.plot(maxArray, 'bo')
-plt.ylabel('Mean Diff % in BV Distribution')
-plt.xlabel('Periods')
+ #%%  
+import matplotlib.ticker as mtick
+x = []
+y = range(0,260,10)
+z = 0
+for i in y:
+    x.append(np.nanmean(maxArray[z:i]))
+    z = i
+
+plt.plot(maxArray,'o', c = '0.8' )
+plt.plot(y,x, 'x', c = '0')
+plt.ylabel('Mean Difference in BV Distribution %')
+plt.xlabel('Periods Elapsed')
 plt.axvline(x = 6, color = 'b', label = 'Entrance of all BVs')
 plt.axhline(y = 0.5, color = 'r', label= "1% Change value")
+
 plt.show()
     
     
