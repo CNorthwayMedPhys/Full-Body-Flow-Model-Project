@@ -24,7 +24,7 @@ def findOptDT():
     intial_guess = np.asarray(np.ones(7)*100)
     
     #Run optimization
-    results = optimize.least_squares(ModelError, intial_guess ,bounds=([0, 500]), max_nfev = 100, diff_step = 1, verbose = 1 )
+    results = optimize.least_squares(ModelError, intial_guess ,bounds=([0, 500]), max_nfev = 100, diff_step = 0.1)
     
     #Parse results
     DT_modifiers = results.x
