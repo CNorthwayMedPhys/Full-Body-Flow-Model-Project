@@ -315,7 +315,7 @@ def BVsim(DTmodifier):
                 #Check to see if we have the desired number of BVs. 
                 #If not release another BV into the system 
                 if self.BVcount < BV_num:
-                    for i in range(0,100):    
+                    for i in range(0,1):    
                         self.intializeBV()
                 if self.BVcount == BV_num and flag == 0:
                     print('\n BV Intialized')
@@ -555,8 +555,9 @@ def BVsim(DTmodifier):
     dx = 1e-4 # Distance step size (m)
     dt = 0.005 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    tc = 250 #Number of cycles to be simulated
-    BV_num = 1e5 #total number BV
+    BV_num = 1e4 #total number BV
+    ToR = BV_num/((T/dt)*10) # nubmer of cycles before all BVs released
+    tc = np.round(250 + ToR) #Number of cycles to be simulated
     
     nt = Network(dt, dx, BV_num)
     nt.setTime(T, tc)
@@ -580,12 +581,15 @@ z = 0
 for i in y:
     x.append(np.nanmean(maxArray[z:i]))
     z = i
-
+dt = 0.005 #Time step size (s)
+T = 0.955 #Length of one period (s)
+BV_num = 1e4 #total number BV
+ToR = BV_num/((T/dt)*1) # nubmer of cycles before all BVs released
 plt.plot(maxArray,'o', c = '0.8' )
 plt.plot(y,x, 'x', c = '0')
 plt.ylabel('Maximum Difference in BV Distribution (%)')
 plt.xlabel('Periods Elapsed')
-plt.axvline(x = 6, color = 'b', label = 'Entrance of all BVs')
+plt.axvline(x = ToR, color = 'b', label = 'Entrance of all BVs')
 plt.axhline(y = 0.5, color = 'r', label= "1% Change value")
 
 plt.show()

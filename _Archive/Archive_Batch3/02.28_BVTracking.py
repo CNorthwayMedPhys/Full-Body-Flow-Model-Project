@@ -69,7 +69,6 @@ def BVsim(DTmodifier):
         t0 = tarray[it-1]
         if it == 1 and ix == 1:
             p00 = 0
-
         else:
             p00 = varray[it-1,ix-1]
         p10 = varray[it,ix-1]
@@ -300,7 +299,7 @@ def BVsim(DTmodifier):
             print('\n Location intialization complete')     
             
         def intializeBV(self):
-            self.BVs.append(BloodVolume(self.BVcount, 28))
+            self.BVs.append(BloodVolume(self.BVcount, 1))
             self._BVcount += 1
                  
         def runNT (self):
@@ -311,9 +310,8 @@ def BVsim(DTmodifier):
                 
                 #Check to see if we have the desired number of BVs. 
                 #If not release another BV into the system 
-                if self.BVcount < BV_num:
-                    for i in range(0,10):    
-                        self.intializeBV()
+                if self.BVcount < BV_num: 
+                    self.intializeBV()
                 if self.BVcount == BV_num and flag == 0:
                     print('\n BV Intialized')
                     flag = 1
@@ -327,6 +325,7 @@ def BVsim(DTmodifier):
                     #BV determine their location type
                     clocation = self.locations[BV.location]
 
+                        
                     if clocation.IDnum > 27: #outside of an organ
                        #Determine velocity value at exact position and time
                         velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
@@ -422,7 +421,7 @@ def BVsim(DTmodifier):
                 ID = int(BV.location)
                 if ID >= 28 and ID <= 54: #arteries
                     dictBV["Aorta and L. Arteries"] += 1
-                elif ID >= 106 and ID <= 127: #arteries
+                elif ID >= 106 and ID <= 126: #arteries
                     dictBV["Aorta and L. Arteries"] += 1
                 elif ID >= 55 and ID <= 99: #veins
                     dictBV["L. Veins"] += 1
@@ -529,9 +528,9 @@ def BVsim(DTmodifier):
     dx = 1e-4 # Distance step size (m)
     dt = 0.002 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    BV_num = 1e5 #total number BV
-    ToR = BV_num/((T/dt)*10) # nubmer of cycles before all BVs released
-    tc = np.round(110 + ToR) #Number of cycles to be simulated
+    BV_num = 1e4 #total number BV
+    ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
+    tc = np.round(200 + ToR) #Number of cycles to be simulated
 
     
     nt = Network(dt, dx, BV_num)

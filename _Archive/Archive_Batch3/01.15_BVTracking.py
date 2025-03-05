@@ -396,7 +396,7 @@ class Network (object):
             ID = int(BV.location)
             if ID >= 28 and ID <= 54: #arteries
                 dictBV["Aorta and L. Arteries"] += 1
-            elif ID >= 106 and ID <= 127: #arteries
+            elif ID >= 106 and ID <= 125: #arteries
                 dictBV["Aorta and L. Arteries"] += 1
             elif ID >= 55 and ID <= 99: #veins
                 dictBV["L. Veins"] += 1
@@ -503,8 +503,8 @@ class Network (object):
 dx = 1e-4 # Distance step size (m)
 dt = 0.002 #Time step size (s)
 T = 0.955 #Length of one period (s)
-tc = 60 #Number of cycles to be simulated
-BV_num = 1e1 #total number BV
+tc = 600 #Number of cycles to be simulated
+BV_num = 1e2 #total number BV
 
 nt = Network(dt, dx, BV_num)
 nt.setTime(T, tc)
@@ -513,7 +513,7 @@ nt.intializeLocations()
 nt.runNT()
 
 BVdict = nt.binBVs()
-print('Complete!')
+print(BVdict)
 
 
 
