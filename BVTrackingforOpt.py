@@ -520,11 +520,11 @@ def BVsim(DTmodifier):
         
     #%%Parameters 
     dx = 1e-4 # Distance step size (m)
-    dt = 0.01 #Time step size (s)
+    dt = 0.05 #Time step size (s)
     T = 0.955 #Length of one period (s)
     BV_num = 1e4 #total number BV
     ToR = BV_num/((T/dt)) # number of cycles before all BVs released
-    tc = np.round(100 + ToR) #Number of cycles to be simulated
+    tc = np.round(150 + ToR) #Number of cycles to be simulated
     
     nt = Network(dt, dx, BV_num)
     nt.setTime(T, tc)
