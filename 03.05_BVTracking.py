@@ -286,24 +286,22 @@ def BVsim(DTmodifier):
                     DTmod = DTmodifier[6]
                 elif int(data[0]) == 2:
                     DTmod = DTmodifier[7]
-                elif int(data[0]) == 0 or int(data[0]) == 1:
-                    DTmod = DTmodifier[8]
                 elif int(data[0]) == 3:
-                    DTmod = DTmodifier[9]
+                    DTmod = DTmodifier[8]
                 elif int(data[0]) == 4:
-                    DTmod = DTmodifier[10]
+                    DTmod = DTmodifier[9]
                 elif int(data[0]) == 5:
-                    DTmod = DTmodifier[11]
+                    DTmod = DTmodifier[10]
                 elif int(data[0]) == 6 or int(data[0]) == 9:
-                    DTmod = DTmodifier[12]
+                    DTmod = DTmodifier[11]
                 elif int(data[0]) == 7:
-                    DTmod = DTmodifier[13]
+                    DTmod = DTmodifier[12]
                 elif int(data[0]) == 8:
-                    DTmod = DTmodifier[14]
+                    DTmod = DTmodifier[13]
                 elif int(data[0]) == 10 or int(data[0]) == 11:
-                    DTmod = DTmodifier[15] 
+                    DTmod = DTmodifier[14] 
                 elif int(data[0]) == 26 or int(data[0]) == 27:
-                    DTmod = DTmodifier[16]       
+                    DTmod = DTmodifier[15]       
                 else:
                     DTmod = 1
                 self.locations.append(Location(int(data[0]),[int(data[1]),int(data[2]),int(data[3])],float(data[4])*DTmod,data[5]))
@@ -546,11 +544,11 @@ def BVsim(DTmodifier):
         
     #%%Parameters 
     dx = 1e-4 # Distance step size (m)
-    dt = 0.1 #Time step size (s)
+    dt = 0.002 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    BV_num = 1e4 #total number BV
+    BV_num = 1e5 #total number BV
     ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
-    tc = np.round(150 + ToR) #Number of cycles to be simulated
+    tc = np.round(500 + ToR) #Number of cycles to be simulated
 
     
     nt = Network(dt, dx, BV_num)
@@ -567,7 +565,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #
-DTmod = [10, 10, 10, 10,10, 10, 10, 10, 4, 1, 1, 1, 1, 2, 2, 2,3]
+DTmod = [1, 1,  1, 1,  1, 1,
+ 1, 1,  1,  1,  1, 1,
+  1, 1,  1, 1]
 
 BVresults=BVsim(DTmod)
 print(BVresults)
@@ -612,4 +612,4 @@ sim = np.array(sim)
 gt = np.array(gt)
     
 #Compute percintile error 
-E = np.nanmax((np.abs(gt-sim)) )  
+E = np.sqrt(np.sum(np.abs(gt-sim)**2))

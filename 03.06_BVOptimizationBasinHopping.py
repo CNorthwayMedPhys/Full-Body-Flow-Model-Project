@@ -16,12 +16,11 @@ Notes to self
 
 def findOptDT():
 
-    intial_guess = np.asarray([13.2, 13.2, 10, 10, 10,
-            10, 10, 4.96, 5.0, 0.2, 10, 10.3,
-            1.5, 8,  4,  5.5])
+    intial_guess = np.asarray([9.4, 10.1, 10.1, 9.4, 9.7, 10.1, 8.3, 10.6, 3.4, 1.2, 0.5, 4.2, 1.1, 4.5, 3.3, 4.5,3.8])
     
     #Run optimization
-    results = optimize.least_squares(ModelError, intial_guess ,bounds=([0.1, 15]), diff_step= 1)
+    results = optimize.basinhopping(ModelError, intial_guess, 
+        niter= 20, stepsize = 1, interval = 20 )
     
     #Parse results
     DT_modifiers = results.x
@@ -58,7 +57,7 @@ def ModelError(DT_modifiers):
     gt = np.array(gt)
         
     #Compute percintile error 
-    E = np.sqrt(np.sum(np.abs(gt-sim)**2))
+    E = np.nanmax(np.abs(gt-sim))
     print(E)
     print(DT_modifiers)
     return E 

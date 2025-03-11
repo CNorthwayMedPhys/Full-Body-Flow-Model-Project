@@ -16,16 +16,20 @@ Notes to self
 
 def findOptDT():
 
-    intial_guess = np.asarray([13.2, 13.2, 10, 10, 10,
-            10, 10, 4.96, 5.0, 0.2, 10, 10.3,
-            1.5, 8,  4,  5.5])
     
+    rrange = (slice(9,15,2),slice(9,15,2),slice(9,15,2),
+              slice(9,15,2), slice(9,15,2),slice(9,15,2),
+              slice(8,14,2),slice(8,14,2), 
+              slice(1,6,2),slice(1,6,2),slice(1,6,2),
+              slice(1,6,2),slice(1,6,2),slice(1,6,2),
+              slice(1,8,2),slice(1,6,2))
     #Run optimization
-    results = optimize.least_squares(ModelError, intial_guess ,bounds=([0.1, 15]), diff_step= 1)
+    results = optimize.brute(ModelError, rrange, Ns = 3,
+        full_output = True, finish = None )
     
     #Parse results
-    DT_modifiers = results.x
-    E = results.fun
+    DT_modifiers = results[0]
+    E = results[1]
 
     return [DT_modifiers, E]
 
@@ -66,9 +70,9 @@ def ModelError(DT_modifiers):
 #%%Prepare MP and run
 
  
-[DT_modifiers,E] = findOptDT()
-print(DT_modifiers)
-print(E)
+results = findOptDT()
+print(results[0])
+print(results[1])
 #plt.bar(range(len(dictSim)), list(dictSim.values()), align='center')
 #plt.xticks(range(len(dictSim)), list(dictSim.keys()))
 #plt.show()
