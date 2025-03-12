@@ -19,7 +19,7 @@ for file in files:
     for row in ws.iter_rows(min_row = 2, min_col = 2):
         for cell in row:
             v = cell.value
-            new_v = v*2
+            new_v = v / 10 #prev 2 
             cell.value = new_v
     wb.save(file)
     wb.close()

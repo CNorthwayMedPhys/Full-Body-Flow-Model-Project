@@ -544,11 +544,11 @@ def BVsim(DTmodifier):
         
     #%%Parameters 
     dx = 1e-4 # Distance step size (m)
-    dt = 0.002 #Time step size (s)
+    dt = 0.005 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    BV_num = 1e5 #total number BV
+    BV_num = 1e4 #total number BV
     ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
-    tc = np.round(500 + ToR) #Number of cycles to be simulated
+    tc = np.round(150 + ToR) #Number of cycles to be simulated
 
     
     nt = Network(dt, dx, BV_num)
@@ -565,8 +565,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #
-DTmod = [1, 1,  1, 1,  1, 1,
- 1, 1,  1,  1,  1, 1,
+DTmod = [1, 1, 1, 1,  1, 1,
+ 1, 1,  1.2,  1,  1, 1,
   1, 1,  1, 1]
 
 BVresults=BVsim(DTmod)

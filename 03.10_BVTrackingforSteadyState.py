@@ -571,11 +571,11 @@ def BVsim(DTmodifier):
         
     #%%Parameters 
     dx = 1e-4 # Distance step size (m)
-    dt = 0.002 #Time step size (s)
+    dt = 0.005 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    BV_num = 1e5 #total number BV
+    BV_num = 1e4 #total number BV
     ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
-    tc = np.round(200 + ToR) #Number of cycles to be simulated
+    tc = np.round(150 + ToR) #Number of cycles to be simulated
     
     nt = Network(dt, dx, BV_num)
     nt.setTime(T, tc)
@@ -594,13 +594,12 @@ maxArray=BVsim(np.asarray([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]))
  #%%  
 
 
-dt = 0.002 #Time step size (s)
+dt = 0.005 #Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1e5 #total number BV
+BV_num = 1e4 #total number BV
 ToR = BV_num/((T/dt)*1) # nubmer of cycles before all BVs released
 
-redpoints = np.where(np.asarray(maxArray)>=0.5)
-redpoints = np.where(np.asarray(redpoints )> ToR)
+
 plt.plot(maxArray,'o', c = '0.8' )
 
 plt.ylabel('Maximum Difference in BV Distribution (%)')
