@@ -5,9 +5,10 @@
 #SBATCH --mail-type=ALL
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
+#SBATCH --mem=1510G
 module load python/3.10
 module load python scipy-stack
 source ENV/bin/activate
 pip install --no-index --upgrade pip
 pip install numba --no-index
-srun python BVOptimization_Alliance.py
+srun python BVOptimizationBrute.py

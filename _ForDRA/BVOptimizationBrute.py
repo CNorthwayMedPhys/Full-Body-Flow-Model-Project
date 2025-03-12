@@ -1,11 +1,10 @@
 #Installations and Functions
 
 
-import matplotlib.pyplot as plt
 import scipy.optimize as optimize
 import numpy as np
 from BVTrackingAll import BVsim
-
+import os
 
 """
 Notes to self
@@ -16,16 +15,16 @@ Notes to self
 
 def findOptDT():
 
-    
-    rrange = (slice(0,2,0.5),slice(0,2,0.5),slice(0,2,0.5),
-              slice(0,2,0.5), slice(0,2,0.5),slice(0,2,0.5),
-              slice(0,2,0.5),slice(0,2,0.5), 
-              slice(0,2,0.5),slice(0,2,0.5),slice(0,2,0.5),
-              slice(0,2,0.5),slice(0,2,0.5),slice(0,2,0.5),
-              slice(0,2,0.5),slice(0,2,0.5))
+    ncpus = int(os.environ.get('SLURM_CPUS_PER_TASK',default=1))
+    rrange = (slice(0,2,0.25),slice(0,2,0.25),slice(0,2,0.25),
+              slice(0,2,0.25), slice(0,2,0.25),slice(0,2,0.25),
+              slice(0,2,0.25),slice(0,2,0.25), 
+              slice(0,2,0.25),slice(0,2,0.25),slice(0,2,0.25),
+              slice(0,2,0.25),slice(0,2,0.25),slice(0,2,0.25),
+              slice(0,2,0.25),slice(0,2,0.25))
     #Run optimization
-    results = optimize.brute(ModelError, rrange, Ns = 3,
-        full_output = True)
+    results = optimize.brute(ModelError, rrange,
+        full_output = True, workers=ncpus)
     
     #Parse results
     DT_modifiers = results[0]
