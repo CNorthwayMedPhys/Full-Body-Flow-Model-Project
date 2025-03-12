@@ -1,7 +1,6 @@
 #Installations and Functions
 
 
-import matplotlib.pyplot as plt
 import scipy.optimize as optimize
 import numpy as np
 from BVTrackingAll import BVsim
@@ -17,14 +16,14 @@ Notes to self
 def findOptDT():
 
     
-    rrange = (slice(0,2,0.5),slice(0,2,0.5),slice(0,2,0.5),
-              slice(0,2,0.5), slice(0,2,0.5),slice(0,2,0.5),
-              slice(0,2,0.5),slice(0,2,0.5), 
-              slice(0,2,0.5),slice(0,2,0.5),slice(0,2,0.5),
-              slice(0,2,0.5),slice(0,2,0.5),slice(0,2,0.5),
-              slice(0,2,0.5),slice(0,2,0.5))
+    rrange = (slice(0,2,0.25),slice(0,2,0.25),slice(0,2,0.25),
+              slice(0,2,0.25), slice(0,2,0.25),slice(0,2,0.25),
+              slice(0,2,0.25),slice(0,2,0.25), 
+              slice(0,2,0.25),slice(0,2,0.25),slice(0,2,0.25),
+              slice(0,2,0.25),slice(0,2,0.25),slice(0,2,0.25),
+              slice(0,2,0.25),slice(0,2,0.25))
     #Run optimization
-    results = optimize.brute(ModelError, rrange, Ns = 3,
+    results = optimize.brute(ModelError, rrange,
         full_output = True)
     
     #Parse results

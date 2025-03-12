@@ -6,15 +6,28 @@ Created on Tue Dec 17 11:46:42 2024
 """
 """
 Notes to self
-Tracks and runs 100 BVs. 
+
+15/01/2025 
+I think I'll want a location class which will include all the values in FlowTracker.xlsx,
+the flow data and the splitting data. 
+
+I'll need to load in the splitting ratio data some where to pass to
+the intializer fcn
+
+21/01/25
+I want to determine the where all the BVs all so let's write a fcn for
+the network to bin them into the categories from legget
 """
-def BVsim(m,DTmodifier):
+def BVsim(DTmodifier):
     #%%Import
+    
     import pandas as pd
     import os
     import numpy as np
     import sys
     import random
+    
+    
     
     #%% Utility functions
     
@@ -24,6 +37,7 @@ def BVsim(m,DTmodifier):
         while div:
             (div, mod) = divmod(div-1, 26) # will return (x, 0 .. 25)
             excelCol = chr(mod + 65) + excelCol
+    
         return excelCol
     
     def periodic(t, T):
@@ -35,7 +49,7 @@ def BVsim(m,DTmodifier):
         """
         while t/T > 1.0:
             t = t - T
-        return t
+        return np.round(t,decimals=3)
             
     def interp(x,x0,x1,y0,y1):
         
@@ -46,7 +60,7 @@ def BVsim(m,DTmodifier):
     def velocity_interp(flowdata,t,x):
         xarray = flowdata[0,1:]
         tarray = flowdata[1:,0]
-        flowdata = flowdata[1:,1:]
+        varray = flowdata[1:,1:]
         it = np.searchsorted(tarray,t,side = 'left')
         ix = np.searchsorted(xarray,x,side = 'right')
         x1 = xarray[ix]
@@ -54,13 +68,12 @@ def BVsim(m,DTmodifier):
         t1 = tarray[it]
         t0 = tarray[it-1]
         if it == 1 and ix == 1:
-            p00 = 0 
+            p00 = 0
         else:
-            p00 = flowdata[it-1,ix-1]
-        p10 = flowdata[it,ix-1]
-        p01 = flowdata[it-1,ix]
-        p11 = flowdata[it,ix]
-        
+            p00 = varray[it-1,ix-1]
+        p10 = varray[it,ix-1]
+        p01 = varray[it-1,ix]
+        p11 = varray[it,ix]
         p = p00 + (p10-p00)*((t-t0)/(t1-t0))+(p01-p00)*((x-x0)/(x1-x0))+\
             (p11-p01-p10+p00)*((t-t0)/(t1-t0))*((x-x0)/(x1-x0))
         return p
@@ -76,11 +89,9 @@ def BVsim(m,DTmodifier):
         if index == 478:
             pa = float(aSR[-1])
             pb = float(bSR[-1])
-            print('/n path selector modification required')
         else:
             pa = interp(time,timearray[index-1],timearray[index],aSR[index-1],aSR[index])
             pb = interp(time,timearray[index-1],timearray[index],bSR[index-1],bSR[index])
-        
         if num <= pa:
             key = outflow[0]
         elif num > pa and num <= pa + pb:
@@ -114,6 +125,8 @@ def BVsim(m,DTmodifier):
             df = pd.read_excel(path, header = None)
             self._flowdata = df.to_numpy()
     
+                
+            
         def IntSplittingRatio (self, SRdf):
             SRarray = np.array(SRdf.loc[2:,'A'],dtype = float, ndmin=2).T
             SRdata = SRdf.loc[2:,self.splittingratiokey]
@@ -235,7 +248,6 @@ def BVsim(m,DTmodifier):
             if np.isnan(value):
                 print('nan value for distance')
             self._distance = value 
-            
     #%% Define Network Class
     
     class Network (object):
@@ -272,6 +284,24 @@ def BVsim(m,DTmodifier):
                     DTmod = DTmodifier[5]
                 elif int(data[0]) == 21 or int(data[0]) == 25:
                     DTmod = DTmodifier[6]
+                elif int(data[0]) == 2:
+                    DTmod = DTmodifier[7]
+                elif int(data[0]) == 3:
+                    DTmod = DTmodifier[8]
+                elif int(data[0]) == 4:
+                    DTmod = DTmodifier[9]
+                elif int(data[0]) == 5:
+                    DTmod = DTmodifier[10]
+                elif int(data[0]) == 6 or int(data[0]) == 9:
+                    DTmod = DTmodifier[11]
+                elif int(data[0]) == 7:
+                    DTmod = DTmodifier[12]
+                elif int(data[0]) == 8:
+                    DTmod = DTmodifier[13]
+                elif int(data[0]) == 10 or int(data[0]) == 11:
+                    DTmod = DTmodifier[14] 
+                elif int(data[0]) == 26 or int(data[0]) == 27:
+                    DTmod = DTmodifier[15]       
                 else:
                     DTmod = 1
                 self.locations.append(Location(int(data[0]),[int(data[1]),int(data[2]),int(data[3])],float(data[4])*DTmod,data[5]))
@@ -284,22 +314,26 @@ def BVsim(m,DTmodifier):
                     location.IntFlowData()
                 if location.splittingratiokey != '0':
                     location.IntSplittingRatio (SRdf)
-            #print('Location intialization complete')     
+            #print('\n Location intialization complete')     
             
         def intializeBV(self):
             self.BVs.append(BloodVolume(self.BVcount, 28))
             self._BVcount += 1
                  
         def runNT (self):
-            BVlocations = []
+            flag = 0
+      
             #Run until we have completed the desired number of cycles
             while self.Nettime < self.tf:
                 
-                #Release 100 BV into the system 
-                if self.BVcount < BV_num:
-                    for i in range(0,100):
-                        self.intializeBV()
-                    
+                #Check to see if we have the desired number of BVs. 
+                #If not release another BV into the system 
+                if self.BVcount < BV_num: 
+                    self.intializeBV()
+                if self.BVcount == BV_num and flag == 0:
+                    #print('\n BV Intialized')
+                    flag = 1
+                
                 #Calculate the t w/in the period for table look ups
                 pt = periodic(self.Nettime, self.T) 
                 
@@ -308,34 +342,34 @@ def BVsim(m,DTmodifier):
                     
                     #BV determine their location type
                     clocation = self.locations[BV.location]
-                    
+
+                        
                     if clocation.IDnum > 27: #outside of an organ
-                       
                        #Determine velocity value at exact position and time
-                       velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
+                        velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
                        
                        #Update position and exp time
-                       newdistance = velocity * self.dt + BV.distance
-
+                        newdistance = velocity * self.dt + BV.distance
+    
                        #Determine wether the BV is in the vessel
-                       if newdistance > clocation.flowdata[0,-1]: 
+                        if newdistance > clocation.flowdata[0,-1]: 
                            
                            #Move BV to next location
                            if clocation.splittingratios is None:
                                BV._location = clocation.outflow[0]
                                BV._dwelltime = 0
-                               BV.distance = 0
+                               BV._distance = 0
                            else:
                                BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
                                BV._dwelltime = 0
-                               BV.distance = 0
+                               BV._distance = 0
                        #Advance BV down vessel        
-                       else:
-                           BV.distance = newdistance
+                        else:
+                           BV._distance = newdistance
                            BV._exptime += self.dt
                     
                     #BV within organ
-                    else:    
+                    else:
                         #Stays in organ
                         if BV.dwelltime < clocation.dwelltime:
                             BV._dwelltime += self.dt
@@ -348,13 +382,9 @@ def BVsim(m,DTmodifier):
                                 BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
                                 BV._dwelltime = 0
                     BV._tottime += self.dt    
-                
+
                 self.timestep()
                 #self.print_status()
-            for BV in self.BVs:
-                BVlocations.append(BV.location)
-            return BVlocations
-                
         def setTime(self, T, tc):
             """
             Sets timing parameters for the network 
@@ -368,7 +398,7 @@ def BVsim(m,DTmodifier):
                      
         def timestep(self):
             self._Nettime += self.dt   
-              
+            self._Nettime = np.round(self._Nettime, decimals =3)  
         @staticmethod
         def _printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, barLength = 100):
             formatStr       = "{0:." + str(decimals) + "f}"
@@ -407,11 +437,11 @@ def BVsim(m,DTmodifier):
                     "Distributed Tissues": 0}
             for BV in self.BVs:
                 ID = int(BV.location)
-                if ID >= 28 and ID <= 54: #arteries
+                if ID >= 28 and ID <= 52: #arteries
                     dictBV["Aorta and L. Arteries"] += 1
-                elif ID >= 106 and ID <= 127: #arteries
+                elif ID >= 104 and ID <= 125: #arteries
                     dictBV["Aorta and L. Arteries"] += 1
-                elif ID >= 55 and ID <= 99: #veins
+                elif ID >= 53 and ID <= 97: #veins
                     dictBV["L. Veins"] += 1
                 elif ID == 0 or ID == 1: #heart
                     dictBV["Heart"] += 1
@@ -514,24 +544,70 @@ def BVsim(m,DTmodifier):
         
     #%%Parameters 
     dx = 1e-4 # Distance step size (m)
-    dt = 0.005 #Time step size (s)
+    dt = 0.002 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    tc = 350 #Number of cycles to be simulated
-    BV_num = 100 #total number BV
+    BV_num = 1e5 #total number BV
+    ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
+    tc = np.round(200 + ToR) #Number of cycles to be simulated
+
     
     nt = Network(dt, dx, BV_num)
     nt.setTime(T, tc)
-    nt.intializeLocations(DTmodifier/100)
+    nt.intializeLocations(DTmodifier)
+    nt.runNT()
+    BVcalc = nt.binBVs()
+    #print('Complete!')
+
+    return BVcalc
+ 
+#%%
+# import numpy as np
+# import matplotlib.pyplot as plt
+
+# #
+# DTmod = [10, 10, 10, 10,10, 10, 10, 10, 4, 1, 1, 1, 1, 2, 2, 2,3]
+
+# BVresults=BVsim(DTmod)
+#print(BVresults)
+ #%%  
+
+# x = []
+# y = range(0,260,10)
+# z = 0
+# for i in y:
+#     x.append(np.nanmean(maxArray[z:i]))
+#     z = i
+
+# plt.plot(maxArray,'o', c = '0.8' )
+# plt.plot(y,x, 'x', c = '0')
+# plt.ylabel('Maximum Difference in BV Distribution (%)')
+# plt.xlabel('Periods Elapsed')
+# plt.axvline(x = 6, color = 'b', label = 'Entrance of all BVs')
+# plt.axhline(y = 0.5, color = 'r', label= "1% Change value")
+
+# plt.show()
     
-    #This is the part where I want everything to seperate
-    # and pass the new BV locations into one big lis
-    BVlocations = nt.runNT()
-
-    return BVlocations    
-
-
+# dictGT = {"Brain": 1.24, 
+#             "Stomach": 1.03 ,
+#             "S. Intestine": 3.93,
+#             "L. Intestine": 2.27,
+#             "Heart": 9.3 ,
+#             "Kidneys": 2.07,
+#             "Liver": 10.34,
+#             "Pulmonary": 10.85,
+#             "Pancreas": 0.62,
+#             "Spleen": 1.45,
+#             "Aorta and L. Arteries": 6.2,
+#             "L. Veins": 18.61,
+#             "Distributed Tissues": 32.09} 
+# dictSim = BVresults
+# sim = []
+# gt = []
+# for item in dictGT:
+#     gt.append(dictGT[item])
+#     sim.append(dictSim[item])
+# sim = np.array(sim)
+# gt = np.array(gt)
     
-        
-        
-        
-                
+# #Compute percintile error 
+# E = np.nanmax((np.abs(gt-sim)) )  

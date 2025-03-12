@@ -544,9 +544,9 @@ def BVsim(DTmodifier):
         
     #%%Parameters 
     dx = 1e-4 # Distance step size (m)
-    dt = 0.1 #Time step size (s)
+    dt = 0.002 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    BV_num = 2e3 #total number BV
+    BV_num = 1e5 #total number BV
     ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
     tc = np.round(200 + ToR) #Number of cycles to be simulated
 
