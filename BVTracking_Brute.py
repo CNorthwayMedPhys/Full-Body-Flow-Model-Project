@@ -284,24 +284,8 @@ def BVsim(DTmodifier):
                     DTmod = DTmodifier[5]
                 elif int(data[0]) == 21 or int(data[0]) == 25:
                     DTmod = DTmodifier[6]
-                elif int(data[0]) == 2:
-                    DTmod = DTmodifier[7]
-                elif int(data[0]) == 3:
-                    DTmod = DTmodifier[8]
-                elif int(data[0]) == 4:
-                    DTmod = DTmodifier[9]
-                elif int(data[0]) == 5:
-                    DTmod = DTmodifier[10]
-                elif int(data[0]) == 6 or int(data[0]) == 9:
-                    DTmod = DTmodifier[11]
-                elif int(data[0]) == 7:
-                    DTmod = DTmodifier[12]
-                elif int(data[0]) == 8:
-                    DTmod = DTmodifier[13]
-                elif int(data[0]) == 10 or int(data[0]) == 11:
-                    DTmod = DTmodifier[14] 
                 elif int(data[0]) == 26 or int(data[0]) == 27:
-                    DTmod = DTmodifier[15]       
+                    DTmod = DTmodifier[7]       
                 else:
                     DTmod = 1
                 self.locations.append(Location(int(data[0]),[int(data[1]),int(data[2]),int(data[3])],float(data[4])*DTmod,data[5]))

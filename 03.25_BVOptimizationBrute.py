@@ -4,7 +4,7 @@
 import matplotlib.pyplot as plt
 import scipy.optimize as optimize
 import numpy as np
-from BVTrackingAll import BVsim
+from BVTracking_Brute import BVsim
 
 
 """
@@ -16,16 +16,18 @@ Notes to self
 
 def findOptDT():
 
-    intial_guess = np.asarray([1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1,
-            1, 1,  1,  1])
     
+    rrange = (slice(0.5,2,0.5),slice(0.5,2,0.5),slice(0.5,2,0.5),
+              slice(0.5,2,0.5), slice(0.5,2,0.5),slice(0.5,2,0.5),
+              slice(0.5,2,0.5),slice(0.5,2,0.5), 
+              slice(0.5,2,0.5))
     #Run optimization
-    results = optimize.least_squares(ModelError, intial_guess ,bounds=([0.1, 2]), diff_step= 0.5)
+    results = optimize.brute(ModelError, rrange,
+        full_output = True)
     
     #Parse results
-    DT_modifiers = results.x
-    E = results.fun
+    DT_modifiers = results[0]
+    E = results[1]
 
     return [DT_modifiers, E]
 
@@ -66,9 +68,9 @@ def ModelError(DT_modifiers):
 #%%Prepare MP and run
 
  
-[DT_modifiers,E] = findOptDT()
-print(DT_modifiers)
-print(E)
+results = findOptDT()
+print(results[0])
+print(results[1])
 #plt.bar(range(len(dictSim)), list(dictSim.values()), align='center')
 #plt.xticks(range(len(dictSim)), list(dictSim.keys()))
 #plt.show()
