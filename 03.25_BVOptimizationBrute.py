@@ -17,7 +17,7 @@ Notes to self
 def findOptDT():
 
     
-    rrange = (slice(0.5,2,0.5),slice(0.5,2,0.5),slice(0.5,2,0.5),
+    rrange = (slice(1.5,2,0.5),slice(0.5,2,0.5),slice(0.5,2,0.5),
               slice(0.5,2,0.5), slice(0.5,2,0.5),slice(0.5,2,0.5),
               slice(0.5,2,0.5),slice(0.5,2,0.5), 
               slice(0.5,2,0.5))
