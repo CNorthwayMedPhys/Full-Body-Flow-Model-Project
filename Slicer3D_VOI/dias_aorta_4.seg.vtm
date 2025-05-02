@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<VTKFile type="vtkMultiBlockDataSet" version="1.0" byte_order="LittleEndian" header_type="UInt32" compressor="vtkZLibDataCompressor">
+  <vtkMultiBlockDataSet>
+    <DataSet index="0" file="dias_aorta_4.seg/dias_aorta_4.seg_0.vtp"/>
+  </vtkMultiBlockDataSet>
+</VTKFile>

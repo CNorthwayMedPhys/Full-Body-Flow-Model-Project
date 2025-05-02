@@ -4,7 +4,7 @@
 import matplotlib.pyplot as plt
 import scipy.optimize as optimize
 import numpy as np
-from BVTracking_Brute import BVsim
+from BVTracking_RefOp import BVsim
 
 
 """
@@ -17,13 +17,12 @@ Notes to self
 def findOptDT():
 
     
-    rrange = (slice(1.5,2,0.5),slice(1.5,2,0.5),slice(0.5,2,0.5),
-              slice(0.5,2,0.5), slice(0.5,2,0.5),slice(0.5,2,0.5),
-              slice(0.5,2,0.5),slice(0.5,2,0.5), 
-              slice(0.5,2,0.5))
+    intial_guess = (1.5,1.5,0.5,
+              1.5, 1.5,1.5,
+              1.5,1.5, 
+              1)
     #Run optimization
-    results = optimize.brute(ModelError, rrange,
-        full_output = True)
+    results = optimize.least_squares(ModelError, intial_guess, diff_step = 0.1 )
     
     #Parse results
     DT_modifiers = results[0]

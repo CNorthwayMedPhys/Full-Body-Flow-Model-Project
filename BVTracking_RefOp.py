@@ -298,7 +298,7 @@ def BVsim(DTmodifier):
                     location.IntFlowData()
                 if location.splittingratiokey != '0':
                     location.IntSplittingRatio (SRdf)
-            #print('\n Location intialization complete')     
+            print('\n Location intialization complete')     
             
         def intializeBV(self):
             self.BVs.append(BloodVolume(self.BVcount, 28))
@@ -368,7 +368,7 @@ def BVsim(DTmodifier):
                     BV._tottime += self.dt    
 
                 self.timestep()
-                #self.print_status()
+                self.print_status()
         def setTime(self, T, tc):
             """
             Sets timing parameters for the network 
@@ -528,9 +528,9 @@ def BVsim(DTmodifier):
         
     #%%Parameters 
     dx = 1e-4 # Distance step size (m)
-    dt = 0.002 #Time step size (s)
+    dt = 0.01 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    BV_num = 1e5 #total number BV
+    BV_num = 5e4 #total number BV
     ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
     tc = np.round(200 + ToR) #Number of cycles to be simulated
 
