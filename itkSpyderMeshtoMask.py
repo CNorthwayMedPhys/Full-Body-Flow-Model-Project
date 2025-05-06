@@ -8,14 +8,11 @@ based on: https://github.com/InsightSoftwareConsortium/ITK/issues/2884
 
 import itk
 import os
-import matplotlib.pyplot as plt
-import numpy as np
-import SimpleITK as sitk
 
 
 #%%
 #Import mesh file
-path = os.getcwd() + '\\VesselFiles\\Utilized Subset\\Cleaned_dias_aorta.stl'
+path = os.getcwd() + '\\VesselFiles\\Utilized Subset\\dias_aorta.stl'
 
 #No idea what this does frankly
 TCoordinate = itk.F
@@ -31,13 +28,13 @@ reader.Update()
 mesh = reader.GetOutput()
 
 mesh_writer = itk.MeshFileWriter[TMesh].New()
-mesh_writer.SetFileName("Cleaned_Aorta.vtk")
+mesh_writer.SetFileName(os.getcwd() + "\\TempVTK\\Cleaned_Aorta.vtk")
 mesh_writer.SetInput(mesh)
 mesh_writer.Update()
 
 TMesh = itk.Mesh[itk.SS, Dimension].New()
 mesh_reader = itk.MeshFileReader[TMesh].New()
-mesh_reader.SetFileName("Cleaned_Aorta.vtk")
+mesh_reader.SetFileName(os.getcwd() + "\\TempVTK\\Cleaned_Aorta.vtk")
 mesh_reader.Update()
 mesh = mesh_reader.GetOutput()
 
@@ -60,6 +57,6 @@ mesh_to_image_filter.SetInput(mesh)
 mesh_to_image_filter.SetInfoImage(image)                                        
 mesh_to_image_filter.Update()
 filtered = mesh_to_image_filter.GetOutput()
-itk.imwrite(mesh_to_image_filter.GetOutput(), "filtered.nii.gz") 
+itk.imwrite(mesh_to_image_filter.GetOutput(), os.getcwd() + "\\VesselFiles\\Utilized Subset\\gzFiles\\cleaned.nii.gz") 
 
 #%%
