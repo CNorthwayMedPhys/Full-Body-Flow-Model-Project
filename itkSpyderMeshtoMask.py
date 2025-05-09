@@ -10,13 +10,15 @@ import itk
 import os
 import tkinter
 from tkinter import filedialog
-
+import numpy as np
 #%%
 #Import mesh file
-path = os.getcwd() + '\\VesselFiles\\Utilized Subset\\Cleaned_dias_aorta.stl'
+
 
 tkinter.Tk().withdraw() # prevents an empty tkinter window from appearing
 file_names = filedialog.askopenfilenames()
+summed_array = []
+flag = 1
 for file_name in file_names:
     name = file_name.split('/')[-1]
     name = name.split('.')[0]
@@ -64,6 +66,16 @@ for file_name in file_names:
     mesh_to_image_filter.SetInfoImage(image)                                        
     mesh_to_image_filter.Update()
     filtered = mesh_to_image_filter.GetOutput()
-    itk.imwrite(mesh_to_image_filter.GetOutput(), os.getcwd() + "\\VesselFiles\\Utilized Subset\\gzFiles\\" + name +".nii.gz") 
+    array = itk.GetArrayFromImage(filtered)
+    if np.max(array) != 1:
+        print(name)
+    else:
+        itk.imwrite(mesh_to_image_filter.GetOutput(), os.getcwd() + "\\VesselFiles\\Utilized Subset\\gzFiles\\" + name +".nii.gz") 
+        if flag == 1:
+            summed_array = array
+            flag = 0
+        else:
+            summed_array = summed_array + array
 
+itk.imwrite(itk.GetImageFromArray(summed_array), os.getcwd() + "\\VesselFiles\\Utilized Subset\\gzFiles\\summed.nii.gz")             
 #%%
