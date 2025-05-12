@@ -22,7 +22,7 @@ def findOptDT():
               1.5,1.5, 
               1)
     #Run optimization
-    results = optimize.least_squares(ModelError, intial_guess, diff_step = 0.1, bounds = (0.01,2) )
+    results = optimize.least_squares(ModelError, intial_guess, diff_step = 0.5 , bounds = (0.01,2) )
     
     #Parse results
     DT_modifiers = results[0]

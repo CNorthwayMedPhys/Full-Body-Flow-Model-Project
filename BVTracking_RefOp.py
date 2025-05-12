@@ -265,7 +265,7 @@ def BVsim(DTmodifier):
             
         def intializeLocations (self,DTmodifier):
             dir_path = os.path.dirname(os.path.realpath(__file__))
-            path = dir_path + "\\FlowTracker.xlsx"
+`   `            path = dir_path + "\\FlowTracker.xlsx"
             df = pd.read_excel(path)
             for index, row in df.iterrows():
                 data = row['LocationIDNumber;OutFlowA;OutFlowB;OutFlowC;DwellTime(s);SplittingRatioKey']
