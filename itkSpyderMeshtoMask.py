@@ -13,7 +13,7 @@ from tkinter import filedialog
 import numpy as np
 #%%
 #Import mesh file
-
+bb_flag = 1
 
 tkinter.Tk().withdraw() # prevents an empty tkinter window from appearing
 file_names = filedialog.askopenfilenames()
@@ -47,17 +47,47 @@ for file_name in file_names:
     mesh_reader.Update()
     mesh = mesh_reader.GetOutput()
     
+    
+    # # Determine BB of entire vessel set to determine the image size 
+    # bounding_box = mesh.GetBoundingBox()
+    # min_point = bounding_box.GetMinimum()
+    # max_point = bounding_box.GetMaximum()
+    # [x_min,y_min,z_min] = np.array(min_point)
+    # [x_max,y_max,z_max] = np.array(max_point)
+    
+    # if bb_flag == 1:
+    #     x_0 = x_min
+    #     y_0 = y_min
+    #     z_0 = z_min
+    #     x_1 = x_max
+    #     y_1 = y_max
+    #     z_1 = z_max
+    #     bb_flag = 0
+    # if x_min < x_0:
+    #     x_0 = x_min
+    # if y_min < y_0:
+    #     y_0 = y_min
+    # if z_min < z_0:
+    #     z_0 = z_min
+    # if x_max > x_1:
+    #     x_1 = x_max
+    # if y_max > y_1:
+    #     y_1 = y_max
+    # if z_max > z_1:
+    #     z_1 = z_max
+
+    
     #%%
     TPixel = itk.SS                                                                     
     TImage = itk.Image[TPixel, Dimension]                                               
                                                                                         
     image = itk.Image[TPixel, Dimension].New()                                          
     region = itk.ImageRegion[Dimension]()                                               
-    region.SetSize([256, 256, 350])                                                     
+    region.SetSize([650, 235, 1630])                                                     
     region.SetIndex([0, 0, 0])                                                          
     image.SetRegions(region)                                                            
     image.Allocate()                                                                    
-    image.SetOrigin([-15, -30, -5])                                              
+    image.SetOrigin([-310, -145, -1070])                                              
     image.SetSpacing([1, 1, 1])   
     
     #%%                                                  
