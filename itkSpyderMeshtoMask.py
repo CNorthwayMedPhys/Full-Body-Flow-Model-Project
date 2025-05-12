@@ -83,12 +83,12 @@ for file_name in file_names:
                                                                                         
     image = itk.Image[TPixel, Dimension].New()                                          
     region = itk.ImageRegion[Dimension]()                                               
-    region.SetSize([650, 235, 1630])                                                     
+    region.SetSize([650*2, 235*2, 1630*2])                                                     
     region.SetIndex([0, 0, 0])                                                          
     image.SetRegions(region)                                                            
     image.Allocate()                                                                    
     image.SetOrigin([-310, -145, -1070])                                              
-    image.SetSpacing([1, 1, 1])   
+    image.SetSpacing([0.5, 0.5, 0.5])   
     
     #%%                                                  
     mesh_to_image_filter = itk.TriangleMeshToBinaryImageFilter[TMesh, TImage].New() 
