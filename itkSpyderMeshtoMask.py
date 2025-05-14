@@ -11,6 +11,7 @@ import os
 import tkinter
 from tkinter import filedialog
 import numpy as np
+
 #%%
 #Import mesh file
 bb_flag = 1
@@ -108,4 +109,20 @@ for file_name in file_names:
             summed_array = summed_array + array
 
 itk.imwrite(itk.GetImageFromArray(summed_array), os.getcwd() + "\\VesselFiles\\Utilized Subset\\gzFiles\\summed.nii.gz")             
-#%%
+#%% Need to adjust values for CITRIX
+dir_path = os.path.dirname(os.path.realpath(__file__))
+path = dir_path + "\\VesselFiles\\Utilized Subset\\gzFiles\\summed.nii.gz"
+summed_image = itk.imread(path)
+summed_array = itk.GetArrayFromImage(summed_image)
+for i in range(summed_array.shape[0]):  # Iterate through the first dimension
+    for j in range(summed_array.shape[1]):  # Iterate through the second dimension
+        for k in range(summed_array.shape[2]):
+            value = summed_array[i,j,k]
+            
+            if value == 0:
+                summed_array[i,j,k]=-1000
+            else:
+                summed_array[i,j,k]=700
+itk.imwrite(itk.GetImageFromArray(summed_array), path) 
+print('done')    
+        
