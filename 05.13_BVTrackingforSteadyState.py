@@ -586,12 +586,12 @@ ToR = BV_num/((T/dt)*1) # nubmer of cycles before all BVs released
 
 
 plt.plot(maxArray,'o', c = '0.8' )
-
-plt.ylabel('Maximum Difference in BV Distribution (%)')
+plt.title('Determining when a Steady State is Reached')
+plt.ylabel('Summed Difference in BV Distribution (%)')
 plt.xlabel('Periods Elapsed')
 plt.axvline(x = ToR, color = 'b', label = 'Entrance of all BVs')
 plt.axhline(y = 1, color = 'r', label= "1% Change value")
 
 plt.show()
-    
+np.savetxt('maxArray.txt', maxArray, fmt='%d')    
     
