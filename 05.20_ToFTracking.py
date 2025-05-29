@@ -201,7 +201,11 @@ class BloodVolume (object):
         self._tottime = 0
         self._dwelltime = 0
         self._distance = 0
-        
+        #EDITS
+        self._traveltime = 0
+        self._travelflag = 0
+    
+    
     @property
     def ID(self):
         """
@@ -249,6 +253,29 @@ class BloodVolume (object):
         if np.isnan(value):
             print('nan value for distance')
         self._distance = value 
+        
+    #EDITS
+    @property 
+    def traveltime(self):
+        """
+        Time from L.Heart to L.Heart
+        """
+        return self._traveltime
+    
+    @property
+    def travelflag(self):
+        """
+        Flag used to determine the stage of travel
+        """
+        return self._travelflag
+    
+    @traveltime.setter
+    def traveltime(self, value):
+        self._traveltime = value
+        
+    @travelflag.setter
+    def travelflag(self,value):
+        self._travelflag = value
 #%% Define Network Class
 
 class Network (object):
@@ -286,7 +313,13 @@ class Network (object):
             elif int(data[0]) == 21 or int(data[0]) == 25:
                 DTmod = DTmodifier[6]    
             elif int(data[0]) == 26 or int(data[0]) == 27:
-                DTmod = DTmodifier[7]       
+                DTmod = DTmodifier[7]  
+            elif int(data[0]) == 2:
+                DTmod = 1.5
+            elif int(data[0]) == 3:
+                DTmod = 0.69882772
+            elif int(data[0]) == 5:
+                DTmod = 0.51878497
             else:
                 DTmod = 1
             self.locations.append(Location(int(data[0]),[int(data[1]),int(data[2]),int(data[3])],float(data[4])*DTmod,data[5]))
@@ -325,6 +358,10 @@ class Network (object):
             #Iterate through each BV
             for BV in self.BVs:
                 
+                #EDIT: have I returned to the L.heart?
+                if BV.location == 1 and BV.travelflag == 0:
+                    BV.travelflag = 1
+                    
                 #BV determine their location type
                 clocation = self.locations[BV.location]
                 
@@ -366,15 +403,11 @@ class Network (object):
                             BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
                             BV._dwelltime = 0
                 BV._tottime += self.dt    
-            
-
-        
-            
+                if BV.travelflag == 0:
+                    BV._traveltime += self.dt
             self.timestep()
             self.print_status()
-            
-        return nt.binBVs()
-   
+           
     def setTime(self, T, tc):
         """
         Sets timing parameters for the network 
@@ -538,16 +571,25 @@ dt = 0.002 #Time step size (s)
 T = 0.955 #Length of one period (s)
 BV_num = 1e4 #total number BV
 ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
-tc = np.round(100 + ToR) #Number of cycles to be simulated
-DTmodifier = np.asarray([1.78908031, 1.73665193, 0.83943898, 1.89678371, 1.9999904,  1.68736531,
- 1.92589095, 1.98335171, 0.95898955])
+tc = np.round(200 + ToR) #Number of cycles to be simulated
+
+DTmodifier = np.asarray([1.16222463, 1.21396462, 1.07799579, 0.76160822, 0.65386433, 1.0146046,\
+ 1.00537915, 0.58857567, 0.8])
+
 nt = Network(dt, dx, BV_num)
 nt.setTime(T, tc)
 nt.intializeLocations(DTmodifier)
-BVDist= nt.runNT()
+nt.runNT()
+
 print('Complete!')
 
+#%%Compute travel time avg
+TravelTime = []
 
+for BV in nt.BVs:
+    TravelTime = np.append(TravelTime,BV.traveltime)
+
+avg = np.mean(TravelTime)
+std = np.std(TravelTime)
  
-
 

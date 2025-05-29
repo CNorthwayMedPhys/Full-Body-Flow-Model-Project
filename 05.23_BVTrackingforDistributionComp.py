@@ -284,9 +284,15 @@ class Network (object):
             elif int(data[0]) == 20 or int(data[0]) == 24:
                 DTmod = DTmodifier[5]
             elif int(data[0]) == 21 or int(data[0]) == 25:
-                DTmod = DTmodifier[6]    
+                DTmod = DTmodifier[6]
             elif int(data[0]) == 26 or int(data[0]) == 27:
-                DTmod = DTmodifier[7]       
+                DTmod = DTmodifier[7]      
+            elif int(data[0]) == 2:
+                DTmod = 1.5
+            elif int(data[0]) == 3:
+                DTmod = 0.69882772
+            elif int(data[0]) == 5:
+                DTmod = 0.51878497
             else:
                 DTmod = 1
             self.locations.append(Location(int(data[0]),[int(data[1]),int(data[2]),int(data[3])],float(data[4])*DTmod,data[5]))
@@ -307,6 +313,7 @@ class Network (object):
              
     def runNT (self):
         flag = 0
+        BVDistArray = []
         #Run until we have completed the desired number of cycles
         while self.Nettime < self.tf:
             
@@ -372,8 +379,17 @@ class Network (object):
             
             self.timestep()
             self.print_status()
-            
-        return nt.binBVs()
+            #Write BV dist for averaging
+            if flag == 1:
+                if BVDistArray == []:
+                    BVDistArray = self.binBVs()
+                else:
+                    dist = self.binBVs()
+                    for key in BVDistArray:
+                        array = BVDistArray[key]
+                        BVDistArray[key]=np.append(array,dist[key])
+                        
+        return BVDistArray
    
     def setTime(self, T, tc):
         """
@@ -536,18 +552,24 @@ class Network (object):
 dx = 1e-4 # Distance step size (m)
 dt = 0.002 #Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1e4 #total number BV
+BV_num = 1e5 #total number BV
 ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
-tc = np.round(100 + ToR) #Number of cycles to be simulated
-DTmodifier = np.asarray([1.78908031, 1.73665193, 0.83943898, 1.89678371, 1.9999904,  1.68736531,
- 1.92589095, 1.98335171, 0.95898955])
+tc = np.round(400 + ToR) #Number of cycles to be simulated
+DTmodifier = np.asarray([1.16222463, 1.21396462, 1.07799579, 0.76160822, 0.65386433, 1.0146046,\
+ 1.00537915, 0.58857567, 0.8])
 nt = Network(dt, dx, BV_num)
 nt.setTime(T, tc)
 nt.intializeLocations(DTmodifier)
 BVDist= nt.runNT()
 print('Complete!')
 
-
+#%%
+avgDict ={}
+stdDict = {}
+for key in BVDist:
+    array = BVDist[key]
+    avgDict.update({key : np.mean(array)})
+    stdDict.update({key : np.std(array)})
  
 
 
