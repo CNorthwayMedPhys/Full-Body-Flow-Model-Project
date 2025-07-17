@@ -17,7 +17,7 @@ import scipy as sp
 #Define classes for handling files
 class egsphant:
     
-    def __init__(self, nmaterials, materialList, dimensions, edges, centers, materialArray, densityArray):
+    def __init__(self, nmaterials, materialList, dimensions, edges, centers, materialArray, densityArray, VOIArray):
         self._nmaterials = nmaterials
         self._materialList = materialList
         self._dimensions = dimensions
@@ -25,7 +25,8 @@ class egsphant:
         self._centers = centers
         self._materialArray = materialArray
         self._densityArray = densityArray
-    
+        self._VOIArray = VOIArray
+        
     @property
     def dimensions(self):
         return self._dimensions
@@ -35,13 +36,18 @@ class egsphant:
     @property
     def densityArray(self):
         return self._densityArray
+    @property
+    def VOIArray(self):
+        return self._VOIArray
+    @VOIArray.setter
+    def VOIArray(self,value):
+        self._VOIArray = value
     
-    
-def read2Egsphant():    
+def readEgsphant():    
     root = tk.Tk()
     root.withdraw()  # Hide the main window
-    file_paths = fd.askopenfilenames(parent=root)    
-    egsphantObjects = []
+    root.attributes("-topmost", True)
+    file_paths = fd.askopenfilenames(parent=root, title = 'Select egsphant file')    
     for path in file_paths:
 
         #Parses file line by line
@@ -120,65 +126,57 @@ def read2Egsphant():
                             densityArray[i,j,k] = xRow[i]
 
     
-        egsphantObjects.append(egsphant(nmaterials, materialList, [xdim, ydim, zdim], [xedgesList, yedgesList, zedgesList], [xcenterList, ycenterList, zcenterList], materialArray, densityArray)) 
-    return egsphantObjects
+        egsphantObject=egsphant(nmaterials, materialList, [xdim, ydim, zdim], [xedgesList, yedgesList, zedgesList], [xcenterList, ycenterList, zcenterList], materialArray, densityArray, []) 
+    return egsphantObject
+
+def addVOI(egsphantObject):
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+    root.attributes("-topmost", True)
+    file_paths = fd.askopenfilenames(parent=root, title = 'Select egsvoi file')    
+    for path in file_paths:
+        #Parses file line by line
+        with open(path) as x:
+            
+            #Number of voxels
+            [edepOption, numVoxels] = x.readline().split()
+            
+            #Produce array of voxels
+            voxelIndices = []
+            for i in range(int(numVoxels)):
+                voxelIndices.append(int(x.readline().strip()))
                 
-[egsphantAP, egsphantPA]=read2Egsphant()        
+            #Confirm size is the same
+            if int(numVoxels) == len(voxelIndices):
+                print('All voxels counted')
+                
+            #Create the empty array
+            [xdim,ydim,zdim] = egsphantObj.dimensions
+            VOIArray = np.zeros((xdim,ydim,zdim))
+            
+            #Start filling array
+            ind = 1
+            vInd = 0
+            tag = 0
+            for k in range(zdim):
+                for j in range(ydim):
+                     for i in range(xdim):
+                         if tag == 0:
+                             if ind == voxelIndices[vInd]:
+                                 VOIArray[i,j,k] = 100
+                                 vInd += 1
+                                 if vInd == len(voxelIndices):
+                                     tag = 1
+                         ind += 1
+                         
+            egsphantObj.VOIArray = VOIArray
+
+#%%
+egsphantObj=readEgsphant() 
+
+addVOI(egsphantObj)  
+#%% 
+Summed = egsphantObj.materialArray + egsphantObj.VOIArray  
+index = np.where(Summed > 100)             
+plt.imshow(Summed[:,:,275], cmap='hot', interpolation='nearest')     
         
-#%%      
-#Rotate and Sum egsphant files
-AP_density = egsphantAP.densityArray
-PA_density = egsphantPA.densityArray
-
-#Firstly check dims and crop if an empty slice leads to a mismatch
-
-if egsphantAP.dimensions[0] != egsphantPA.dimensions[0]:
-    if egsphantAP.dimensions[0] > egsphantPA.dimensions[0]:
-        if (egsphantAP.materialArray[0,:,:] == 1).all() :
-            AP_density = AP_density[1:0,:,:]
-        elif (egsphantAP.materialArray[-1,:,:] == 1).all():
-            AP_density = AP_density[0:-1,:,:]
-        else:
-            sys.exit('AP x-dim issue')
-    else:
-        if (egsphantPA.materialArray[0,:,:] == 1).all() :
-            PA_density = PA_density[1:0,:,:]
-        elif (egsphantPA.materialArray[-1,:,:] == 1).all():
-            PA_density = PA_density[0:-1,:,:]
-        else:
-            sys.exit('PA x-dim issue')           
-if egsphantAP.dimensions[1] != egsphantPA.dimensions[1]:
-    if egsphantAP.dimensions[1] > egsphantPA.dimensions[1]:
-        if (egsphantAP.materialArray[:,0,:] == 1).all() :
-            AP_density = AP_density[:,1:0,:]
-        elif (egsphantAP.materialArray[:,-1,:] == 1).all():
-            AP_density = AP_density[:,0:-1,:]
-        else:
-            sys.exit('AP y-dim issue')
-    else:
-        if (egsphantPA.materialArray[:,0,:] == 1).all() :
-            PA_density = PA_density[:,1:0,:]
-        elif (egsphantPA.materialArray[:,-1,:] == 1).all():
-            PA_density = PA_density[:,0:-1,:]
-        else:
-            sys.exit('PA y-dim issue')                    
-if egsphantAP.dimensions[2] != egsphantPA.dimensions[2]:
-    if egsphantAP.dimensions[2] > egsphantPA.dimensions[2]:
-        if (egsphantAP.materialArray[:,:,0] == 1).all() :
-            AP_density = AP_density[:,:,1:0]
-        elif (egsphantAP.materialArray[:,:,-1] == 1).all():
-            AP_density = AP_density[:,:,0:-1]
-        else:
-            sys.exit('AP z-dim issue')
-    else:
-        if (egsphantPA.materialArray[:,:,0] == 1).all() :
-            PA_density = PA_density[:,:,1:0]
-        elif (egsphantPA.materialArray[:,:,-1] == 1).all():
-            PA_density = PA_density[:,:,0:-1]
-        else:
-            sys.exit('PA z-dim issue')       
-
-#Sum the arrays
-Summed = AP_density + sp.ndimage.rotate(PA_density, 180)     
-plt.imshow(Summed[:,:,6], cmap='hot', interpolation='nearest')
-plt.show()
