@@ -1,0 +1,15 @@
+#! /bin/bash
+
+# Puts together the "puts" codes (plastic, lead) and extends patient
+
+# $1 original ID (7 digits)
+# $2 AP or PA
+# $3 shift_y_plastic
+# $4 shift_y_lead
+
+./plastic $1 $2 $3
+
+./lead $1 $2 $4
+
+./extend $1 $2
+

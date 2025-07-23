@@ -1,0 +1,14 @@
+#! /bin/bash
+
+#Shifts filter and makes final phantom, can check this to see if its centered properly
+
+# $1 ID
+# $2 PA
+# $3 Tx_x
+# $4 Tx_z
+# $5 SSD 
+# $6 Tx_y
+
+./filtershift $1 $2 $3 $4 $5 $6
+
+./stacker $1 $2
