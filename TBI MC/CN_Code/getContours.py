@@ -90,7 +90,7 @@ def main(args):
     print("   Getting Contours from DICOM file")
     print("**************************************")
     dicom_file_name = "RP.CN_XCAT.TBI_Crop_AP.dcm"
-    output_file_name = "defaultOutput.contourPoints"
+    output_file_name = "LOG.contourPoints"
     print(f"  Number of Inputs {len(args)}")
     
     if len(args) >= 2:
