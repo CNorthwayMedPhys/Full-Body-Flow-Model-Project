@@ -134,7 +134,7 @@ def readEgsphant():
         materialArray = np.zeros((xdim,ydim,zdim))
         
         #Reset position 
-        x.seek(currentposition-xdim-2)
+        x.seek(currentposition-xdim)
         for k in range(zdim):
             for j in range(ydim+1):
                 xRow = x.readline().strip()
@@ -222,7 +222,7 @@ def measureDist(egsphant, sliceDim, sliceLocation, lineLocation):
         
         body_ant = np.min(body_line[4,:])
         plastic_tray_ant = plastic_line[4,-1]
-        plastic_filter_ant = np.min(plastic_line[4,:])
+        plastic_filter_post = np.max(plastic_line[4,:])
         lead_ant = lead_line[4]
 
   
@@ -233,7 +233,7 @@ def measureDist(egsphant, sliceDim, sliceLocation, lineLocation):
         
         print("body ant: " + str(body_ant))
         print('tray ant: ' + str(plastic_tray_ant))
-        print('filter ant: ' + str(plastic_filter_ant))
+        print('filter post: ' + str(plastic_filter_post))
         print('lead ant: ' + str(lead_ant))
         
             
