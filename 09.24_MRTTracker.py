@@ -203,8 +203,9 @@ class BloodVolume (object):
         self._distance = 0
         #EDITS
         self._traveltime = 0
-        self._travelflag = 0
-    
+        self._enterflag = 0
+        self._exitflag = 0
+        self._trackedflag = 0
     
     @property
     def ID(self):
@@ -263,19 +264,38 @@ class BloodVolume (object):
         return self._traveltime
     
     @property
-    def travelflag(self):
+    def enterflag(self):
         """
         Flag used to determine the stage of travel
         """
-        return self._travelflag
+        return self._enterflag
+    @property
+    def exitflag(self):
+        """
+        Flag used to determine the stage of travel
+        """
+        return self._exitflag    
+    @property
+    def trackedflag(self):
+        """
+        Flag used to ID whether the BV has been tracked once
+        """
+        return self._trackedflag
     
     @traveltime.setter
     def traveltime(self, value):
         self._traveltime = value
         
-    @travelflag.setter
-    def travelflag(self,value):
-        self._travelflag = value
+    @enterflag.setter
+    def enterflag(self,value):
+        self._enterflag = value
+    @exitflag.setter
+    def exitflag(self,value):
+        self._exitflag = value
+        
+    @trackedflag.setter
+    def trackedflag(self,value):
+        self._trackedflag = value
 #%% Define Network Class
 
 class Network (object):
@@ -358,10 +378,14 @@ class Network (object):
             #Iterate through each BV
             for BV in self.BVs:
                 
-                #EDIT: have I returned to the L.heart?
-                if BV.location == 1 and BV.travelflag == 0:
-                    BV.travelflag = 1
-                    
+                #EDIT: we reached the location of interest?
+                if BV.location == 2 and BV.enterflag == 0: 
+                    BV.enterflag = 1
+                #Edit: have we re-entered our region of interest
+                if BV.location == 2 and BV.exitflag == 1:
+                    BV.trackedflag = 2
+
+                
                 #BV determine their location type
                 clocation = self.locations[BV.location]
                 
@@ -402,8 +426,12 @@ class Network (object):
                         else:
                             BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
                             BV._dwelltime = 0
-                BV._tottime += self.dt    
-                if BV.travelflag == 0:
+                BV._tottime += self.dt  
+                #EDIT have we left the location
+                if BV.location != 2 and BV.enterflag == 1 and BV.exitflag == 0:
+                    BV.trackedflag  = 1
+                    BV.exitflag = 1
+                if BV.trackedflag == 1:
                     BV._traveltime += self.dt
             self.timestep()
             self.print_status()
@@ -569,9 +597,9 @@ class Network (object):
 dx = 1e-4 # Distance step size (m)
 dt = 0.002 #Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1e2 #total number BV
+BV_num = 1E5 #total number BV
 ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
-tc = np.round(200 + ToR) #Number of cycles to be simulated
+tc = np.round(500 + ToR) #Number of cycles to be simulated
 
 DTmodifier = np.asarray([1.16222463, 1.21396462, 1.07799579, 0.76160822, 0.65386433, 1.0146046,\
  1.00537915, 0.58857567, 0.8])
@@ -587,7 +615,8 @@ print('Complete!')
 TravelTime = []
 
 for BV in nt.BVs:
-    TravelTime = np.append(TravelTime,BV.traveltime)
+    if BV.trackedflag == 2:
+        TravelTime = np.append(TravelTime,BV.traveltime)
 
 avg = np.mean(TravelTime)
 std = np.std(TravelTime)

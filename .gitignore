@@ -7,3 +7,19 @@ _Archive/Archive_Batch1/08.30 ST BCs.ipynb
 *.nrrd
 TBI MC/CN_Code/TBI_XCAT_Full_AP_trimmed.3ddose
 TBI MC/CN_Code/TBI_XCAT_Full_Combined.3ddose
+MCDAO_pt9.egsphant
+MCDAO_pt9.egsvoi
+MCDAO_pt9_plan02_w1.ainflu
+MCDAO_pt9_plan02_w1.edepdat
+MCDAO_pt9_plan02_w1.edepheader
+MCDAO_pt9_plan02_w2.ainflu
+MCDAO_pt9_plan02_w2.edepdat
+MCDAO_pt9_plan02_w2.edepheader
+MCDAO_pt9_plan02_w3.ainflu
+MCDAO_pt9_plan02_w3.edepdat
+MCDAO_pt9_plan02_w3.edepheader
+XCAT_AP_stacked.egsvoi
+XCAT_PA_stacked.egsvoi
+4DDoseFiles/MCDAO_pt9_plan02_w1.npy
+4DDoseFiles/MCDAO_pt9_plan02_w2.npy
+4DDoseFiles/MCDAO_pt9_plan02_w3.npy

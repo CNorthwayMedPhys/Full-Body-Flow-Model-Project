@@ -158,16 +158,23 @@ def addVOI(egsphantObject):
             ind = 1
             vInd = 0
             tag = 0
-            for k in range(zdim):
-                for j in range(ydim):
-                     for i in range(xdim):
-                         if tag == 0:
-                             if ind == voxelIndices[vInd]:
-                                 VOIArray[i,j,k] = 100
-                                 vInd += 1
-                                 if vInd == len(voxelIndices):
-                                     tag = 1
-                         ind += 1
+            
+            for lin_ind in voxelIndices:
+                
+                x_ind = int((lin_ind-1) % xdim)
+                y_ind = int(((lin_ind-1) //xdim) % ydim)
+                z_ind = int(((lin_ind-1)//xdim) // ydim)
+                VOIArray[x_ind,y_ind,z_ind] = 3
+            # for k in range(zdim):
+            #     for j in range(ydim):
+            #          for i in range(xdim):
+            #              if tag == 0:
+            #                  if ind == voxelIndices[vInd]:
+            #                      VOIArray[i,j,k] = 3
+            #                      vInd += 1
+            #                      if vInd == len(voxelIndices):
+            #                          tag = 1
+            #              ind += 1
                          
             egsphantObj.VOIArray = VOIArray
 
@@ -176,7 +183,7 @@ egsphantObj=readEgsphant()
 
 addVOI(egsphantObj)  
 #%% 
-Summed = egsphantObj.materialArray + egsphantObj.VOIArray  
+Summed = egsphantObj.densityArray + egsphantObj.VOIArray  
 index = np.where(Summed > 100)             
-plt.imshow(Summed[:,:,275], cmap='hot', interpolation='nearest')     
+plt.imshow(Summed[:,:,250], cmap='hot')     
         
