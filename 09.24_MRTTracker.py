@@ -379,10 +379,10 @@ class Network (object):
             for BV in self.BVs:
                 
                 #EDIT: we reached the location of interest?
-                if BV.location == 2 and BV.enterflag == 0: 
+                if (BV.location == 26 or BV.location == 27) and BV.enterflag == 0: 
                     BV.enterflag = 1
                 #Edit: have we re-entered our region of interest
-                if BV.location == 2 and BV.exitflag == 1:
+                if (BV.location == 26 or BV.location == 27) and BV.exitflag == 1:
                     BV.trackedflag = 2
 
                 
@@ -428,7 +428,7 @@ class Network (object):
                             BV._dwelltime = 0
                 BV._tottime += self.dt  
                 #EDIT have we left the location
-                if BV.location != 2 and BV.enterflag == 1 and BV.exitflag == 0:
+                if (BV.location != 26 and BV.location != 27) and BV.enterflag == 1 and BV.exitflag == 0:
                     BV.trackedflag  = 1
                     BV.exitflag = 1
                 if BV.trackedflag == 1:
