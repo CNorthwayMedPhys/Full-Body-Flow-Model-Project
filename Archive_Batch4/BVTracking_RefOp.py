@@ -265,7 +265,7 @@ def BVsim(DTmodifier):
             
         def intializeLocations (self,DTmodifier):
             dir_path = os.path.dirname(os.path.realpath(__file__))
-`   `            path = dir_path + "\\FlowTracker.xlsx"
+            path = dir_path + "\\FlowTracker.xlsx"
             df = pd.read_excel(path)
             for index, row in df.iterrows():
                 data = row['LocationIDNumber;OutFlowA;OutFlowB;OutFlowC;DwellTime(s);SplittingRatioKey']
@@ -306,7 +306,7 @@ def BVsim(DTmodifier):
                  
         def runNT (self):
             flag = 0
-      
+            BVDistArray = []
             #Run until we have completed the desired number of cycles
             while self.Nettime < self.tf:
                 
@@ -369,6 +369,16 @@ def BVsim(DTmodifier):
 
                 self.timestep()
                 self.print_status()
+                #Write BV dist for averaging
+                if flag == 1:
+                    if BVDistArray == []:
+                        BVDistArray = self.binBVs()
+                    else:
+                        dist = self.binBVs()
+                        for key in BVDistArray:
+                            array = BVDistArray[key]
+                            BVDistArray[key]=np.append(array,dist[key])
+                            
         def setTime(self, T, tc):
             """
             Sets timing parameters for the network 
@@ -530,7 +540,7 @@ def BVsim(DTmodifier):
     dx = 1e-4 # Distance step size (m)
     dt = 0.01 #Time step size (s)
     T = 0.955 #Length of one period (s)
-    BV_num = 5e4 #total number BV
+    BV_num = 1e4 #total number BV
     ToR = BV_num/((T/dt)) # nubmer of cycles before all BVs released
     tc = np.round(200 + ToR) #Number of cycles to be simulated
 
@@ -541,8 +551,12 @@ def BVsim(DTmodifier):
     nt.runNT()
     BVcalc = nt.binBVs()
     #print('Complete!')
-
-    return BVcalc
+    avgDict ={}
+    
+    for key in BVcalc:
+        array = BVcalc[key]
+        avgDict.update({key : np.mean(array)})     
+    return avgDict
  
 #%%
 # import numpy as np

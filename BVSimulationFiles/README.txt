@@ -1,0 +1,1 @@
+2D arrays with first column providing 0->L in m and first row is time in heart beat period, and the resulting array is the flow velocity m/s

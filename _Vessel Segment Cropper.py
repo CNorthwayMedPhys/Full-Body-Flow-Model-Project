@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Oct 22 17:01:37 2025
-
+Manually crop vessel segements which are fitted "too long"
 @author: Cassidy.Northway
 """
 

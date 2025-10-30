@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Jan 10 14:48:02 2024
-
+Breaks apart fitted vessels  into segements 
 @author: Cassidy.Northway
 """
-###Goal: ID where we have overlapping vessel bifurcations, does it match what I've been seeing in my code
 
 #%%Import
 

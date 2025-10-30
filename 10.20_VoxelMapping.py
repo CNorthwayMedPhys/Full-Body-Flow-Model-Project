@@ -198,14 +198,5 @@ for i in range(np.shape(vesselArray)[0]-1):
     dist_voxel_match = np.vstack([vesselArray[transition_index,4], vesselArray[transition_index,5]]).T    
          
 #%%Write to an excel document
-workbook = xlsxwriter.Workbook(dir_path + str(vesselNum) + '.xlsx')
-worksheet = workbook.add_worksheet()
-
-col = 0
-for location, index in (dist_voxel_match):
-    worksheet.write(0, col, location)
-    worksheet.write(1, col, index)
-    col += 1
-workbook.close()    
-    
+np.save(dir_path + '\\VOIMappingArrays\\' + str(vesselNum) + '.npy')
 
