@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<VTKFile type="vtkMultiBlockDataSet" version="1.0" byte_order="LittleEndian" header_type="UInt32" compressor="vtkZLibDataCompressor">
-  <vtkMultiBlockDataSet>
-    <DataSet index="0" file="0 RTSTRUCT Full_AP.seg/0 RTSTRUCT Full_AP.seg_0.vtp"/>
-    <DataSet index="1" file="0 RTSTRUCT Full_AP.seg/0 RTSTRUCT Full_AP.seg_1.vtp"/>
-    <DataSet index="2" file="0 RTSTRUCT Full_AP.seg/0 RTSTRUCT Full_AP.seg_2.vtp"/>
-    <DataSet index="3" file="0 RTSTRUCT Full_AP.seg/0 RTSTRUCT Full_AP.seg_3.vtp"/>
-  </vtkMultiBlockDataSet>
-</VTKFile>

@@ -25,3 +25,4 @@ XCAT_PA_stacked.egsvoi
 4DDoseFiles/MCDAO_pt9_plan02_w3.npy
 TBI_XCAT_Full_AP.egsphant
 *.gz
+*.nii
