@@ -22,6 +22,7 @@ fZDim = 489
 
 #Enter the file name you want to save this under
 filename = 'XCAT_PA_stacked.egsvoi'  
+mapping_array = 'PAVOIUnstackToStackMap'
 #%%
 
 #Load in the egsvoi file
@@ -84,12 +85,14 @@ for k in range(iZDim):
                 egsvoi.append(value)
 
 #%% 
-numVOI = np.count_nonzero(VOIArray)
-with open(filename, 'w') as fid:
-    fid.write(f'{1}, {numVOI} \n')
-    for value in egsvoi:
-        fid.write(f'{value}\n')
+# numVOI = np.count_nonzero(VOIArray)
+# with open(filename, 'w') as fid:
+#     fid.write(f'{1}, {numVOI} \n')
+#     for value in egsvoi:
+#         fid.write(f'{value}\n')
 
-print('Writing egsvoi... Done.')           
+# print('Writing egsvoi... Done.')
 
+#%%
+pairedArray = 
 

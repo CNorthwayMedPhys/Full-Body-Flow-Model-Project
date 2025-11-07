@@ -19,10 +19,10 @@ import scipy
 #Import excel sheet
 dir_path = os.path.dirname(os.path.realpath(__file__))
 path = dir_path + '\\FlowTracker.xlsx'
-#arteries_sheet = pd.read_excel(path, sheet_name = 1)
-veins_sheet = pd.read_excel(path, sheet_name = 4)
+arteries_sheet = pd.read_excel(path, sheet_name = 1)
+#veins_sheet = pd.read_excel(path, sheet_name = 4)
    
-sheet=veins_sheet
+sheet=arteries_sheet
 
 #Define the data frame
 df = pd.DataFrame(columns=['Name', 'lam', 'Radius Values', 'End Condition']) 
@@ -119,7 +119,7 @@ for index in range(0,sheet.shape[0]):
                 if branches[i] == 'art_carotid':
                     seg_df.loc[len(seg_df)] = {'Branch Name': branches[i] , 'Index of Split': 1, 'Dist': 0.1}  
                 else:   
-                    branch_row = sheet[sheet['Filename'].str.match(branches[i])].index.values[0]
+                    branch_row = sheet[sheet['Anatomy Name'].str.match(branches[i])].index.values[0]
                     branch_file = sheet.at[sheet.index[branch_row],'Filename']
                     branch_file = branch_file + '_fitted_data.npy'
             

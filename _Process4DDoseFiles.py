@@ -18,16 +18,8 @@ rxTime= 8.14
 
 #Is the volume stacked (Co-60 with filters)?
 stacked_flag = 1 #set to 1 if true, set to zero otherwise
+stackmap_filename = 
 
-#Enter the orginal number of dimensions
-iXDim = 132
-iYDim = 53
-iZDim = 349
-
-#Enter the stacked number of dimensions
-fXDim = 132
-fYDim = 74
-fZDim = 489
 #%% FCN: Read edepheader
 def read_edepheader(headerfile):
     # read phsp source data: xsrc, ysrc, muindx and num of voxel
@@ -78,23 +70,35 @@ def has_duplicates(arr):
     newdict = {k: seen[k] for k in dup_keys}        
     return newdict
 #%% FCN: "Unstack the VOI values for the phantom"
-# We know that the we have z-extensions padding the front and y-padding on the "top"
-zPadding = fZDim - iZDim
-yPadding = fYDim - iYDim
+def unstack (voiValue,egsphantphantom):
 
-#First we need to know the indices taken up by the padding.
-zPaddedIndices = zPadding * fXDim * fYDim
-yPaddingIndices = yPadding * fXDim
 
-egsvoi=[]
-#Replace the VOI Array values with the appropriate 
-for k in range(iZDim):
-    for j in range(iYDim):
-        for i in range(iXDim):
-            if VOIArray[i,j,k] != 0:
-                value = VOIArray[i,j,k]
-                value = int(value + zPaddedIndices + (j*yPaddingIndices))
-                egsvoi.append(value)
+# #Replace the VOI Array values with the appropriate
+# #Create the empty array
+#     VOIArray = np.zeros((iXDim,iYDim,iZDim))
+    
+#     #Start filling array
+#     ind = 1
+#     vInd = 0
+#     tag = 0
+#     for k in range(iZDim):
+#         for j in range(iYDim):
+#              for i in range(iXDim):
+#                  if tag == 0:
+#                      if ind == voxelIndices[vInd]:
+#                          VOIArray[i,j,k] = voxelIndices[vInd]
+#                          vInd += 1
+#                          if vInd == len(voxelIndices):
+#                              tag = 1
+#                  ind += 1
+     
+#     for k in range(iZDim):
+#         for j in range(iYDim):
+#             for i in range(iXDim):
+#                 if VOIArray[i,j,k] != 0:
+#                     value = VOIArray[i,j,k]
+#                     value = int(value - zPaddedIndices - (j*yPaddingIndices))
+#                     egsvoi.append(value)
 
 
 

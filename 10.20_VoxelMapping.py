@@ -9,8 +9,7 @@ Intention: Create array for every vessel were we have |voxel index | xmin | xmax
 import os
 import pandas as pd
 import numpy as np
-import xlsxwriter
-
+import matplotlib.pyplot as plt
 #HARD CODED THE VOXEL SIZE AS 0.5,0.5,0.5 cm
 #HARD CODED the VOXEL ARRAY ORIGIN -32.21, -15.37, -110.5 cm
 #%%Define classes for egsphant handling files and the fcn for loading them in
@@ -140,7 +139,7 @@ egsphant = readEgsphant(path)
 
 #%% Iterate for all vessel numbers
 #for vesselNum in range(28,126+1)
-vesselNum = 42
+vesselNum = 28
 #%% Load in the length array from the excel document
 path = dir_path + '\\BVSimulationFiles\\'+ str(vesselNum) + '.xlsx'
 flowdf = pd.read_excel(path, header = None)
@@ -160,12 +159,12 @@ for i in range(np.shape(vesselArray)[0]-1):
     distanceArray[i+1] = np.linalg.norm(a-b) + distanceArray[i] #mm
 distanceArray = np.array([distanceArray]).T 
   
-#Append the distance array to the vesselArray 
+#Append the distance array to the vesselArray  [x,y,z,r,d] mm
 vesselArray = np.append(vesselArray,distanceArray, axis = 1)    
 #%% Create an index array which pairs  [0,L] and [position_i, position_f] by 
 #binning distance data 
-bin_edges = np.histogram_bin_edges(vesselArray[:,4], bins = len(length_array)-1) 
-inds = np.digitize(vesselArray[:,4], bin_edges)
+# bin_edges = np.histogram_bin_edges(vesselArray[:,4], bins = len(length_array)-1) 
+# inds = np.digitize(vesselArray[:,4], bin_edges)
 
 #%% Map positions in orginal vessels location to finalized egsphant coords
 transition_map = [(1.6*10)-8.0, (-1.1*10)+5.7, (51.5*10) - 553.7]
@@ -187,16 +186,37 @@ for i in range(np.shape(vesselArray)[0]):
 voxelArray = np.array([voxelArray]).T
 vesselArray = np.append(vesselArray ,voxelArray, axis = 1  )    
 
-#%%Find the transition points from voxel to voxel
-transition_index = [0]
-for i in range(np.shape(vesselArray)[0]-1):
-    a = vesselArray[i,5]
-    b = vesselArray[i+1,5]
-    if a-b != 0:
-        transition_index.append(i+1)
 
-    dist_voxel_match = np.vstack([vesselArray[transition_index,4], vesselArray[transition_index,5]]).T    
+#%%To check if translation of array actually aligns everything properly or not.
+#Create the empty array
+[xdim,ydim,zdim] = egsphant.dimensions
+VOIArray = np.zeros((xdim,ydim,zdim))
+
+#Start filling array
+ind = 1
+vInd = 0
+tag = 0
+
+for lin_ind in voxelArray:
+    lin_ind = int(lin_ind)
+    x_ind = int((lin_ind-1) % xdim)
+    y_ind = int(((lin_ind-1) //xdim) % ydim)
+    z_ind = int(((lin_ind-1)//xdim) // ydim)
+    VOIArray[x_ind,y_ind,z_ind] = 10
+
+Summed = egsphant.materialArray + VOIArray  
+index = np.where(Summed > 100)             
+plt.imshow(Summed[:,:,250], cmap='hot')  
+# #%%Find the transition points from voxel to voxel
+# transition_index = [0]
+# for i in range(np.shape(vesselArray)[0]-1):
+#     a = vesselArray[i,5]
+#     b = vesselArray[i+1,5]
+#     if a-b != 0:
+#         transition_index.append(i+1)
+
+#     dist_voxel_match = np.vstack([vesselArray[transition_index,4], vesselArray[transition_index,5]]).T    
          
-#%%Write to an excel document
-np.save(dir_path + '\\VOIMappingArrays\\' + str(vesselNum) + '.npy')
+# #%%Write to an excel document
+# np.save(dir_path + '\\VOIMappingArrays\\' + str(vesselNum) + '.npy')
 
