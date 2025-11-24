@@ -9,16 +9,18 @@ import os
 import numpy as np
 #%%Files names and manual data 
 cd = os.getcwd()
-filename = "MCDAO_pt9_plan02"
-num_files  = 3
-egsphantfile = os.path.join(cd,'MCDAO_pt9'+ '.egsphant')
+filename = "4DDoseData\\AP\\XCAT_AP"
+num_files  = 80
+egsphantfile = os.path.join(cd,'XCAT_AP'+ '.egsphant')
 
-#Treatment time (min)
-rxTime= 8.14
-
+#Treatment time (min/field)
+rxTime= 6.81
+rxTime = rxTime * 60 #(s)
 #Is the volume stacked (Co-60 with filters)?
 stacked_flag = 1 #set to 1 if true, set to zero otherwise
-stackmap_filename = 
+stackmap_filename = "StackToUnstackMaps\\APVOIUnstackToStackMapHiRes.npy"
+stackmap_path = os.path.join(cd,stackmap_filename)
+
 
 #%% FCN: Read edepheader
 def read_edepheader(headerfile):
@@ -33,6 +35,10 @@ def read_edepheader(headerfile):
 def read_edepdat(datafile):
     with open(datafile, 'r') as fid:
         line1 = fid.readline().strip().split(' ')
+        try: 
+            line1 =list(filter(None,line1))
+        except:
+            print('issue')
         dat1 = [float(x) for x in line1]
         ncol = len(dat1)
 
@@ -70,43 +76,14 @@ def has_duplicates(arr):
     newdict = {k: seen[k] for k in dup_keys}        
     return newdict
 #%% FCN: "Unstack the VOI values for the phantom"
-def unstack (voiValue,egsphantphantom):
+if stacked_flag == 1:
+    voiMap = np.load(stackmap_path)
+            
+def unstack(voiMap,StackedVoiValue):
+    ind = np.where(voiMap[1,:] == int(StackedVoiValue))[0]
+    unStackedVOI = voiMap[0,ind[0]]
 
-
-# #Replace the VOI Array values with the appropriate
-# #Create the empty array
-#     VOIArray = np.zeros((iXDim,iYDim,iZDim))
-    
-#     #Start filling array
-#     ind = 1
-#     vInd = 0
-#     tag = 0
-#     for k in range(iZDim):
-#         for j in range(iYDim):
-#              for i in range(iXDim):
-#                  if tag == 0:
-#                      if ind == voxelIndices[vInd]:
-#                          VOIArray[i,j,k] = voxelIndices[vInd]
-#                          vInd += 1
-#                          if vInd == len(voxelIndices):
-#                              tag = 1
-#                  ind += 1
-     
-#     for k in range(iZDim):
-#         for j in range(iYDim):
-#             for i in range(iXDim):
-#                 if VOIArray[i,j,k] != 0:
-#                     value = VOIArray[i,j,k]
-#                     value = int(value - zPaddedIndices - (j*yPaddingIndices))
-#                     egsvoi.append(value)
-
-
-
-
-
-
-
-
+    return int(unStackedVOI)
 
 #%% FCN and class: Read egsphant and voi
 class egsphant:
@@ -259,6 +236,12 @@ for sub_files in range(1,num_files+1):
     [xdim,ydim,zdim] = egsphantom.dimensions
     [xbnds,ybnds,zbnds] = egsphantom.edges
     
+    #If necessary swap voi values
+    if stacked_flag == 1:
+        for i in range(eventArray.shape[1]):
+            unstacked = unstack(voiMap,eventArray[1,i])
+            eventArray[1,i] = unstacked
+    
     for i in range(len(data)):
         lin_ind = eventArray[1,i]
         x_ind = int((lin_ind-1) % xdim)
@@ -292,13 +275,12 @@ for sub_files in range(1,num_files+1):
     ind = np.argsort(eventArray[2,:])
     eventArray = eventArray[:,ind]
     
-    #Start by converting treatment time to seconds
-    rxTime = rxTime * 60 #(s)
+    #Converting treatment time to seconds
     eventArray[2,:] = eventArray[2,:] * rxTime #s
-
-
-    np.save(os.path.join(cd,"4DDoseFiles",filename +"_w" + str(sub_files) +'.npy'),eventArray)
     
+
+    np.save(os.path.join(cd,filename +"_w" + str(sub_files) +'.npy'),eventArray)
+   
     
     
 

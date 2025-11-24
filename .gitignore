@@ -26,3 +26,9 @@ XCAT_PA_stacked.egsvoi
 TBI_XCAT_Full_AP.egsphant
 *.gz
 *.nii
+*.ainflu
+*.edepdat
+*.edepheader
+4DDoseData/
+VOIMappingArrays/
+*.egsphant

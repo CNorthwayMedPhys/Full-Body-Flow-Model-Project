@@ -72,13 +72,23 @@ def readEgsphant():
             zdim = int(zdim)
             
             #Read voxel edges
-            xedgesList = x.readline().split()
-            xedgesList = [float(item) for item in xedgesList]
-            yedgesList = x.readline().split()
-            yedgesList = [float(item) for item in yedgesList]
-            zedgesList = x.readline().split()
-            zedgesList = [float(item) for item in zedgesList]
+            xedgesList = []
+            yedgesList = []
+            zedgesList = []
             
+            while len(xedgesList) < xdim + 1:
+                xedgesTemp = x.readline().split()
+                xedgesTemp = [float(item) for item in xedgesTemp]
+                xedgesList.extend(xedgesTemp)
+            while len(yedgesList) < ydim + 1:
+                yedgesTemp = x.readline().split()
+                yedgesTemp = [float(item) for item in yedgesTemp]
+                yedgesList.extend(yedgesTemp)
+            while len(zedgesList) < zdim + 1:
+                zedgesTemp = x.readline().split()
+                zedgesTemp = [float(item) for item in zedgesTemp]
+                zedgesList.extend(zedgesTemp)    
+
             #Determine the center of the voxels
             xcenterList = []
             ycenterList = []
@@ -154,7 +164,7 @@ def addVOI(egsphantObject):
             [xdim,ydim,zdim] = egsphantObj.dimensions
             VOIArray = np.zeros((xdim,ydim,zdim))
             
-            
+
             for lin_ind in voxelIndices:
                 
                 x_ind = int((lin_ind-1) % xdim)

@@ -184,9 +184,9 @@ path = dir_path + "\\FlowTracker.xlsx"
 df = pd.read_excel(path)
 
 #%%Load in the relevant egsphant
-path = dir_path + "\\XCAT_AP.egsphant"
+path = dir_path + "\\XCAT_PA.egsphant"
 egsphantObj = readEgsphant(path)
-path = dir_path + "\\XCAT_AP_unstacked.egsvoi"
+path = dir_path + "\\XCAT_PA_unstacked.egsvoi"
 addVOI(path, egsphantObj)  
 [xdim,ydim,zdim] = egsphantObj.dimensions
 VOIFittedArray = np.zeros((xdim,ydim,zdim))
@@ -203,6 +203,10 @@ for vesselNum in range(28,125+1):
     vesselName = df.loc[vesselNum, 'NAME']
     path = dir_path + '\\FittedVesselSegments\\'+ vesselName + '.npy' 
     vesselArray = np.load(path) #[x,y,z,r] mm
+    
+    #for PA
+    vesselArray[:,0] = -vesselArray[:,0]
+    vesselArray[:,1] = -vesselArray[:,1]
 
     #%% Create an array that is the total distance elapsed between n and n+1 vessel
     distanceArray = np.zeros(np.shape(vesselArray)[0])
@@ -214,16 +218,16 @@ for vesselNum in range(28,125+1):
       
     #Append the distance array to the vesselArray  [x,y,z,r,d] mm
     vesselArray = np.append(vesselArray,distanceArray, axis = 1)    
-    
+
     #%% Map positions in orginal vessels location to finalized egsphant coords
-    transition_map = [(11.97 - 12.5)-6.2,(-14.1 + 1.5)-0.9,(0.8 - 35)-1.6]
+    transition_map = [(-5-12)+9.9+8.7+3.7+1,(35)+3+3+2+1,-25-4.7-3-3]
     vesselArray[:,0:3] = vesselArray[:,0:3] + transition_map
     
     #%% Determine which positions are in which voxel
     #HARD CODED THE VOXEL SIZE AS 0.5,0.5,0.5 cm
     #HARD CODED the VOXEL ARRAY ORIGIN -32.21, -15.37, -110.5 cm
     voxelArray = np.zeros(np.shape(vesselArray)[0])
-    origin = np.array ([-31.96,-15.62,-110.5]) * 10 #mm
+    origin = np.array ([-33.64,-7.97,-110.5]) * 10 #mm
     size = np. array ([0.25,0.25,0.25]) * 10 # mm
     for i in range(np.shape(vesselArray)[0]):
         voxels = []
@@ -255,11 +259,11 @@ for vesselNum in range(28,125+1):
 #%%
 # Summed = egsphantObj.materialArray + VOIFittedArray*10  
 # plt.figure()         
-# plt.imshow(Summed[:,:,450], cmap='hot')   
+# plt.imshow(Summed[:,:,500], cmap='hot')   
 
 # truth = egsphantObj.materialArray + egsphantObj.VOIArray*10
 # plt.figure()         
-# plt.imshow(truth[:,:,450], cmap='hot') 
+# plt.imshow(truth[:,:,500], cmap='hot') 
    
 
 #%%Find the transition points from voxel to voxel
@@ -273,5 +277,5 @@ for vesselNum in range(28,125+1):
         dist_voxel_match = np.vstack([vesselArray[transition_index,4], vesselArray[transition_index,5]]).T    #mm, voxel num
          
 #%%Write to an excel document
-    np.save(dir_path + '\\VOIMappingArrays\\Hi-Res\\AP\\' + str(vesselNum) + '.npy', dist_voxel_match)
+    np.save(dir_path + '\\VOIMappingArrays\\Hi-Res\\PA\\' + str(vesselNum) + '.npy', dist_voxel_match)
 

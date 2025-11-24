@@ -186,12 +186,12 @@ df = pd.read_excel(path)
 #%%Load in the relevant egsphant
 path = dir_path + "\\XCAT_AP.egsphant"
 egsphantObj = readEgsphant(path)
-path = dir_path + "\\XCAT_AP_unstacked.egsvoi"
+path = dir_path + "\\CN_XCATPulm.egsvoi"
 addVOI(path, egsphantObj)  
 [xdim,ydim,zdim] = egsphantObj.dimensions
 VOIFittedArray = np.zeros((xdim,ydim,zdim))
 #%% Iterate for all vessel numbers
-for vesselNum in range(28,125+1):
+for vesselNum in range( 125+1,127):
 
     #%% Load in the length array from the excel document
     path = dir_path + '\\BVSimulationFiles\\'+ str(vesselNum) + '.xlsx'
@@ -200,10 +200,48 @@ for vesselNum in range(28,125+1):
     length_array = flowdata[0,1:] * 1000 # m*1000 = mm
     
     #%% Load in the radius and central axis data
-    vesselName = df.loc[vesselNum, 'NAME']
-    path = dir_path + '\\FittedVesselSegments\\'+ vesselName + '.npy' 
-    vesselArray = np.load(path) #[x,y,z,r] mm
+    #vesselName = df.loc[vesselNum, 'NAME']
+    #path = dir_path + '\\FittedVesselSegments\\'+ vesselName + '.npy' 
+    vesselArray =np.array([[   -0.4788,    8.4887,   21.0000,],
+   [-0.4511,    8.8462,   21.5000],
+   [-0.9197,    9.4078,   22.0000],
+   [-0.9675,    9.5499,   22.5000],
+   [-0.7166,    9.4224,   23.0000],
+   [-0.6332,    9.3115,   23.5000],
+   [-0.8794,    9.0298,   24.0000],
+   [-0.9861,    8.7653,   24.5000],
+   [-1.1784,    8.2897,   25.0000],
+   [-1.2477,    7.9006,   25.5000],
+   [-1.1477,    7.3701,   26.0000],
+   [-1.1322,    6.5357,   26.5000],
+   [-1.0946,    6.2124,   27.0000],
+   [-1.0830,    5.8202,   27.5000],
+   [-0.9001,    4.9556,   28.0000],
+   [-0.9187,    4.9896,   28.5000]])*10 #[x,y,z] mm
+    
+    # tempY =vesselArray[:,0]
+    # tempX = vesselArray[:,1]
+ 
+    # vesselArray[:,0] = -tempY
+    # vesselArray[:,1] = -tempX
+ 
 
+    interSlices = np.empty((15,3)) 
+    #Want to interpolate to a 2.5 mm slice
+    for i in range(np.shape(vesselArray)[0]-1):
+        [x0,y0,z0] = vesselArray[i,:]
+        [x1,y1,z1] = vesselArray[i+1,:]
+        x = x0 + 0.5*(x1-x0)
+        y = y0 + 0.5*(y1-y0)
+        z = z0 + 0.5*(z1-z0)
+        interSlices[i,:] = [x,y,z]
+        
+    newArray = np.zeros((1,3))
+    for i in range(np.shape(vesselArray)[0]-1):
+        newArray = np.vstack((newArray,vesselArray[i,:],interSlices[i,:]))
+    newArray = np.vstack((newArray,vesselArray[-1,:]))
+    vesselArray = newArray[1:,:]
+        
     #%% Create an array that is the total distance elapsed between n and n+1 vessel
     distanceArray = np.zeros(np.shape(vesselArray)[0])
     for i in range(np.shape(vesselArray)[0]-1):
@@ -212,11 +250,12 @@ for vesselNum in range(28,125+1):
         distanceArray[i+1] = np.linalg.norm(a-b) + distanceArray[i] #mm
     distanceArray = np.array([distanceArray]).T 
       
-    #Append the distance array to the vesselArray  [x,y,z,r,d] mm
+    #Append the distance array to the vesselArray  [x,y,z,d] mm
     vesselArray = np.append(vesselArray,distanceArray, axis = 1)    
     
     #%% Map positions in orginal vessels location to finalized egsphant coords
-    transition_map = [(11.97 - 12.5)-6.2,(-14.1 + 1.5)-0.9,(0.8 - 35)-1.6]
+
+    transition_map = [(11.97 - 12.5)+16,(-14.1 + 1.5)-32,(0.8 - 35)+36]
     vesselArray[:,0:3] = vesselArray[:,0:3] + transition_map
     
     #%% Determine which positions are in which voxel
@@ -249,29 +288,36 @@ for vesselNum in range(28,125+1):
 
 #%%Compelte a rigid registration of the two VOI Arrays to determine the transform 
     #to apply to the vessels
-# shift_values, error, phasediff = phase_cross_correlation(egsphantObj.VOIArray,  VOIFittedArray, upsample_factor=10)
-# print(f"Detected translation: {shift_values}")
+shift_values, error, phasediff = phase_cross_correlation(egsphantObj.VOIArray,  VOIFittedArray, upsample_factor=10)
+print(f"Detected translation: {shift_values}")
 
 #%%
-# Summed = egsphantObj.materialArray + VOIFittedArray*10  
-# plt.figure()         
-# plt.imshow(Summed[:,:,450], cmap='hot')   
+voiindex = np.where(egsphantObj.VOIArray>0)
+Summed = egsphantObj.VOIArray - VOIFittedArray
+for i in range(np.min(voiindex[2]),np.max(voiindex[2])):  
+    plt.figure()         
+    plt.imshow(Summed[:,:,i], cmap='hot')   
 
-# truth = egsphantObj.materialArray + egsphantObj.VOIArray*10
-# plt.figure()         
-# plt.imshow(truth[:,:,450], cmap='hot') 
+truth = egsphantObj.materialArray + egsphantObj.VOIArray*10
+plt.figure()         
+plt.imshow(truth[:,:,545], cmap='hot') 
    
-
-#%%Find the transition points from voxel to voxel
-    transition_index = [0]
-    for i in range(np.shape(vesselArray)[0]-1):
-        a = vesselArray[i,5]
-        b = vesselArray[i+1,5]
-        if a-b != 0:
-            transition_index.append(i+1)
+index = np.where(VOIFittedArray>0)
+print(np.max(index[2]))
+print(np.min(index[2]))
+voiindex = np.where(egsphantObj.VOIArray>0)
+print(np.max(voiindex[2]))
+print(np.min(voiindex[2]))
+# #%%Find the transition points from voxel to voxel
+#     transition_index = [0]
+#     for i in range(np.shape(vesselArray)[0]-1):
+#         a = vesselArray[i,4]
+#         b = vesselArray[i+1,4]
+#         if a-b != 0:
+#             transition_index.append(i+1)
     
-        dist_voxel_match = np.vstack([vesselArray[transition_index,4], vesselArray[transition_index,5]]).T    #mm, voxel num
+#         dist_voxel_match = np.vstack([vesselArray[transition_index,3], vesselArray[transition_index,4]]).T    #mm, voxel num
          
-#%%Write to an excel document
-    np.save(dir_path + '\\VOIMappingArrays\\Hi-Res\\AP\\' + str(vesselNum) + '.npy', dist_voxel_match)
+# #%%Write to an excel document
+#     np.save(dir_path + '\\VOIMappingArrays\\Hi-Res\\AP\\' + str(vesselNum) + '.npy', dist_voxel_match)
 
