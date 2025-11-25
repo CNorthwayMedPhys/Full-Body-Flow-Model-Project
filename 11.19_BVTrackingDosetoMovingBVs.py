@@ -16,7 +16,7 @@ import random
 dx =1 # not used place holder
 dt = 0.002 #Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1e4 #total number BV
+BV_num = 5e2 #total number BV
 Tss = round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
 Tfield = round(6.81 * 60, 3) #Time per field (s)
 Ttrans = 15 * 60 # Time to transition pt from AP to PA (s)
@@ -28,7 +28,7 @@ dose_filename_PA = "4DDoseData\\PA\\Sorted\\XCAT_PA"
 mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
 mapping_filename_PA = "VOIMappingArrays\\Hi-Res\\PA\\"  
 
-save_filename = 'FullBVSim'
+save_filename = '5E2BVSim'
 #%% Utility functions
 
 def colToExcel(col): # col is 1 based
@@ -791,25 +791,25 @@ for BV in BVolumes:
 np.save(os.path.join(cd,save_filename+'.npy'),BV_data)
     
 # Normalize the data by exposure time
-weight = (2*Tfield) / BV_data[:,1]
-norm_dose = BV_data[:,0] * weight
+scale = (2*Tfield) / BV_data[:,1]
+norm_dose = BV_data[:,0] * scale
 
 # Calculate mean and standard deviation
 mean = np.mean(norm_dose)
 std_dev = np.std(norm_dose)
 
 # Create the histogram
-plt.hist(norm_dose, bins=30, alpha=0.7, color='skyblue', edgecolor='black', label='Data Distribution')
+plt.hist(norm_dose, bins=15, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
 
 # Add vertical lines for mean and standard deviation
-plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2f}')
-plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2f}')
+plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
+plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
 plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
 
 # Add labels and title
-plt.xlabel('Value')
-plt.ylabel('Frequency')
-plt.title('Histogram with Mean and Standard Deviation')
+plt.xlabel('Scaled Dose (Gy)')
+plt.ylabel('Blood Volume Count')
+plt.title('Preliminary Results for Co-60 Sweeping TBI')
 plt.legend()
 plt.grid(axis='y', alpha=0.75)
 
