@@ -177,14 +177,14 @@ def addVOI(egsphantObject):
 #%%
 egsphantObj=readEgsphant() 
 
-addVOI(egsphantObj)  
+#addVOI(egsphantObj)  
 #%% 
-Summed = egsphantObj.densityArray + egsphantObj.VOIArray 
-index = np.where(Summed > 100)
+#Summed = egsphantObj.densityArray + egsphantObj.VOIArray 
+#index = np.where(Summed > 100)
 # plt.figure()         
 # plt.imshow(egsphantObj.densityArray[:,:,250])   
-plt.figure()         
-plt.imshow(Summed[:,:,500], cmap='hot')  
+#plt.figure()         
+#plt.imshow(Summed[:,:,500], cmap='hot')  
 # plt.figure()         
 # plt.imshow(Summed[:,26,:], cmap='hot')  
      

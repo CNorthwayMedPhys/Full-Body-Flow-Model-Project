@@ -12,7 +12,7 @@ import numpy as np
 
 #%% File names and manual data
 cd = os.getcwd()
-filename = "4DDoseData\\AP\\Sorted\\XCAT_AP"
+filename = "4DDoseData\\PA\\Sorted\\XCAT_PA"
 num_files  = 80
 step_size = 0.002 #(s)
 sorted_flags = np.zeros(num_files-1)

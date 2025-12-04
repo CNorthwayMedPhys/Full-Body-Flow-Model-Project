@@ -9,16 +9,16 @@ import os
 import numpy as np
 #%%Files names and manual data 
 cd = os.getcwd()
-filename = "4DDoseData\\AP\\XCAT_AP"
+filename = "4DDoseData\\PA\\XCAT_PA"
 num_files  = 80
-egsphantfile = os.path.join(cd,'XCAT_AP'+ '.egsphant')
+egsphantfile = os.path.join(cd,'XCAT_PA'+ '.egsphant')
 
 #Treatment time (min/field)
 rxTime= 6.81
 rxTime = rxTime * 60 #(s)
 #Is the volume stacked (Co-60 with filters)?
 stacked_flag = 1 #set to 1 if true, set to zero otherwise
-stackmap_filename = "StackToUnstackMaps\\APVOIUnstackToStackMapHiRes.npy"
+stackmap_filename = "StackToUnstackMaps\\PAVOIUnstackToStackMapHiRes.npy"
 stackmap_path = os.path.join(cd,stackmap_filename)
 
 
