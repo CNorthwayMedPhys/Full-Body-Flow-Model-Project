@@ -28,6 +28,10 @@ dose_filename_PA = "4DDoseData\\PA\\Sorted\\XCAT_PA"
 mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
 mapping_filename_PA = "VOIMappingArrays\\Hi-Res\\PA\\"  
 
+#Compartment data locations
+compartment_AP = "CompartmentData\\AP\\"
+compartment_PA = "CompartmentData\\PA\\"
+
 save_filename = '5E2BVSim'
 #%% Utility functions
 
@@ -106,6 +110,19 @@ def VOISelector (distance, VOIMapArray):
     index = np.searchsorted(VOIMapArray[:,0],distance, side ='right') 
     VOI = VOIMapArray[index-1,1]
     return VOI  
+
+def DVHSampler(DVHArray):
+
+    volume = random.random()*100 #convert to percentages
+    index = np.searchsorted(DVHArray[0,:],volume)
+    value = np.interp(volume, [DVHArray[1,index-1], DVHArray[1,index]],[DVHArray[0,index-1],DVHArray[0,index-1]])
+    return value #Gy
+
+def DoseRateSampler(EventFreqArray, time):
+    index = np.searchsorted(EventFreqArray[1,:],time, side ='right')
+    DoseRate = EventFreqArray[0,index-1]
+    return DoseRate #1/s
+    
       
 #%%Location class
 
@@ -352,10 +369,6 @@ class Network (object):
         self._locations = []
         self._currentDoseData = None
         
-        
-        
-        
-        
     def intializeLocations (self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         path = dir_path + "\\FlowTracker.xlsx"
@@ -396,6 +409,8 @@ class Network (object):
             if location.IDnum > 27:
                 location.IntFlowData()
                 location.IntVOIMap (location.IDnum, 'AP')
+                location.IntDVH(location.IDnum, 'AP')
+                location.IntEventFreq(location.IDnum, 'AP')
             if location.splittingratiokey != '0':
                 location.IntSplittingRatio (SRdf)
         print('\n Location intialization complete')     
@@ -551,6 +566,8 @@ class Network (object):
         for location in self.locations:
             if location.IDnum > 27:
                 location.IntVOIMap (location.IDnum, 'PA')
+                location.IntDVH(location.IDnum, 'PA')
+                location.IntEventFreq(location.IDnum, 'PA')
         print( '\n AP Field Delievered ')
         self._progress = 0
         localTime = round(self.Nettime - self.Tss - self.Tfield,3)
@@ -684,6 +701,7 @@ class Network (object):
              self.print_status(localTime,self.Tfield)     
         print( '\n PA field delivered ')
         self._progress = 0
+        
 ######## DONE ##############
    
     def setTimes(self, T, Tss, Tfield, Ttrans):

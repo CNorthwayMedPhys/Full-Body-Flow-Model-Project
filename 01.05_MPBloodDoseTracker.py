@@ -7,16 +7,16 @@ Created on Tue Dec 17 11:46:42 2024
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
 import sys
 import random
+import multiprocessing as mp
 
 #%%Parameters 
 dx =1 # not used place holder
 dt = 0.002 #Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 5e2 #total number BV
+BV_num = 1E2 #total number BV
 Tss = round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
 Tfield = round(6.81 * 60, 3) #Time per field (s)
 Ttrans = 15 * 60 # Time to transition pt from AP to PA (s)
@@ -28,7 +28,10 @@ dose_filename_PA = "4DDoseData\\PA\\Sorted\\XCAT_PA"
 mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
 mapping_filename_PA = "VOIMappingArrays\\Hi-Res\\PA\\"  
 
-save_filename = '5E2BVSim'
+#Compartment data locations
+compartment_AP = "CompartmentData\\AP\\"
+compartment_PA = "CompartmentData\\PA\\"
+
 #%% Utility functions
 
 def colToExcel(col): # col is 1 based
@@ -106,6 +109,24 @@ def VOISelector (distance, VOIMapArray):
     index = np.searchsorted(VOIMapArray[:,0],distance, side ='right') 
     VOI = VOIMapArray[index-1,1]
     return VOI  
+
+def DVHSampler(DVHArray):
+    volume = random.random()*100 #convert to percentages
+    DVHArray = np.fliplr(DVHArray)
+    index = np.searchsorted(DVHArray[0,:],volume)
+    value = np.interp(volume, [DVHArray[0,index-1], DVHArray[0,index]],[DVHArray[1,index-1],DVHArray[1,index]])
+    return value #Gy
+
+def DoseRateSampler(EventFreqArray, time):
+    if time < EventFreqArray[0,0]:
+        DoseRate = 0
+    elif time >= EventFreqArray[0,-1] + 0.002:
+        DoseRate = 0
+    else:    
+        index = np.searchsorted(EventFreqArray[0,:],time, side ='right')
+        DoseRate = EventFreqArray[1,index-1]
+    return DoseRate #1/s
+    
       
 #%%Location class
 
@@ -154,11 +175,11 @@ class Location (object):
         self._VOIMap = VOIMappingArray
         
     def IntDVH (self,number, xx):
-        if str(number) == 11:
+        if number == 11:
             number = 10
-        elif str(number) == 13 or str(number) == 14:
+        elif number == 13 or number == 14:
             number = 12
-        elif str(number) == 16 or str(number) == 17:
+        elif number == 16 or number == 17:
             number = 15    
         if xx == 'AP':
             DVHArrayPath = os.path.join(cd,compartment_AP,str(number)+'DVH.npy')
@@ -167,11 +188,11 @@ class Location (object):
         DVHArray = np.load(DVHArrayPath)  
         self._DVH = DVHArray
     def IntEventFreq (self,number, xx):
-            if str(number) == 11:
+            if number == 11:
                 number = 10
-            elif str(number) == 13 or str(number) == 14:
+            elif number == 13 or number == 14:
                 number = 12
-            elif str(number) == 16 or str(number) == 17:
+            elif number == 16 or number == 17:
                 number = 15    
             if xx == 'AP':
                 EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace.npy')
@@ -268,7 +289,6 @@ class BloodVolume (object):
         """
         self._ID =ID
         self._location = location
-        self._exptime = 0
         self._tottime = 0
         self._dwelltime = 0
         self._distance = 0
@@ -288,13 +308,6 @@ class BloodVolume (object):
         ID number of the current location of the BV
         """
         return self._location
-    
-    @property
-    def exptime(self):
-        """
-        Total time that the BV has been "exposed" to dose (s)
-        """
-        return self._exptime
     
     @property
     def tottime(self):
@@ -352,10 +365,6 @@ class Network (object):
         self._locations = []
         self._currentDoseData = None
         
-        
-        
-        
-        
     def intializeLocations (self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         path = dir_path + "\\FlowTracker.xlsx"
@@ -396,9 +405,12 @@ class Network (object):
             if location.IDnum > 27:
                 location.IntFlowData()
                 location.IntVOIMap (location.IDnum, 'AP')
+            else:
+                location.IntDVH(location.IDnum, 'AP')
+                location.IntEventFreq(location.IDnum, 'AP')
             if location.splittingratiokey != '0':
                 location.IntSplittingRatio (SRdf)
-        print('\n Location intialization complete')     
+        #print('\n Location intialization complete')     
         
     def intializeBV(self):
         self.BVs.append(BloodVolume(self.BVcount, 28))
@@ -466,9 +478,9 @@ class Network (object):
                             BV._dwelltime = 0
                 BV._tottime += self.dt    
             self.timestep()
-            self.print_status(self.Nettime,self.Tss)
+            #self.print_status(self.Nettime,self.Tss)
 ################ Steady State Established ########################
-        print( '\n Steady State Established')
+        #print( '\n Steady State Established')
         self._progress = 0
         localTime = round(self.Nettime - self.Tss,3)
         
@@ -516,7 +528,7 @@ class Network (object):
                    #Advance BV down vessel        
                     else:
                        BV._distance = newdistance
-                       BV._exptime += self.dt
+
                 #BV within organ
                 else:
                     #Stays in organ
@@ -540,10 +552,21 @@ class Network (object):
                     if energy_index.size > 0:
                         energy = self.currentDoseData[0,energy_index] * 9.76E14 *self.dt
                         BV._dose = BV.dose + energy
+                else:
+                   doselocation = self.locations[BV.location]
+                   DVHArray = doselocation.DVH
+                   doseDVH = DVHSampler(DVHArray) #Gy
+                   DoseRateArray = doselocation.EventFreq
+                   doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
+                   doseStep = doseDVH * doseRate * self.dt  
+                   BV._dose = BV.dose + doseStep
+                   
+                   
+                   
 
             self.timestep()
             localTime = round(self.Nettime - self.Tss,3)
-            self.print_status(localTime,self.Tfield)
+            #self.print_status(localTime,self.Tfield)
 
 #######################End AP############################
 #Prep for PA 
@@ -551,7 +574,10 @@ class Network (object):
         for location in self.locations:
             if location.IDnum > 27:
                 location.IntVOIMap (location.IDnum, 'PA')
-        print( '\n AP Field Delievered ')
+            else:    
+                location.IntDVH(location.IDnum, 'PA')
+                location.IntEventFreq(location.IDnum, 'PA')
+        #print( '\n AP Field Delievered ')
         self._progress = 0
         localTime = round(self.Nettime - self.Tss - self.Tfield,3)
          
@@ -592,7 +618,7 @@ class Network (object):
                    #Advance BV down vessel        
                     else:
                        BV._distance = newdistance
-                       BV._exptime += self.dt
+
                 #BV within organ
                 else:
                     #Stays in organ
@@ -609,11 +635,11 @@ class Network (object):
 
             self.timestep()
             localTime = round(self.Nettime - self.Tss - self.Tfield,3)
-            self.print_status(localTime,self.Ttrans)
+            #self.print_status(localTime,self.Ttrans)
             
             
 ###############Patient is ready to be treated ######################            
-        print( '\n Patient Flipped ')
+        #print( '\n Patient Flipped ')
         self._progress = 0
         localTime = round(self.Nettime - self.Tss - self.Tfield -self.Ttrans,3)
         while localTime < self.Tfield:
@@ -654,7 +680,7 @@ class Network (object):
                     #Advance BV down vessel        
                      else:
                         BV._distance = newdistance
-                        BV._exptime += self.dt
+
                  #BV within organ
                  else:
                      #Stays in organ
@@ -678,12 +704,21 @@ class Network (object):
                      if energy_index.size > 0:
                          energy = self.currentDoseData[0,energy_index] * 9.76E14 *self.dt
                          BV._dose = BV.dose + energy
+                 else:
+                    doselocation = self.locations[BV.location]
+                    DVHArray = doselocation.DVH
+                    doseDVH = DVHSampler(DVHArray) #Gy
+                    DoseRateArray = doselocation.EventFreq
+                    doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
+                    doseStep = doseDVH * doseRate * self.dt  
+                    BV._dose = BV.dose + doseStep         
 
              self.timestep()
              localTime =  round(self.Nettime - self.Tss - self.Tfield -self.Ttrans,3)
-             self.print_status(localTime,self.Tfield)     
-        print( '\n PA field delivered ')
+             #self.print_status(localTime,self.Tfield)     
+        #print( '\n PA field delivered ')
         self._progress = 0
+        
 ######## DONE ##############
    
     def setTimes(self, T, Tss, Tfield, Ttrans):
@@ -818,49 +853,29 @@ class Network (object):
         
  
 #%% Excute Simulation
-nt = Network(dt, dx, BV_num)
-nt.setTimes(T, Tss, Tfield, Ttrans)
-nt.intializeLocations()
-   
-nt.runNT()
+def runSimulation(dummy_input):
+    nt = Network(dt, dx, BV_num)
+    nt.setTimes(T, Tss, Tfield, Ttrans)
+    nt.intializeLocations()
+  
+    nt.runNT()
 
-BVolumes = nt.BVs
+    BVolumes = nt.BVs
+    #%% Process Data 
+    BV_data = np.zeros([len(BVolumes)])
+    i=0
+    for BV in BVolumes:
+        dose = BV.dose
+        BV_data[i] = dose[0]
+        i += 1
+    return BV_data    
     
-#%% Process Data 
-BV_data = np.zeros([len(BVolumes),2])
-i=0
-for BV in BVolumes:
-    dose = BV.dose
-    exp_time = BV.exptime
-    BV_data[i,0] = dose
-    BV_data[i,1] = exp_time
-    i += 1
+if  __name__ == "__main__":
+    num_tasks = 3
+    dummy_input_list = [None] * num_tasks
+    pool = mp.Pool(mp.cpu_count())
+    results = pool.map(runSimulation, dummy_input_list ) #runs 1E2, three times
+    pool.close()
+    print(len(results))
     
-#Save Data
-np.save(os.path.join(cd,save_filename+'.npy'),BV_data)
-    
-# Normalize the data by exposure time
-scale = (2*Tfield) / BV_data[:,1]
-norm_dose = BV_data[:,0] * scale
 
-# Calculate mean and standard deviation
-mean = np.mean(norm_dose)
-std_dev = np.std(norm_dose)
-
-# Create the histogram
-plt.hist(norm_dose, bins=15, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
-
-# Add vertical lines for mean and standard deviation
-plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
-plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
-plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
-
-# Add labels and title
-plt.xlabel('Scaled Dose (Gy)')
-plt.ylabel('Blood Volume Count')
-plt.title('Preliminary Results for Co-60 Sweeping TBI')
-plt.legend()
-plt.grid(axis='y', alpha=0.75)
-
-# Display the plot
-plt.show()

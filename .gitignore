@@ -32,3 +32,4 @@ TBI_XCAT_Full_AP.egsphant
 4DDoseData/
 VOIMappingArrays/
 *.egsphant
+*.dcm
