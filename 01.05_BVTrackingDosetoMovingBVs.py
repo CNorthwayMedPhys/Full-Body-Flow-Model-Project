@@ -11,8 +11,12 @@ import matplotlib.pyplot as plt
 import os
 import sys
 import random
+import time
 
 #%%Parameters 
+
+tic = time.perf_counter()
+
 dx =1 # not used place holder
 dt = 0.002 #Time step size (s)
 T = 0.955 #Length of one period (s)
@@ -897,3 +901,6 @@ plt.grid(axis='y', alpha=0.75)
 
 # Display the plot
 plt.show()
+toc = time.perf_counter()
+elapsed_time = toc - tic
+print(f"Elapsed time is {elapsed_time:0.4f} seconds.")

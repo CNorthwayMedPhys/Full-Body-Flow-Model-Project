@@ -868,14 +868,16 @@ def runSimulation(dummy_input):
         dose = BV.dose
         BV_data[i] = dose[0]
         i += 1
+    print('iteration done')    
     return BV_data    
     
 if  __name__ == "__main__":
-    num_tasks = 3
+    num_tasks = 20
     dummy_input_list = [None] * num_tasks
-    pool = mp.Pool(mp.cpu_count())
+    pool = mp.Pool(10)
     results = pool.map(runSimulation, dummy_input_list ) #runs 1E2, three times
     pool.close()
     print(len(results))
+    np.save("1E4BVMP.npy",results)
     
 

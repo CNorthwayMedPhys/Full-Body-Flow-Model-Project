@@ -30,6 +30,5 @@ TBI_XCAT_Full_AP.egsphant
 *.edepdat
 *.edepheader
 4DDoseData/
-VOIMappingArrays/
 *.egsphant
 *.dcm
