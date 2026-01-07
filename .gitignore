@@ -29,6 +29,5 @@ TBI_XCAT_Full_AP.egsphant
 *.ainflu
 *.edepdat
 *.edepheader
-4DDoseData/
 *.egsphant
 *.dcm
