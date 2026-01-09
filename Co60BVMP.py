@@ -871,12 +871,12 @@ def runSimulation(dummy_input):
     print('iteration done')    
     return BV_data    
     
-num_tasks = 4
+num_tasks = 1000
 ncpus = int(os.environ.get('SLURM_CPUS_PER_TASK',default=1))
 pool = mp.Pool(processes=ncpus)
 dummy_input_list = [None] * num_tasks
 results = pool.map(runSimulation, dummy_input_list ) #runs 1E2, three times
 pool.close()
-np.save("4E2BVMP.npy",results)
+np.save("1E5BVMP.npy",results)
     
 
