@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-ispading
-#SBATCH --time=72:00:00
+#SBATCH --time=167:00:00
 #SBATCH --ntasks-per-node=24
 #SBATCH --cpus-per-task=8
 #SBATCH --mail-user=cbnorthway@gmail.com
