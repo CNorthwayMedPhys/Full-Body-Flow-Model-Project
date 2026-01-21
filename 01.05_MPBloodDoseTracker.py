@@ -720,7 +720,10 @@ class Network (object):
         self._progress = 0
         
 ######## DONE ##############
-   
+    def shufflePositions(self):
+        BVs = self.BVs
+        
+        
     def setTimes(self, T, Tss, Tfield, Ttrans):
         """
         Sets timing parameters for the network 

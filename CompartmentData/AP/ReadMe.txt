@@ -1,8 +1,8 @@
 *eventTrace.npy
-Compartment "dose rate" arrays. Every energy event is binned into 0.002 s bins
+Compartment "dose rate" arrays. Every energy event is binned into 0.5 s bins
 size is [2,n]
 [0,:]  is the number of events/total number of events
-[1,:] is the LEFT bin edge (recall bin width = 2ms) 
+[1,:] is the LEFT bin edge (recall bin width = 500ms) 
 
 *DVH.npy
 DVH for each compartment [2,n]

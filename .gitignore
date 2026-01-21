@@ -31,3 +31,6 @@ TBI_XCAT_Full_AP.egsphant
 *.edepheader
 *.egsphant
 *.dcm
+timeStepQuery/
+4DDoseData/PA/XCAT_PA_500ms.npy
+4DDoseData/

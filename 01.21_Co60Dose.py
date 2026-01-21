@@ -10,21 +10,23 @@ import pandas as pd
 import os
 import sys
 import random
-import multiprocessing as mp
-
+import matplotlib.pyplot as plt
+from pytictoc import TicToc
+t = TicToc()          # Create an instance
+t.tic()   
 #%%Parameters 
 dx =1 # not used place holder
 dt = 0.002 #Time step size (s)
 dst = 0.5 #Dose sample time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1E1 #total number BV
+BV_num = 5E3 #total number BV
 Tss = round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
 Tfield = round(6.81 * 60, 3) #Time per field (s)
 #Ttrans = 15 * 60 # Time to transition pt from AP to PA (s)
 #Dose file locations 
 cd = os.getcwd()
-dose_filename_AP = "4DDoseData\\AP\\Sorted\\XCAT_AP"
-dose_filename_PA = "4DDoseData\\PA\\Sorted\\XCAT_PA"
+dose_filename_AP = "4DDoseData\\AP\\XCAT_AP"
+dose_filename_PA = "4DDoseData\\PA\\XCAT_PA"
 #Get Voxel Mapping Array
 mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
 mapping_filename_PA = "VOIMappingArrays\\Hi-Res\\PA\\"  
@@ -552,7 +554,7 @@ class Network (object):
                         VOI = VOISelector(BV.distance, VOIArray)
                         energy_index = np.where((self.currentDoseData[1,:] == VOI) & (self.currentDoseData[2,:] == localTime))[0]
                         if energy_index.size > 0:
-                            energy = self.currentDoseData[0,energy_index] * 9.76E14 *self.dt
+                            energy = self.currentDoseData[0,energy_index] * 9.76E14 *dst
                             BV._dose = BV.dose + energy
                     else:
                        doselocation = self.locations[BV.location]
@@ -560,7 +562,7 @@ class Network (object):
                        doseDVH = DVHSampler(DVHArray) #Gy
                        DoseRateArray = doselocation.EventFreq
                        doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
-                       doseStep = doseDVH * doseRate * self.dt  
+                       doseStep = doseDVH * doseRate * dst 
                        BV._dose = BV.dose + doseStep
                    
                    
@@ -585,10 +587,9 @@ class Network (object):
          
         #Load in the first set of dose data
         current_file = 2
-        self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA +"_w" + str(1) +'.npy'))
-        bv1 = self.BVs[0]     
-        self.shuffleBVs(self)
-        bv2 = self.BVs[0] 
+        self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA +"_w" + str(1) +'.npy'))    
+        self.shuffleBVs()
+
 ################# Run Tranistion Time without Field #################
         # while localTime < self.Ttrans:
             
@@ -707,7 +708,7 @@ class Network (object):
                          VOI = VOISelector(BV.distance, VOIArray)
                          energy_index = np.where((self.currentDoseData[1,:] == VOI) & (self.currentDoseData[2,:] == localTime))[0]
                          if energy_index.size > 0:
-                             energy = self.currentDoseData[0,energy_index] * 9.76E14 *self.dt
+                             energy = self.currentDoseData[0,energy_index] * 9.76E14 *dst
                              BV._dose = BV.dose + energy
                      else:
                         doselocation = self.locations[BV.location]
@@ -715,7 +716,7 @@ class Network (object):
                         doseDVH = DVHSampler(DVHArray) #Gy
                         DoseRateArray = doselocation.EventFreq
                         doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
-                        doseStep = doseDVH * doseRate * self.dt  
+                        doseStep = doseDVH * doseRate * dst  
                         BV._dose = BV.dose + doseStep         
 
              self.timestep()
@@ -746,7 +747,7 @@ class Network (object):
                 position_data[i,:] =[loc, dt, 0, tag]
             i += 1
         #Shuffle position data   
-        position_data = np.random.shuffle(position_data)
+        np.random.shuffle(position_data)
         
         #Redist locations
         i = 0
@@ -755,11 +756,11 @@ class Network (object):
             tag = position_data[i,3]
             
             if tag == 0: #Vessels
-                BV._loction = loc
+                BV._loction = int(loc)
                 BV._dwelltime = 0
                 BV._distance = position_data[i,2]
             else: #Compartment
-                BV._location = loc
+                BV._location = int(loc)
                 BV._distance = 0
                 BV._dwelltime = position_data[i,1]
         self._BVs = BV_data         
@@ -920,5 +921,28 @@ def runSimulation(dummy_input):
     return BV_data    
     
 results = runSimulation(0)
-    
+ 
+BV_data = results
+# Calculate mean and standard deviation
+mean = np.mean(BV_data)
+std_dev = np.std(BV_data)
+
+# Create the histogram
+plt.hist(BV_data, bins=15, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
+
+# Add vertical lines for mean and standard deviation
+plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
+plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
+plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
+
+# Add labels and title
+plt.xlabel('Dose (Gy)')
+plt.ylabel('Blood Volume Count')
+plt.title('Single Fracation Results for Co-60 Sweeping TBI')
+plt.legend()
+plt.grid(axis='y', alpha=0.75)
+
+# Display the plot
+plt.show()
+t.toc()   
 

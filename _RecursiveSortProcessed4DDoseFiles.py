@@ -12,9 +12,9 @@ import numpy as np
 
 #%% File names and manual data
 cd = os.getcwd()
-filename = "4DDoseData\\PA\\Sorted\\XCAT_PA"
+filename = "4DDoseData\\AP\\XCAT_AP"
 num_files  = 80
-step_size = 0.002 #(s)
+step_size = 0.5 #(s)
 sorted_flags = np.zeros(num_files-1)
 
 #%% FCN: Check for duplicate location, time events
@@ -48,10 +48,10 @@ while any(flags!= 1 for flags in sorted_flags ):
         #Combine the two files
         array = np.append(array_1,array_2,axis=1)
         
-        
-        for j in range(np.size(array, axis = 1)):
-            new_value = round(array[2,j] / step_size)*step_size
-            array[2,j] = new_value
+        #Now done in previous stage
+        # for j in range(np.size(array, axis = 1)):
+        #     new_value = round(array[2,j] / step_size)*step_size
+        #     array[2,j] = new_value
         
         
         #Sum shared events

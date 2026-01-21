@@ -10,11 +10,10 @@ import pandas as pd
 import os
 import sys
 import random
-import multiprocessing as mp
 
 #%%Parameters 
 dx =1 # not used place holder
-dt = 0.2 #Time step size (s)
+dt = 0.002 #Time step size (s)
 dst = 0.5 #Dose sample time step size (s)
 T = 0.955 #Length of one period (s)
 BV_num = 1E1 #total number BV
@@ -23,8 +22,8 @@ Tfield = round(1 * 60, 3) #Time per field (s)
 #Ttrans = 15 * 60 # Time to transition pt from AP to PA (s)
 #Dose file locations 
 cd = os.getcwd()
-dose_filename_AP = "4DDoseData\\AP\\Sorted\\XCAT_AP"
-dose_filename_PA = "4DDoseData\\PA\\Sorted\\XCAT_PA"
+dose_filename_AP = "4DDoseData\\AP\\XCAT_AP"
+dose_filename_PA = "4DDoseData\\PA\\XCAT_PA"
 #Get Voxel Mapping Array
 mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
 mapping_filename_PA = "VOIMappingArrays\\Hi-Res\\PA\\"  

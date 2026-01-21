@@ -14,7 +14,7 @@ import multiprocessing as mp
 
 #%%Parameters 
 dx =1 # not used place holder
-dt = 0.002 #Time step size (s)
+dt = 0.008 #Time step size (s)
 T = 0.955 #Length of one period (s)
 BV_num = 1E2 #total number BV
 Tss = round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
@@ -871,12 +871,13 @@ def runSimulation(dummy_input):
     print('iteration done')    
     return BV_data    
     
-num_tasks = 1000
+
+num_tasks = 4
 ncpus = int(os.environ.get('SLURM_CPUS_PER_TASK',default=1))
 pool = mp.Pool(processes=ncpus)
 dummy_input_list = [None] * num_tasks
 results = pool.map(runSimulation, dummy_input_list ) #runs 1E2, three times
-pool.close()
-np.save("1E5BVMP.npy",results)
+pool.close() #runs 1E2, three times
+np.save("0.008BV.npy",results)
     
 

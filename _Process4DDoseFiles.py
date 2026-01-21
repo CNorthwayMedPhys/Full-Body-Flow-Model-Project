@@ -9,16 +9,18 @@ import os
 import numpy as np
 #%%Files names and manual data 
 cd = os.getcwd()
-filename = "4DDoseData\\PA\\XCAT_PA"
+filename = "4DDoseData\\AP\\XCAT_AP"
 num_files  = 80
-egsphantfile = os.path.join(cd,'XCAT_PA'+ '.egsphant')
+egsphantfile = os.path.join(cd,'XCAT_AP'+ '.egsphant')
 
 #Treatment time (min/field)
 rxTime= 6.81
 rxTime = rxTime * 60 #(s)
+step_size = 0.5 
+
 #Is the volume stacked (Co-60 with filters)?
 stacked_flag = 1 #set to 1 if true, set to zero otherwise
-stackmap_filename = "StackToUnstackMaps\\PAVOIUnstackToStackMapHiRes.npy"
+stackmap_filename = "StackToUnstackMaps\\APVOIUnstackToStackMapHiRes.npy"
 stackmap_path = os.path.join(cd,stackmap_filename)
 
 
@@ -228,7 +230,18 @@ for sub_files in range(1,num_files+1):
             eventArray[:,j] = np.hstack((event,muIndex))
             j += 1
     
+#%%Convert MU to time and sort in descending order    
     
+    #Sort by MU index, aka in time
+    ind = np.argsort(eventArray[2,:])
+    eventArray = eventArray[:,ind]
+    
+    #Converting treatment time to seconds
+    eventArray[2,:] = eventArray[2,:] * rxTime #s 
+    
+    for j in range(np.size(eventArray, axis = 1)):
+        new_value = round(eventArray[2,j] / step_size)*step_size
+        eventArray[2,j] = new_value
 #%%Convert energy to Gy/particle
     
     #Determine mass of each voxel. 
@@ -268,17 +281,9 @@ for sub_files in range(1,num_files+1):
             eventArray = np.append(eventArray,np.vstack([sum(sumValues), location, time]), axis = 1)
             
     #Remove summed values
-    eventArray = np.delete(eventArray, rem_ind, axis = 1)        
-#%%Convert MU to time and sort in descending order    
+    eventArray = np.delete(eventArray, rem_ind, axis = 1)
     
-    #Sort by MU index, aka in time
-    ind = np.argsort(eventArray[2,:])
-    eventArray = eventArray[:,ind]
-    
-    #Converting treatment time to seconds
-    eventArray[2,:] = eventArray[2,:] * rxTime #s
-    
-
+#%% SAVE
     np.save(os.path.join(cd,filename +"_w" + str(sub_files) +'.npy'),eventArray)
    
     

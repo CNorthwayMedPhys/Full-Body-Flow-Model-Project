@@ -40,7 +40,7 @@ ax.set_yticklabels(ylabels, rotation=90)
 ax.tick_params(axis='y', colors='red')
 
 plt.xlabel('Time (s)')
-plt.ylabel('Energy Deposition\n Rate (1/s)')
+plt.ylabel('Dose Rate (1/s)')
 ax.xaxis.set_label_coords(.5, -0.03)
 ax.yaxis.set_label_coords(-0.03, 0.45)
 ax.axvline(x = x[ind], ymin = 0, ymax = 0.93, color = 'r',linestyle = "--")
@@ -259,14 +259,14 @@ for i in range(264):
         if any(phant[i,:,j] > 1):
             phant2d[i,j] = 3
 
-# voinames = [12,15,18,19,20,21,22,23,24,25] 
-# for items in voinames:     
-#     addVOI(egsphantObj,"CompartmentData//AP//UnStackedEgsvoi//" +str(items)+".egsvoi") 
-#     voi = egsphantObj.VOIArray
-#     for i in range(264):
-#         for j in range(697):
-#             if any(voi[i,:,j] > 0):
-#                 phant2d[i,j] = 4 
+voinames = [3,5,8,10] #darker grey
+for items in voinames:     
+    addVOI(egsphantObj,"CompartmentData//AP//UnStackedEgsvoi//" +str(items)+".egsvoi") 
+    voi = egsphantObj.VOIArray
+    for i in range(264):
+        for j in range(697):
+            if any(voi[i,:,j] > 0):
+                phant2d[i,j] = 4 
 
 voinames = [2,6,9,26,27] 
 for items in voinames:     
