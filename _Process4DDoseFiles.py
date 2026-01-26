@@ -9,9 +9,9 @@ import os
 import numpy as np
 #%%Files names and manual data 
 cd = os.getcwd()
-filename = "4DDoseData\\AP\\XCAT_AP"
+filename = "4DDoseData\\PA\\XCAT_PA"
 num_files  = 80
-egsphantfile = os.path.join(cd,'XCAT_AP'+ '.egsphant')
+egsphantfile = os.path.join(cd,'XCAT_PA'+ '.egsphant')
 
 #Treatment time (min/field)
 rxTime= 6.81
@@ -20,10 +20,19 @@ step_size = 0.5
 
 #Is the volume stacked (Co-60 with filters)?
 stacked_flag = 1 #set to 1 if true, set to zero otherwise
-stackmap_filename = "StackToUnstackMaps\\APVOIUnstackToStackMapHiRes.npy"
+stackmap_filename = "StackToUnstackMaps\\PAVOIUnstackToStackMapHiRes.npy"
 stackmap_path = os.path.join(cd,stackmap_filename)
 
-
+#Load in the relevant voxel indices
+mapping_filename = "VOIMappingArrays\\Hi-Res\\PA\\"
+voxelMap = np.zeros((0,2))
+for i in range(28,81):
+    voxelMapSub =np.load(os.path.join(cd,mapping_filename+str(i)+".npy"))
+    voxelMap = np.append(voxelMap,voxelMapSub,axis =0)
+mapVoxels = np.unique(voxelMap[:,1])  
+ 
+#Create empty array to add all event data to
+allEvents = np.zeros((3,0)) 
 #%% FCN: Read edepheader
 def read_edepheader(headerfile):
     # read phsp source data: xsrc, ysrc, muindx and num of voxel
@@ -206,6 +215,10 @@ def readEgsphant(egsphantfile):
 #%%Begin file processing 
 egsphantom = readEgsphant(egsphantfile)
 
+#For this need to use the the volume and density of each voxel
+[xdim,ydim,zdim] = egsphantom.dimensions
+[xbnds,ybnds,zbnds] = egsphantom.edges
+
 for sub_files in range(1,num_files+1):
     headerfile = os.path.join(cd,filename +"_w" + str(sub_files) + '.edepheader')
     datafile = os.path.join(cd,filename +"_w" + str(sub_files)+ '.edepdat')
@@ -242,12 +255,7 @@ for sub_files in range(1,num_files+1):
     for j in range(np.size(eventArray, axis = 1)):
         new_value = round(eventArray[2,j] / step_size)*step_size
         eventArray[2,j] = new_value
-#%%Convert energy to Gy/particle
-    
-    #Determine mass of each voxel. 
-    #For this need to use the the volume and density of each voxel
-    [xdim,ydim,zdim] = egsphantom.dimensions
-    [xbnds,ybnds,zbnds] = egsphantom.edges
+#%%Make edits to voxel indices and remove excess events
     
     #If necessary swap voi values
     if stacked_flag == 1:
@@ -255,36 +263,72 @@ for sub_files in range(1,num_files+1):
             unstacked = unstack(voiMap,eventArray[1,i])
             eventArray[1,i] = unstacked
     
-    for i in range(len(data)):
-        lin_ind = eventArray[1,i]
-        x_ind = int((lin_ind-1) % xdim)
-        y_ind = int(((lin_ind-1) //xdim) % ydim)
-        z_ind = int(((lin_ind-1)//xdim) // ydim)
-        voxelVolume = (xbnds[x_ind+1]-xbnds[x_ind])*(ybnds[y_ind+1]-ybnds[y_ind])*(zbnds[z_ind+1]-zbnds[z_ind]) #cm^3
-        voxelDensity = egsphantom.densityArray[x_ind,y_ind,z_ind] #g/cm
-        massVoxel = voxelDensity / voxelVolume # g
-        voxelDose = (1.602E-10 / (massVoxel * ainflu))*eventArray[0,i] #Gy/particle
-        eventArray[0,i] = voxelDose #Gy/particle
-        
-#%%Sum identical locations and times
+    #Remove events which don't have Voxel Indices found in the mapping array
+    eventVoxels = eventArray[1,:]
+    mask = np.isin(eventVoxels,mapVoxels)
+    eventArray = eventArray[:,mask]
+
+#%%Sum energy for shared time and location events with summing identical values    
+    
+    #Find events at a shared event and location
     dup_dict = has_duplicates(eventArray[1:3,:])
     rem_ind = []
     
     if dup_dict != {}:
         for key, value in dup_dict.items():
-            sumValues = []
+            sumEnergy = []
             for ind in value:
-                sumValues.append(eventArray[0,ind])
+                sumEnergy.append(eventArray[0,ind])
                 location = eventArray[1,ind]
-                time = eventArray [2,ind]
+                time = eventArray[2,ind]
                 rem_ind.append(ind)
-            eventArray = np.append(eventArray,np.vstack([sum(sumValues), location, time]), axis = 1)
-            
+            eventArray = np.append(eventArray,np.vstack([np.sum(sumEnergy), location, time]), axis = 1)
+    
     #Remove summed values
     eventArray = np.delete(eventArray, rem_ind, axis = 1)
     
-#%% SAVE
-    np.save(os.path.join(cd,filename +"_w" + str(sub_files) +'.npy'),eventArray)
+#%% Calculate the dose values
+    
+    for i in range(len(eventArray[0,:])):
+        lin_ind = eventArray[1,i]
+        x_ind = int((lin_ind-1) % xdim)
+        y_ind = int(((lin_ind-1) //xdim) % ydim)
+        z_ind = int(((lin_ind-1)//xdim) // ydim)
+        voxelVolume = (xbnds[x_ind+1]-xbnds[x_ind])*(ybnds[y_ind+1]-ybnds[y_ind])*(zbnds[z_ind+1]-zbnds[z_ind]) #cm^3
+        voxelDensity = egsphantom.densityArray[x_ind,y_ind,z_ind] #g/cm^3
+        massVoxel = voxelDensity * voxelVolume # g
+        voxelDose = (1.602E-10 / (massVoxel * ainflu))*eventArray[0,i] #Gy/particle
+        eventArray[0,i] = voxelDose #Gy/particle
+        
+
+    
+#%% Create full array 
+    allEvents = np.append(allEvents, eventArray, axis = 1)
+    print(str(sub_files))
+#%%Now sum all dose events  
+  
+#Find events at a shared event and location
+dup_dict = has_duplicates(allEvents[1:3,:])
+rem_ind = []
+
+if dup_dict != {}:
+    for key, value in dup_dict.items():
+        sumDose = []
+        for ind in value:
+            sumDose.append(allEvents[0,ind])
+            location = allEvents[1,ind]
+            time = allEvents[2,ind]
+            rem_ind.append(ind)
+        allEvents = np.append(allEvents,np.vstack([np.sum(sumDose), location, time]), axis = 1)
+
+#Remove summed values
+allEvents = np.delete(allEvents, rem_ind, axis = 1)
+
+#Sort by time again
+ind = np.argsort(allEvents[2,:])
+allEvents = allEvents[:,ind]
+
+np.save(os.path.join(cd,filename +"FullDoseData500msRes.npy"),allEvents)
    
     
     

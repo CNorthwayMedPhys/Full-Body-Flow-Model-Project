@@ -275,7 +275,7 @@ for sub_files in range(1,num_files+1):
                 
             voxelVolume = (xbnds[x_ind+1]-xbnds[x_ind])*(ybnds[y_ind+1]-ybnds[y_ind])*(zbnds[z_ind+1]-zbnds[z_ind]) #cm^3
             voxelDensity = egsphantom.densityArray[x_ind,y_ind,z_ind] #g/cm
-            massVoxel = voxelDensity / voxelVolume # g
+            massVoxel = voxelDensity * voxelVolume # g
                 
             voxelDose = (1.602E-10 / (massVoxel * ainflu))*sum(sumEnergy) #Gy/particle
              
@@ -301,7 +301,7 @@ for sub_files in range(1,num_files+1):
             z_ind = int(((location-1)//xdim) // ydim)
             voxelVolume = (xbnds[x_ind+1]-xbnds[x_ind])*(ybnds[y_ind+1]-ybnds[y_ind])*(zbnds[z_ind+1]-zbnds[z_ind]) #cm^3
             voxelDensity = egsphantom.densityArray[x_ind,y_ind,z_ind] #g/cm
-            massVoxel = voxelDensity / voxelVolume # g
+            massVoxel = voxelDensity * voxelVolume # g
             voxelDose = (1.602E-10 / (massVoxel * ainflu))*E #Gy/particle
             if E != 0:
                 relError = (1/E)*np.sqrt((ainflu/(ainflu-1))*(E**2 -(E**2/ainflu)))
@@ -353,6 +353,7 @@ np.save(savefile,allData)
 toc = clock.perf_counter()   
 elapsed_time = toc - tic
 print(f"Elapsed time: {elapsed_time:0.4f} seconds") 
+print(np.mean(allData))
     
     
 

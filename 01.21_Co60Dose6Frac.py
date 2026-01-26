@@ -922,10 +922,22 @@ def runSimulation(dummy_input):
         i += 1
     print('iteration done')    
     return BV_data    
+
     
 results = runSimulation(0)
- 
-BV_data = results
+frac2 = runSimulation(2)
+frac3 = runSimulation(2)
+frac4 = runSimulation(2)
+frac5 = runSimulation(2)
+frac6 = runSimulation(2)
+
+np.random.shuffle(frac2)
+np.random.shuffle(frac3)
+np.random.shuffle(frac4)
+np.random.shuffle(frac5)
+np.random.shuffle(frac6)
+
+BV_data = results + frac2 + frac3 + frac4 + frac5 + frac5
 # Calculate mean and standard deviation
 mean = np.mean(BV_data)
 std_dev = np.std(BV_data)
@@ -948,6 +960,6 @@ plt.grid(axis='y', alpha=0.75)
 # Display the plot
 plt.show()
 
-np.save("1FracAbstract.npy", BV_data)
+np.save("6FracAbstract.npy", BV_data)
 t.toc()   
 

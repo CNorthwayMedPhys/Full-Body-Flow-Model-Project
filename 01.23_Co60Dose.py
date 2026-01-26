@@ -20,13 +20,13 @@ dt = 0.002 #Time step size (s)
 dst = 0.5 #Dose sample time step size (s)
 T = 0.955 #Length of one period (s)
 BV_num = 5E3 #total number BV
-Tss = round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
+Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
 Tfield = round(6.81 * 60, 3) #Time per field (s)
 Ttrans = 1 * 60 # Added to shuffle (s)
 #Dose file locations 
 cd = os.getcwd()
-dose_filename_AP = "4DDoseData\\AP\\XCAT_AP"
-dose_filename_PA = "4DDoseData\\PA\\XCAT_PA"
+dose_filename_AP = "4DDoseData\\AP\\XCAT_APFullDoseData500msRes.npy"
+dose_filename_PA = "4DDoseData\\PA\\XCAT_PAFullDoseData500msRes.npy"
 #Get Voxel Mapping Array
 mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
 mapping_filename_PA = "VOIMappingArrays\\Hi-Res\\PA\\"  
@@ -489,16 +489,16 @@ class Network (object):
         
         #Load in the first set of dose data
         current_file = 2
-        self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP +"_w" + str(1) +'.npy'))
+        self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP))
 
 ############# Begin AP Field ###########################
         while localTime < self.Tfield:
             
             
-            #Check to see if we need to update the dose date
-            if self.currentDoseData[2,-1] < localTime and current_file!= 80:
-                self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP +"_w" + str(current_file) +'.npy') )
-                current_file += 1
+            # #Check to see if we need to update the dose date
+            # if self.currentDoseData[2,-1] < localTime and current_file!= 80:
+            #     self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP ) )
+            #     current_file += 1
 
 
             #Calculate the t w/in the period for table look ups
@@ -588,7 +588,7 @@ class Network (object):
          
         #Load in the first set of dose data
         current_file = 2
-        self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA +"_w" + str(1) +'.npy'))    
+        self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA))    
         self.shuffleBVs()
 
 ################# Run Tranistion Time without Field #################
@@ -652,10 +652,10 @@ class Network (object):
         while localTime < self.Tfield:
              
              
-             #Check to see if we need to update the dose date
-             if self.currentDoseData[2,-1] < localTime and current_file!= 80:
-                 self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA +"_w" + str(current_file) +'.npy') )
-                 current_file += 1
+             # #Check to see if we need to update the dose date
+             # if self.currentDoseData[2,-1] < localTime and current_file!= 80:
+             #     self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA +"_w" + str(current_file) +'.npy') )
+             #     current_file += 1
 
              #Calculate the t w/in the period for table look ups
              pt = periodic(self.Nettime, self.T) 
@@ -914,24 +914,27 @@ def runSimulation(dummy_input):
 
     BVolumes = nt.BVs
     #%% Process Data 
-    BV_data = np.zeros([len(BVolumes)])
+    BV_data = np.zeros([len(BVolumes),2])
     i=0
     for BV in BVolumes:
         dose = BV.dose
-        BV_data[i] = dose[0]
+        location = BV.location
+        BV_data[i,0] = dose
+        BV_data[i,1] = location
         i += 1
     print('iteration done')    
-    return BV_data    
+    return BV_data, BVolumes    
     
-results = runSimulation(0)
+results, BVolumes = runSimulation(0)
  
 BV_data = results
+dose = BV_data[:,0]
 # Calculate mean and standard deviation
-mean = np.mean(BV_data)
-std_dev = np.std(BV_data)
+mean = np.mean(dose)
+std_dev = np.std(dose)
 
 # Create the histogram
-plt.hist(BV_data, bins=15, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
+plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
 
 # Add vertical lines for mean and standard deviation
 plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
@@ -950,4 +953,34 @@ plt.show()
 
 np.save("1FracAbstract.npy", BV_data)
 t.toc()   
+
+#%% Scratch Pad
+vessel_dose = []
+comp_data = []
+for BV in BVolumes:
+    location = BV.location
+    if location > 27:
+        try:
+            vessel_dose.append(round(BV.dose[0],3))
+        except:
+            
+            vessel_dose.append(round(BV.dose,3))
+    else:
+        try:
+            comp_data.append(round(BV.dose[0],3))
+        except:
+            
+            comp_data.append(round(BV.dose,3))
+        
+vessel_mean = np.mean(vessel_dose)
+comp_mean = np.mean(comp_data)
+
+plt. hist(vessel_dose, bins=25 )
+plt.title('Vessels')
+print(np.mean(vessel_dose))
+plt.show()
+plt.hist(comp_data,  bins=25)
+plt.title('Comp')
+print(np.mean(comp_data))
+plt.show()       
 
