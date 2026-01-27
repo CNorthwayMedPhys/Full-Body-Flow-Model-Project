@@ -951,36 +951,36 @@ plt.grid(axis='y', alpha=0.75)
 # Display the plot
 plt.show()
 
-np.save("1FracAbstract.npy", BV_data)
+np.save("1FracAbstract_6.npy", BV_data)
 t.toc()   
 
-#%% Scratch Pad
-vessel_dose = []
-comp_data = []
-for BV in BVolumes:
-    location = BV.location
-    if location > 27:
-        try:
-            vessel_dose.append(round(BV.dose[0],3))
-        except:
+# #%% Scratch Pad
+# vessel_dose = []
+# comp_data = []
+# for BV in BVolumes:
+#     location = BV.location
+#     if location > 27:
+#         try:
+#             vessel_dose.append(round(BV.dose[0],3))
+#         except:
             
-            vessel_dose.append(round(BV.dose,3))
-    else:
-        try:
-            comp_data.append(round(BV.dose[0],3))
-        except:
+#             vessel_dose.append(round(BV.dose,3))
+#     else:
+#         try:
+#             comp_data.append(round(BV.dose[0],3))
+#         except:
             
-            comp_data.append(round(BV.dose,3))
+#             comp_data.append(round(BV.dose,3))
         
-vessel_mean = np.mean(vessel_dose)
-comp_mean = np.mean(comp_data)
+# vessel_mean = np.mean(vessel_dose)
+# comp_mean = np.mean(comp_data)
 
-plt. hist(vessel_dose, bins=25 )
-plt.title('Vessels')
-print(np.mean(vessel_dose))
-plt.show()
-plt.hist(comp_data,  bins=25)
-plt.title('Comp')
-print(np.mean(comp_data))
-plt.show()       
+# plt. hist(vessel_dose, bins=25 )
+# plt.title('Vessels')
+# print(np.mean(vessel_dose))
+# plt.show()
+# plt.hist(comp_data,  bins=25)
+# plt.title('Comp')
+# print(np.mean(comp_data))
+# plt.show()       
 

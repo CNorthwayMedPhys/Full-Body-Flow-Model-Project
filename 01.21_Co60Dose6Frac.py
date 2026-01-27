@@ -960,6 +960,6 @@ plt.grid(axis='y', alpha=0.75)
 # Display the plot
 plt.show()
 
-np.save("6FracAbstract.npy", BV_data)
+np.save("2FracAbstract.npy", BV_data)
 t.toc()   
 
