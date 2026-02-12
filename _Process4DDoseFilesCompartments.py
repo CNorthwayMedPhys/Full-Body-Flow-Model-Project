@@ -11,14 +11,14 @@ import physt
 import matplotlib.pyplot as plt
 #%%Files names and manual data 
 cd = os.getcwd()
-filename = "CompartmentData\\PA\\RawData\\XCAT_PA"
+filename = "CompartmentData\\AP\\26RawData\\XCAT_AP"
 writelocation = "CompartmentData\\PA\\"
 compartmentnum = 27
 
 num_files  = 80
 
 #Treatment time (min/field)
-rxTime= 6.81
+rxTime= 0.45 * 15
 rxTime = rxTime * 60 #(s)
 
 #%% FCN: Read edepheader
@@ -101,7 +101,7 @@ for sub_files in range(1,num_files+1):
     
     if sub_files == 1:
         #Create first histogram to fill
-        hist = physt.h1(hist_data,'fixed_width', bin_width = 0.002) #bin width in ms
+        hist = physt.h1(hist_data,'fixed_width', bin_width = 0.1) #bin width in ms
         
     else:
         #Update hist with new data
@@ -109,11 +109,11 @@ for sub_files in range(1,num_files+1):
     
 #%%Now we have a filled histogram of events 
 total = hist.total
-hist = hist/total
 freq_data = hist.frequencies
+norm_freq = freq_data / total
 bin_data = hist.bin_left_edges
 event_trace = np.concatenate(([bin_data], [freq_data]),axis=0)
 
 #Save the data
-np.save(os.path.join(cd,writelocation + str(compartmentnum) +'eventTrace.npy'),event_trace)
+#np.save(os.path.join(cd,writelocation + str(compartmentnum) +'eventTrace.npy'),event_trace)
 

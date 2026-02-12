@@ -12,15 +12,15 @@ tic = clock.perf_counter()
 
 #%%Files names and manual data 
 cd = os.getcwd()
-filename = "4DDoseData\TimeQueryTest\XCAT_AP"
+filename = "4DDoseData\Individual Sweeps\AP\Sweep5SI\XCAT_AP_SI"
 num_files  = 80
 egsphantfile = os.path.join(cd,'XCAT_AP'+ '.egsphant')
 
-#Treatment time (min/field)
-rxTime= 6.81
+#Treatment time (min/SWEEP)
+rxTime= 0.45
 rxTime = rxTime * 60 #(s)
-step_size = 0.5 #s
-stepsize = "_500ms2E11"
+step_size = 0.1 #s
+stepsize = "_100msSweep5SI"
 
 #Is the volume stacked (Co-60 with filters)?
 stacked_flag = 1 #set to 1 if true, set to zero otherwise
@@ -361,6 +361,9 @@ for sub_files in range(1,num_files+1):
     #Remove summed values
     allData= np.delete(allData, rem_ind, axis = 1)
     os.remove(filepath)
+#Remove events at t=0
+rem_ind = np.where(allData[2, :] == 0)
+allData= np.delete(allData, rem_ind, axis = 1)
     
 savefile = os.path.join(cd,filename + stepsize + ".npy")
 np.save(savefile,allData)

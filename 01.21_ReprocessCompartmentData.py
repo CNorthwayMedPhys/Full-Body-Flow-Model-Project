@@ -10,9 +10,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 #%%Files names and manual data 
 cd = os.getcwd()
-filename = "CompartmentData\\AP\\"
-compartmentnum = [0,1,3,4,5,6,6,7,8,9,10,12,15,18,19,20,21,22,23,24,25,26,27]
-newTimeStep = 0.5 #s, assuming og step size is 0.002 s
+filename = "CompartmentData\\PA\\"
+compartmentnum = [0,1,2,3,4,5,6,6,7,8,9,10,12,15,18,19,20,21,22,23,24,25,26,27]
+newTimeStep = 0.1 #s, assuming og step size is 0.002 s
 
 
 for num in compartmentnum:
@@ -39,8 +39,10 @@ for num in compartmentnum:
     newEdges = np.array(newEdges)
     
     fArray = np.vstack([newEdges,newCount])
-    fFilePath = os.path.join(cd,filename,str(num)+"eventTrace.npy")
+    fFilePath = os.path.join(cd,filename,str(num)+"eventTrace100ms.npy")
     np.save(fFilePath,fArray)
+    
+    #plt.hist()
   
     
 

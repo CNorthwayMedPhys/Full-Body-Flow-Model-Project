@@ -34,3 +34,5 @@ TBI_XCAT_Full_AP.egsphant
 timeStepQuery/
 4DDoseData/PA/XCAT_PA_500ms.npy
 4DDoseData/
+CompartmentData/
+XCAT_AP_15E9_relbin.npy
