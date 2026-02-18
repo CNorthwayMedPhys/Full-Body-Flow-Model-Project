@@ -78,6 +78,8 @@ def velocity_interp(flowdata,t,x):
     varray = flowdata[1:,1:]
     it = np.searchsorted(tarray,t,side = 'left')
     ix = np.searchsorted(xarray,x,side = 'left')
+    if ix == len(xarray):
+        ix = ix-1
     x1 = xarray[ix]
     x0 = xarray[ix-1]
     t1 = tarray[it]
@@ -956,7 +958,7 @@ def runSimulation(dummy):
         i += 1   
     return BV_data  
 
-variables = [1E0,1E1,1E2,5E2,1E3,2.5E3,5E3,7.5E3,1E4,2.5E4,5E4,7.5E4,1E5] 
+variables = [1E4,2.5E4,5E4,7.5E4,1E5] 
 for BV_num in variables:  
     results= runSimulation(0)
      

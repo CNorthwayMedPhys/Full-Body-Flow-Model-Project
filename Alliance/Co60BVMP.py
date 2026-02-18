@@ -13,24 +13,25 @@ import random
 import multiprocessing as mp
 
 #%%Parameters 
-dx =1 # not used place holder
 dt = 0.002 #Time step size (s)
+dst = 0.1 #Dose sampling interval (s)
 T = 0.955 #Length of one period (s)
 BV_num = 1E2 #total number BV
-Tss = round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
-Tfield = round(6.81 * 60, 3) #Time per field (s)
-Ttrans = 15 * 60 # Time to transition pt from AP to PA (s)
+
+Tss = round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
+Tfield = round((0.45*15) * 60, 3) #Time per field (s)
+
 #Dose file locations 
 cd = os.getcwd()
-dose_filename_AP = "4DDoseData/AP/Sorted/XCAT_AP"
-dose_filename_PA = "4DDoseData/PA/Sorted/XCAT_PA"
+dose_filename_AP = "AP_Sweeps/XCAT_AP"
+dose_filename_PA = "PA_Sweeps/XCAT_PA"
 #Get Voxel Mapping Array
 mapping_filename_AP = "VOIMappingArrays/Hi-Res/AP/"
 mapping_filename_PA = "VOIMappingArrays/Hi-Res/PA/"  
 
 #Compartment data locations
-compartment_AP = "CompartmentData/AP/"
-compartment_PA = "CompartmentData/PA/"
+compartment_AP = "EventTraceAP/"
+compartment_PA = "EventTracePA/"
 
 #%% Utility functions
 
@@ -65,14 +66,15 @@ def velocity_interp(flowdata,t,x):
     tarray = flowdata[1:,0]
     varray = flowdata[1:,1:]
     it = np.searchsorted(tarray,t,side = 'left')
-    ix = np.searchsorted(xarray,x,side = 'right')
+    ix = np.searchsorted(xarray,x,side = 'left')
+    if ix == len(xarray):
+        ix = ix-1
     x1 = xarray[ix]
     x0 = xarray[ix-1]
     t1 = tarray[it]
     t0 = tarray[it-1]
     if it == 1 and ix == 1:
         p00 = 0
-
     else:
         p00 = varray[it-1,ix-1]
     p10 = varray[it,ix-1]
@@ -127,7 +129,17 @@ def DoseRateSampler(EventFreqArray, time):
         DoseRate = EventFreqArray[1,index-1]
     return DoseRate #1/s
     
-      
+def DoseDataSampler (doseArray,time,voi):
+    voiArray = doseArray[:,(doseArray[1,:]==voi)]
+    if np.shape(voiArray)[1] == 0:
+        dose = 0 
+    else:    
+        index = np.searchsorted(voiArray[0,:],time,side='left')
+        if index == np.shape(voiArray)[1]:
+            dose = 0 
+        else:    
+            dose = voiArray[2,index]
+    return dose      
 #%%Location class
 
 class Location (object):
@@ -195,9 +207,9 @@ class Location (object):
             elif number == 16 or number == 17:
                 number = 15    
             if xx == 'AP':
-                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace.npy')
+                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace100ms.npy')
             else:
-               EventFreqArrayPath = os.path.join(cd,compartment_PA,str(number)+'eventTrace.npy')
+               EventFreqArrayPath = os.path.join(cd,compartment_PA,str(number)+'eventTrace100ms.npy')
             EventFreqArray = np.load(EventFreqArrayPath)  
             self._EventFreq = EventFreqArray
         
@@ -355,11 +367,10 @@ class Network (object):
     """
     Class representing the entire network of blood volumes and locations
     """
-    def __init__ (self, dt, dx, BV_num):
+    def __init__ (self, dt, BV_num):
         self._Nettime = 0
         self._progress = 0
         self._dt = dt
-        self._dx = dx
         self._BVcount = 0
         self._BVs = []
         self._locations = []
@@ -478,24 +489,27 @@ class Network (object):
                             BV._dwelltime = 0
                 BV._tottime += self.dt    
             self.timestep()
-            #self.print_status(self.Nettime,self.Tss)
+
 ################ Steady State Established ########################
         #print( '\n Steady State Established')
         self._progress = 0
-        localTime = round(self.Nettime - self.Tss,3)
+        localTime = 0
+        localTimeSweep = 0
         
         #Load in the first set of dose data
         current_file = 2
-        self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP +"_w" + str(1) +'.npy'))
+        self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP+"1.npy"))
 
 ############# Begin AP Field ###########################
         while localTime < self.Tfield:
             
             
             #Check to see if we need to update the dose date
-            if self.currentDoseData[2,-1] < localTime and current_file!= 80:
-                self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP +"_w" + str(current_file) +'.npy') )
-                current_file += 1
+            if localTimeSweep > (0.45*60) and current_file != 16:
+                 self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP+str(current_file)+".npy" ) )
+                 current_file += 1
+                 localTimeSweep = 0.002
+                 
 
 
             #Calculate the t w/in the period for table look ups
@@ -544,28 +558,33 @@ class Network (object):
                             BV._dwelltime = 0 
                             
                 ######ADD DOSE HERE #####
-                if BV.location > 27:
-                    newlocation = self.locations[BV.location]
-                    VOIArray = newlocation.VOIMap
-                    VOI = VOISelector(BV.distance, VOIArray)
-                    energy_index = np.where((self.currentDoseData[1,:] == VOI) & (self.currentDoseData[2,:] == localTime))[0]
-                    if energy_index.size > 0:
-                        energy = self.currentDoseData[0,energy_index] * 9.76E14 *self.dt
-                        BV._dose = BV.dose + energy
-                else:
-                   doselocation = self.locations[BV.location]
-                   DVHArray = doselocation.DVH
-                   doseDVH = DVHSampler(DVHArray) #Gy
-                   DoseRateArray = doselocation.EventFreq
-                   doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
-                   doseStep = doseDVH * doseRate * self.dt  
-                   BV._dose = BV.dose + doseStep
+                if int(localTime*100) % int(dst*100) == 0:
+                    if BV.location > 27:
+                        newlocation = self.locations[BV.location]
+                        VOIArray = newlocation.VOIMap
+                        VOI = VOISelector(BV.distance, VOIArray)
+                        energy_index = np.where((self.currentDoseData[1,:] == VOI) & (self.currentDoseData[2,:] == localTimeSweep))[0]
+                        if energy_index.size > 0:
+                            doseStep = self.currentDoseData[0,energy_index] * 9.76E14  * (dst) 
+                            BV._dose = BV.dose + doseStep
+
+                    else:
+                       doselocation = self.locations[BV.location]
+                       DVHArray = doselocation.DVH
+                       doseDVH = DVHSampler(DVHArray) #Gy
+                       DoseRateArray = doselocation.EventFreq
+                       doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
+                       doseStep = doseDVH * doseRate * dst 
+                       BV._dose = BV.dose + doseStep    
                    
                    
                    
 
             self.timestep()
-            localTime = round(self.Nettime - self.Tss,3)
+            localTime += self.dt
+            localTime = round(localTime,3)
+            localTimeSweep += self.dt
+            localTimeSweep = round(localTimeSweep,3)
             #self.print_status(localTime,self.Tfield)
 
 #######################End AP############################
@@ -579,11 +598,14 @@ class Network (object):
                 location.IntEventFreq(location.IDnum, 'PA')
         #print( '\n AP Field Delievered ')
         self._progress = 0
-        localTime = round(self.Nettime - self.Tss - self.Tfield,3)
+        localTime = 0
          
         #Load in the first set of dose data
         current_file = 2
-        self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA +"_w" + str(1) +'.npy'))             
+        self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+"1.npy")) 
+        
+        #Shuffle BV positions
+        self.shuffleBVs() 
 
 ################# Run Tranistion Time without Field #################
         while localTime < self.Ttrans:
@@ -634,21 +656,26 @@ class Network (object):
                             BV._dwelltime = 0 
 
             self.timestep()
-            localTime = round(self.Nettime - self.Tss - self.Tfield,3)
+            localTime += self.dt
+            localTime = round(localTime,3)
             #self.print_status(localTime,self.Ttrans)
             
             
 ###############Patient is ready to be treated ######################            
         #print( '\n Patient Flipped ')
         self._progress = 0
-        localTime = round(self.Nettime - self.Tss - self.Tfield -self.Ttrans,3)
+        localTime = 0
+        localTimeSweep = 0
+        
         while localTime < self.Tfield:
              
              
              #Check to see if we need to update the dose date
-             if self.currentDoseData[2,-1] < localTime and current_file!= 80:
-                 self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA +"_w" + str(current_file) +'.npy') )
+             if localTimeSweep > (0.45*60) and current_file != 16:
+                 self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+str(current_file)+".npy" ) )
                  current_file += 1
+                 localTimeSweep = 0.002
+    
 
              #Calculate the t w/in the period for table look ups
              pt = periodic(self.Nettime, self.T) 
@@ -696,32 +723,76 @@ class Network (object):
                              BV._dwelltime = 0 
                              
                  ######ADD DOSE HERE #####
-                 if BV.location > 27:
-                     newlocation = self.locations[BV.location]
-                     VOIArray = newlocation.VOIMap
-                     VOI = VOISelector(BV.distance, VOIArray)
-                     energy_index = np.where((self.currentDoseData[1,:] == VOI) & (self.currentDoseData[2,:] == localTime))[0]
-                     if energy_index.size > 0:
-                         energy = self.currentDoseData[0,energy_index] * 9.76E14 *self.dt
-                         BV._dose = BV.dose + energy
-                 else:
-                    doselocation = self.locations[BV.location]
-                    DVHArray = doselocation.DVH
-                    doseDVH = DVHSampler(DVHArray) #Gy
-                    DoseRateArray = doselocation.EventFreq
-                    doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
-                    doseStep = doseDVH * doseRate * self.dt  
-                    BV._dose = BV.dose + doseStep         
+                 if int(localTime*100) % int(dst*100) == 0:
+                    if BV.location > 27:
+                        newlocation = self.locations[BV.location]
+                        VOIArray = newlocation.VOIMap
+                        VOI = VOISelector(BV.distance, VOIArray)
+                        energy_index = np.where((self.currentDoseData[1,:] == VOI) & (self.currentDoseData[2,:] == localTimeSweep))[0]
+                        if energy_index.size > 0:
+                            doseStep = self.currentDoseData[0,energy_index] * 9.76E14  * (dst) 
+                            BV._dose = BV.dose + doseStep
 
-             self.timestep()
-             localTime =  round(self.Nettime - self.Tss - self.Tfield -self.Ttrans,3)
-             #self.print_status(localTime,self.Tfield)     
-        #print( '\n PA field delivered ')
-        self._progress = 0
+                    else:
+                       doselocation = self.locations[BV.location]
+                       DVHArray = doselocation.DVH
+                       doseDVH = DVHSampler(DVHArray) #Gy
+                       DoseRateArray = doselocation.EventFreq
+                       doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
+                       doseStep = doseDVH * doseRate * dst 
+                       BV._dose = BV.dose + doseStep     
+
+             self.timestep() 
+             localTime += self.dt
+             localTime = round(localTime,3)
+             localTimeSweep += self.dt
+             localTimeSweep = round(localTimeSweep,3)
+
         
 ######## DONE ##############
+    def shuffleBVs (self):
+        """
+        Take the BVs current positions and shuffle them amongst themselves to
+        simulate 
+        """
+        BV_data = self.BVs
+        position_data = np.zeros((len(BV_data),4))
+        i = 0
+        #Write existing BV into an array
+        for BV in BV_data:
+            loc = BV.location
+            if loc > 27: #In blood vessels
+                dist = BV.distance
+                tag = 0
+                position_data[i,:] = [loc, 0, dist, tag]
+            else: #In comp
+                dt = BV.dwelltime
+                tag = 1
+                position_data[i,:] =[loc, dt, 0, tag]
+            i += 1
+        #Shuffle position data   
+        np.random.shuffle(position_data)
+        
+        #Redist locations
+        i = 0
+        for BV in BV_data:
+            loc = position_data[i,0]
+            tag = position_data[i,3]
+            
+            if tag == 0: #Vessels
+                BV._loction = int(loc)
+                BV._dwelltime = 0
+                BV._distance = position_data[i,2]
+            else: #Compartment
+                BV._location = int(loc)
+                BV._distance = 0
+                BV._dwelltime = position_data[i,1]
+        self._BVs = BV_data         
+    
    
-    def setTimes(self, T, Tss, Tfield, Ttrans):
+    
+   
+    def setTimes(self, T, Tss, Tfield):
         """
         Sets timing parameters for the network 
         :param Tss: Time to elapse to reach Steady State
@@ -731,7 +802,7 @@ class Network (object):
         self._Tss = Tss
         self._T = T
         self._Tfield = Tfield
-        self._Ttrans = Ttrans
+        self._Ttrans = np.round(0.955 * 30,3)
                  
     def timestep(self):
         self._Nettime += self.dt   
@@ -854,8 +925,8 @@ class Network (object):
  
 #%% Excute Simulation
 def runSimulation(dummy_input):
-    nt = Network(dt, dx, BV_num)
-    nt.setTimes(T, Tss, Tfield, Ttrans)
+    nt = Network(dt, BV_num)
+    nt.setTimes(T, Tss, Tfield)
     nt.intializeLocations()
   
     nt.runNT()
@@ -866,17 +937,20 @@ def runSimulation(dummy_input):
     i=0
     for BV in BVolumes:
         dose = BV.dose
-        BV_data[i] = dose[0]
+        try:
+            BV_data[i] = dose[0]
+        except:
+            BV_data[i] = dose
         i += 1
     print('iteration done')    
     return BV_data    
     
-num_tasks = 1000
+num_tasks = 200
 ncpus = int(os.environ.get('SLURM_CPUS_PER_TASK',default=1))
 pool = mp.Pool(processes=ncpus)
 dummy_input_list = [None] * num_tasks
-results = pool.map(runSimulation, dummy_input_list ) #runs 1E2, three times
+results = pool.map(runSimulation, dummy_input_list ) 
 pool.close()
-np.save("1E5BVMP.npy",results)
+np.save("Co601Frac.npy",results)
     
 
