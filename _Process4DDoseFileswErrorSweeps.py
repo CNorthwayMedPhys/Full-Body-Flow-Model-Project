@@ -19,8 +19,8 @@ egsphantfile = os.path.join(cd,'XCAT_AP'+ '.egsphant')
 #Treatment time (min/SWEEP)
 rxTime= 0.45
 rxTime = rxTime * 60 #(s)
-step_size = 0.1 #s
-stepsize = "_100msSweep5SI"
+step_size = 0.25 #s
+stepsize = "_250msSweep5SI"
 
 #Is the volume stacked (Co-60 with filters)?
 stacked_flag = 1 #set to 1 if true, set to zero otherwise

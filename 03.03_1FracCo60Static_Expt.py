@@ -24,16 +24,16 @@ import matplotlib.pyplot as plt
   
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
-dst = 0.1 #Dose sample time step size (s)
+dst = 0.25 #Dose sample time step size (s)
 T = 0.955 #Length of one period (s)
 #BV_num = 1E1 #total number BV
-Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
+Tss =  round(100*T,3) #round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
 
 #Dose file locations 
 cd = os.getcwd()
-dose_filename_AP = "4DDoseData\\Individual Sweeps\\AP\\XCAT_AP_Sweep"
-dose_filename_PA = "4DDoseData\\Individual Sweeps\\PA\\XCAT_PA_Sweep"
+dose_filename_AP = "4DDoseData\\Individual Sweeps\\AP\\XCAT_AP_250msSweep"
+dose_filename_PA = "4DDoseData\\Individual Sweeps\\PA\\XCAT_PA_250msSweep"
 
 #Get Voxel Mapping Array
 mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
@@ -532,42 +532,7 @@ class Network (object):
                 #BV determine their location type
                 clocation = self.locations[BV.location]
                 
-                if clocation.IDnum > 27: #outside of an organ
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
-                   #Update position and exp time
-                    newdistance = velocity * self.dt + BV.distance
-    
-                   #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
-                       
-                       #Move BV to next location
-                       if clocation.splittingratios is None:
-                           BV._location = clocation.outflow[0]
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                       else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                   #Advance BV down vessel        
-                    else:
-                       BV._distance = newdistance
-
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
+              
                             
                 ######ADD DOSE HERE #####                
                 if int(localTime*100) % int(dst*100) == 0:
@@ -579,6 +544,9 @@ class Network (object):
                         if energy_index.size > 0:
                             doseStep = self.currentDoseData[0,energy_index] * 9.76E14  * (dst) 
                             BV._dose = BV.dose + doseStep
+                            
+                            if BV.dose > 2:
+                                print('stop')
 
                     else:
                        doselocation = self.locations[BV.location]
@@ -612,60 +580,7 @@ class Network (object):
         #Load in the first set of dose data
         current_file = 2
         self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+"1.npy"))    
-        self.shuffleBVs()  
         
-################# Run Tranistion Time without Field #################
-        while localTime < self.Ttrans:
-            
-            #Calculate the t w/in the period for table look ups
-            pt = periodic(self.Nettime, self.T) 
-            
-            #Iterate through each BV
-            for BV in self.BVs:
-                #BV determine their location type
-                clocation = self.locations[BV.location]
-                
-                if clocation.IDnum > 27: #outside of an organ
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
-                   #Update position and exp time
-                    newdistance = velocity * self.dt + BV.distance
-    
-                   #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
-                       
-                       #Move BV to next location
-                       if clocation.splittingratios is None:
-                           BV._location = clocation.outflow[0]
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                       else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                   #Advance BV down vessel        
-                    else:
-                       BV._distance = newdistance
-
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
-
-            self.timestep()
-            localTime += self.dt
-            localTime = round(localTime,3)
-            self.print_status(localTime,self.Ttrans)
             
             
 ###############Patient is ready to be treated ######################            
@@ -695,43 +610,7 @@ class Network (object):
                 #BV determine their location type
                 clocation = self.locations[BV.location]
                 
-                if clocation.IDnum > 27: #outside of an organ
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
-                   #Update position and exp time
-                    newdistance = velocity * self.dt + BV.distance
-    
-                   #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
-                       
-                       #Move BV to next location
-                       if clocation.splittingratios is None:
-                           BV._location = clocation.outflow[0]
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                       else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                   #Advance BV down vessel        
-                    else:
-                       BV._distance = newdistance
-
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
-                            
+                
                 ######ADD DOSE HERE #####                
                 if int(localTime*100) % int(dst*100) == 0:
                     if BV.location > 27:
@@ -958,62 +837,81 @@ def runSimulation(dummy):
         i += 1   
     return BV_data  
 
-means = []
-stds = []
-BVnums = []
-variables = range(10,10010,10)
+variables = [1E2] 
 for BV_num in variables:  
     results= runSimulation(0)
      
     BV_data = results
     dose = BV_data[:,0]
+    #np.save("1FracCo60Static.npy",BV_data)
     # Calculate mean and standard deviation
     mean = np.mean(dose)
     std_dev = np.std(dose)
-    BVnums.append(BV_num)
-    means.append(mean)
-    stds.append(std_dev)
+    
     print ("BV Number:" + str(BV_num))
     print("mean: " + str(mean))
     print("std: " + str(std_dev))
     
+    # Create the histogram
+    plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
     
-    # # Create the histogram
-    # plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
+    # Add vertical lines for mean and standard deviation
+    plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
+    plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
+    plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
     
-    # # Add vertical lines for mean and standard deviation
-    # plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
-    # plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
-    # plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
+    # Add labels and title
+    plt.xlabel('Dose (Gy)')
+    plt.ylabel('Blood Volume Count')
+    plt.title(str(BV_num))
+    plt.legend()
+    plt.grid(axis='y', alpha=0.75)
     
-    # # Add labels and title
-    # plt.xlabel('Dose (Gy)')
-    # plt.ylabel('Blood Volume Count')
-    # plt.title(str(BV_num))
-    # plt.legend()
-    # plt.grid(axis='y', alpha=0.75)
+    # Display the plot
+    plt.show()
     
-    # # Display the plot
-    # plt.show()
+    vessel_dose = []
+    comp_data = []
+
+    for BV in BV_data:
+        location = BV[1]
+        if location > 27:
+
+            vessel_dose.append(round(BV[0],3))
+        else:
+            comp_data.append(round(BV[0],3))
+
+            
+    vessel_mean = np.mean(vessel_dose)
+    comp_mean = np.mean(comp_data)
+
+    plt. hist(vessel_dose, bins=25 )
+    plt.title('Vessels')
+    print(np.mean(vessel_dose))
+    plt.show()
+    plt.hist(comp_data,  bins=25)
+    plt.title('Comp')
+    print(np.mean(comp_data))
+    plt.show()   
+
+    vessel_Loc = []
+    for BV in BV_data:
+        location = BV[1]
+        dose = BV[0]
+        if location > 27 and dose > 5:
+
+            vessel_Loc.append(BV[1]) 
+            
+    plt.hist(vessel_Loc)
+    plt.title ("Vessel BV Location")
+    plt.show()        
+
 
 #%%
-fig,ax1 = plt.subplots()
-ax2 = ax1.twinx()
-line1 = ax1.semilogx(BVnums,means,color = 'k', label= "Mean Dose" )
-line2 = ax2.semilogx(BVnums,stds, color = 'k', linestyle = '--', label = "Standard Deviation")
-
-ax1.set_xlabel("Number of Blood Volumes Simulated")
-ax1.set_ylabel("Mean Dose (Gy)")
 
 
-ax2.set_ylabel("Standard Deviation (Gy)")
-ax2.set_ylim(bottom = 0.3)
+   
 
-lns = line1+line2
-labs = [l.get_label() for l in lns]
-ax1.legend(lns, labs, loc=0)
-
-plt.show()
    
 
 

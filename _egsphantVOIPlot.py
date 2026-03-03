@@ -160,7 +160,10 @@ def addVOI(egsphantObject):
                 x_ind = int((lin_ind-1) % xdim)
                 y_ind = int(((lin_ind-1) //xdim) % ydim)
                 z_ind = int(((lin_ind-1)//xdim) // ydim)
-                VOIArray[x_ind,y_ind,z_ind] = 3
+                #VOIArray[x_ind,y_ind,z_ind] = 3
+                if lin_ind == 16579317:
+                    print(x_ind,y_ind,z_ind)
+                    VOIArray[x_ind,y_ind,z_ind] = 7
             # for k in range(zdim):
             #     for j in range(ydim):
             #          for i in range(xdim):
@@ -184,7 +187,7 @@ index = np.where(Summed > 1)
 # plt.figure()         
 # plt.imshow(egsphantObj.densityArray[:,:,250])   
 plt.figure()         
-plt.imshow(Summed[:,:,515], cmap='hot')  
+plt.imshow(Summed[:,:,581], cmap='hot')  
 # plt.figure()         
 # plt.imshow(Summed[:,26,:], cmap='hot')  
      

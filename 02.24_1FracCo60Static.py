@@ -532,42 +532,7 @@ class Network (object):
                 #BV determine their location type
                 clocation = self.locations[BV.location]
                 
-                if clocation.IDnum > 27: #outside of an organ
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
-                   #Update position and exp time
-                    newdistance = velocity * self.dt + BV.distance
-    
-                   #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
-                       
-                       #Move BV to next location
-                       if clocation.splittingratios is None:
-                           BV._location = clocation.outflow[0]
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                       else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                   #Advance BV down vessel        
-                    else:
-                       BV._distance = newdistance
-
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
+              
                             
                 ######ADD DOSE HERE #####                
                 if int(localTime*100) % int(dst*100) == 0:
@@ -612,60 +577,7 @@ class Network (object):
         #Load in the first set of dose data
         current_file = 2
         self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+"1.npy"))    
-        self.shuffleBVs()  
         
-################# Run Tranistion Time without Field #################
-        while localTime < self.Ttrans:
-            
-            #Calculate the t w/in the period for table look ups
-            pt = periodic(self.Nettime, self.T) 
-            
-            #Iterate through each BV
-            for BV in self.BVs:
-                #BV determine their location type
-                clocation = self.locations[BV.location]
-                
-                if clocation.IDnum > 27: #outside of an organ
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
-                   #Update position and exp time
-                    newdistance = velocity * self.dt + BV.distance
-    
-                   #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
-                       
-                       #Move BV to next location
-                       if clocation.splittingratios is None:
-                           BV._location = clocation.outflow[0]
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                       else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                   #Advance BV down vessel        
-                    else:
-                       BV._distance = newdistance
-
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
-
-            self.timestep()
-            localTime += self.dt
-            localTime = round(localTime,3)
-            self.print_status(localTime,self.Ttrans)
             
             
 ###############Patient is ready to be treated ######################            
@@ -695,43 +607,7 @@ class Network (object):
                 #BV determine their location type
                 clocation = self.locations[BV.location]
                 
-                if clocation.IDnum > 27: #outside of an organ
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
-                   #Update position and exp time
-                    newdistance = velocity * self.dt + BV.distance
-    
-                   #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
-                       
-                       #Move BV to next location
-                       if clocation.splittingratios is None:
-                           BV._location = clocation.outflow[0]
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                       else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                   #Advance BV down vessel        
-                    else:
-                       BV._distance = newdistance
-
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
-                            
+                
                 ######ADD DOSE HERE #####                
                 if int(localTime*100) % int(dst*100) == 0:
                     if BV.location > 27:
@@ -958,62 +834,82 @@ def runSimulation(dummy):
         i += 1   
     return BV_data  
 
-means = []
-stds = []
-BVnums = []
-variables = range(10,10010,10)
+variables = [1E3] 
 for BV_num in variables:  
     results= runSimulation(0)
      
     BV_data = results
     dose = BV_data[:,0]
+    #np.save("1FracCo60Static.npy",BV_data)
     # Calculate mean and standard deviation
     mean = np.mean(dose)
     std_dev = np.std(dose)
-    BVnums.append(BV_num)
-    means.append(mean)
-    stds.append(std_dev)
+    
     print ("BV Number:" + str(BV_num))
     print("mean: " + str(mean))
     print("std: " + str(std_dev))
     
+    # Create the histogram
+    plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
     
-    # # Create the histogram
-    # plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
+    # Add vertical lines for mean and standard deviation
+    plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
+    plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
+    plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
     
-    # # Add vertical lines for mean and standard deviation
-    # plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
-    # plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
-    # plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
+    # Add labels and title
+    plt.xlabel('Dose (Gy)')
+    plt.ylabel('Blood Volume Count')
+    plt.title(str(BV_num))
+    plt.legend()
+    plt.grid(axis='y', alpha=0.75)
     
-    # # Add labels and title
-    # plt.xlabel('Dose (Gy)')
-    # plt.ylabel('Blood Volume Count')
-    # plt.title(str(BV_num))
-    # plt.legend()
-    # plt.grid(axis='y', alpha=0.75)
-    
-    # # Display the plot
-    # plt.show()
+    # Display the plot
+    plt.show()
+
 
 #%%
-fig,ax1 = plt.subplots()
-ax2 = ax1.twinx()
-line1 = ax1.semilogx(BVnums,means,color = 'k', label= "Mean Dose" )
-line2 = ax2.semilogx(BVnums,stds, color = 'k', linestyle = '--', label = "Standard Deviation")
+BV_data = np.load("1FracCo60Static.npy")
+vessel_dose = []
+comp_data = []
 
-ax1.set_xlabel("Number of Blood Volumes Simulated")
-ax1.set_ylabel("Mean Dose (Gy)")
+for BV in BV_data:
+    location = BV[1]
+    if location > 27:
 
+        vessel_dose.append(round(BV[0],3))
+    else:
+        comp_data.append(round(BV[0],3))
 
-ax2.set_ylabel("Standard Deviation (Gy)")
-ax2.set_ylim(bottom = 0.3)
+        
+vessel_mean = np.mean(vessel_dose)
+comp_mean = np.mean(comp_data)
 
-lns = line1+line2
-labs = [l.get_label() for l in lns]
-ax1.legend(lns, labs, loc=0)
-
+plt. hist(vessel_dose, bins=25 )
+plt.title('Vessels')
+print(np.mean(vessel_dose))
 plt.show()
+plt.hist(comp_data,  bins=25)
+plt.title('Comp')
+print(np.mean(comp_data))
+plt.show()   
+
+vessel_Loc = []
+for BV in BV_data:
+    location = BV[1]
+    dose = BV[0]
+    if location > 27 and dose > 5:
+
+        vessel_Loc.append(BV[1]) 
+        
+plt.hist(vessel_Loc)
+plt.title ("Vessel BV Location")
+plt.show()        
+        
+        
+
+   
+
    
 
 
