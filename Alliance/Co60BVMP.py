@@ -16,7 +16,7 @@ import multiprocessing as mp
 dt = 0.002 #Time step size (s)
 dst = 0.1 #Dose sampling interval (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1E5 #total number BV
+BV_num = 1E2 #total number BV
 
 Tss = round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
