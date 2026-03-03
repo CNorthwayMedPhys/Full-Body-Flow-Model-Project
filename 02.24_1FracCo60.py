@@ -958,62 +958,40 @@ def runSimulation(dummy):
         i += 1   
     return BV_data  
 
-means = []
-stds = []
-BVnums = []
-variables = range(10,10010,10)
+variables = [1E3] 
 for BV_num in variables:  
     results= runSimulation(0)
      
     BV_data = results
     dose = BV_data[:,0]
+    #np.save("1FracCo60.npy",dose)
     # Calculate mean and standard deviation
     mean = np.mean(dose)
     std_dev = np.std(dose)
-    BVnums.append(BV_num)
-    means.append(mean)
-    stds.append(std_dev)
+    
     print ("BV Number:" + str(BV_num))
     print("mean: " + str(mean))
     print("std: " + str(std_dev))
     
+    # Create the histogram
+    plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
     
-    # # Create the histogram
-    # plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
+    # Add vertical lines for mean and standard deviation
+    plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
+    plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
+    plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
     
-    # # Add vertical lines for mean and standard deviation
-    # plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
-    # plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
-    # plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
+    # Add labels and title
+    plt.xlabel('Dose (Gy)')
+    plt.ylabel('Blood Volume Count')
+    plt.title(str(BV_num))
+    plt.legend()
+    plt.grid(axis='y', alpha=0.75)
     
-    # # Add labels and title
-    # plt.xlabel('Dose (Gy)')
-    # plt.ylabel('Blood Volume Count')
-    # plt.title(str(BV_num))
-    # plt.legend()
-    # plt.grid(axis='y', alpha=0.75)
-    
-    # # Display the plot
-    # plt.show()
-
-#%%
-fig,ax1 = plt.subplots()
-ax2 = ax1.twinx()
-line1 = ax1.semilogx(BVnums,means,color = 'k', label= "Mean Dose" )
-line2 = ax2.semilogx(BVnums,stds, color = 'k', linestyle = '--', label = "Standard Deviation")
-
-ax1.set_xlabel("Number of Blood Volumes Simulated")
-ax1.set_ylabel("Mean Dose (Gy)")
+    # Display the plot
+    plt.show()
 
 
-ax2.set_ylabel("Standard Deviation (Gy)")
-ax2.set_ylim(bottom = 0.3)
-
-lns = line1+line2
-labs = [l.get_label() for l in lns]
-ax1.legend(lns, labs, loc=0)
-
-plt.show()
    
 
 
