@@ -161,7 +161,7 @@ def addVOI(egsphantObject):
                 y_ind = int(((lin_ind-1) //xdim) % ydim)
                 z_ind = int(((lin_ind-1)//xdim) // ydim)
                 #VOIArray[x_ind,y_ind,z_ind] = 3
-                if lin_ind == 570568:
+                if lin_ind == 16579317:
                     print(x_ind,y_ind,z_ind)
                     VOIArray[x_ind,y_ind,z_ind] = 7
             # for k in range(zdim):
