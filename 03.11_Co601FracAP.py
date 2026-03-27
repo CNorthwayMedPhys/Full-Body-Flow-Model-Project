@@ -125,7 +125,7 @@ def DoseRateSampler(EventFreqArray, time):
         DoseRate = 0
     else: 
         index = np.searchsorted(EventFreqArray[0,:],time, side ='right')
-        DoseRate =  EventFreqArray[1,index-1]
+        DoseRate =  np.interp(time, [EventFreqArray[0,index-1], EventFreqArray[0,index]],[EventFreqArray[1,index-1],EventFreqArray[1,index]])
     return DoseRate #1/s
     
 def DoseDataSampler (doseArray,time,voi):
@@ -200,7 +200,7 @@ class Location (object):
             elif number == 16 or number == 17:
                 number = 15    
             if xx == 'AP':
-                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace100ms.npy')
+                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace500ms.npy')
             EventFreqArray = np.load(EventFreqArrayPath)  
             self._EventFreq = EventFreqArray
         

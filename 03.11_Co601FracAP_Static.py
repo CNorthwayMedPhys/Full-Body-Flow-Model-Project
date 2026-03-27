@@ -19,7 +19,7 @@ t.tic()
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1E2 #total number BV
+BV_num = 1E3 #total number BV
 Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
 
@@ -498,45 +498,45 @@ class Network (object):
             
             #Iterate through each BV
             for BV in self.BVs:
-                #BV determine their location type
-                clocation = self.locations[BV.location]
+                # #BV determine their location type
+                # clocation = self.locations[BV.location]
                 
-                if clocation.IDnum > 27: #outside of an organ
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
+                # if clocation.IDnum > 27: #outside of an organ
+                #    #Determine velocity value at exact position and time
+                #     velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
                    
-                   #Update position and exp time
-                    newdistance = velocity * self.dt + BV.distance
+                #    #Update position and exp time
+                #     newdistance = velocity * self.dt + BV.distance
     
-                   #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
+                #    #Determine wether the BV is in the vessel
+                #     if newdistance > clocation.flowdata[0,-1]: 
                        
-                       #Move BV to next location
-                       if clocation.splittingratios is None:
-                           BV._location = clocation.outflow[0]
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                       else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                   #Advance BV down vessel        
-                    else:
-                       BV._distance = newdistance
+                #        #Move BV to next location
+                #        if clocation.splittingratios is None:
+                #            BV._location = clocation.outflow[0]
+                #            BV._dwelltime = 0
+                #            BV._distance = 0
+                #        else:
+                #            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                #            BV._dwelltime = 0
+                #            BV._distance = 0
+                #    #Advance BV down vessel        
+                #     else:
+                #        BV._distance = newdistance
 
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
+                # #BV within organ
+                # else:
+                #     #Stays in organ
+                #     if BV.dwelltime < clocation.dwelltime:
+                #         BV._dwelltime += self.dt
+                #     #Leaves organ    
+                #     else:
+                #         if clocation.splittingratios is None:
+                #             BV._location = clocation.outflow[0]
+                #             BV._dwelltime = 0
+                #         else:
+                #             BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                #             BV._dwelltime = 0 
                             
                 ######ADD DOSE HERE #####                
                 if int(localTime*1000) % int(dst*1000) == 0:
@@ -800,33 +800,33 @@ for dst in dsts:
 
     t.toc()   
 
-# #%% Scratch Pad
-# vessel_dose = []
-# comp_data = []
-# for BV in BVolumes:
-#     location = BV.location
-#     if location > 27:
-#         try:
-#             vessel_dose.append(round(BV.dose[0],3))
-#         except:
+#%% Scratch Pad
+    vessel_dose = []
+    comp_data = []
+    for BV in BVolumes:
+        location = BV.location
+        if location > 27:
+            try:
+                vessel_dose.append(round(BV.dose[0],3))
+            except:
+                
+                vessel_dose.append(round(BV.dose,3))
+        else:
+            try:
+                comp_data.append(round(BV.dose[0],3))
+            except:
+                
+                comp_data.append(round(BV.dose,3))
             
-#             vessel_dose.append(round(BV.dose,3))
-#     else:
-#         try:
-#             comp_data.append(round(BV.dose[0],3))
-#         except:
-            
-#             comp_data.append(round(BV.dose,3))
-        
-# vessel_mean = np.mean(vessel_dose)
-# comp_mean = np.mean(comp_data)
-
-# plt. hist(vessel_dose, bins=25 )
-# plt.title('Vessels')
-# print(np.mean(vessel_dose))
-# plt.show()
-# plt.hist(comp_data,  bins=25)
-# plt.title('Comp')
-# print(np.mean(comp_data))
-# plt.show()       
+    vessel_mean = np.mean(vessel_dose)
+    comp_mean = np.mean(comp_data)
+    
+    plt. hist(vessel_dose, bins=25 )
+    plt.title('Vessels')
+    print(np.mean(vessel_dose))
+    plt.show()
+    plt.hist(comp_data,  bins=25)
+    plt.title('Comp')
+    print(np.mean(comp_data))
+    plt.show()       
 

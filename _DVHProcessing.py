@@ -51,10 +51,11 @@ for i in range(numDVH):
         step = doseArray[i]
         doseArray[i] = doseArray[i-1]+step
         
-    DVHArray = np.concat(([volumeArray],[doseArray]))    
+    DVHArray = np.concat(([volumeArray],[doseArray])) 
+    
     np.save(os.path.join(cd,write_file + ROIName + "DVH.npy"),DVHArray)
     
-    
+
 #%% ScratchPad
 
 

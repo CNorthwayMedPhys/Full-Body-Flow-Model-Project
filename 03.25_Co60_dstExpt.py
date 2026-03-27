@@ -13,24 +13,29 @@ import os
 import sys
 import random
 import matplotlib.pyplot as plt
-from pytictoc import TicToc
-t = TicToc()          # Create an instance
-t.tic()   
+
+ 
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1E2 #total number BV
+BV_num = 1E3 #total number BV
 Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
 
 #Dose file locations 
 cd = os.getcwd()
 
+#Dose file locations 
+dose_filename_AP = "4DDoseData\\Individual Sweeps\\AP\\Sweep"
+dose_filename_PA = "4DDoseData\\Individual Sweeps\\PA\\Sweep"
+
 #Get Voxel Mapping Array
 mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
+mapping_filename_PA = "VOIMappingArrays\\Hi-Res\\PA\\"
 
 #Compartment data locations
 compartment_AP = "CompartmentData\\AP\\"
+compartment_PA = "CompartmentData\\PA\\"
 
 
 #%% Utility functions
@@ -66,7 +71,7 @@ def velocity_interp(flowdata,t,x):
     tarray = flowdata[1:,0]
     varray = flowdata[1:,1:]
     it = np.searchsorted(tarray,t,side = 'left')
-    ix = np.searchsorted(xarray,x,side = 'right')
+    ix = np.searchsorted(xarray,x,side = 'left')    
     x1 = xarray[ix]
     x0 = xarray[ix-1]
     t1 = tarray[it]
@@ -125,16 +130,18 @@ def DoseRateSampler(EventFreqArray, time):
         DoseRate = 0
     else: 
         index = np.searchsorted(EventFreqArray[0,:],time, side ='right')
-        DoseRate =  EventFreqArray[1,index-1]
+        DoseRate =  np.interp(time, [EventFreqArray[0,index-1], EventFreqArray[0,index]],[EventFreqArray[1,index-1],EventFreqArray[1,index]])
     return DoseRate #1/s
     
 def DoseDataSampler (doseArray,time,voi):
     try:
+        timeRange = int(dst/0.002)
         voiIndex = np.where(doseArray[0,:] == int(voi))[0][0]
         timeIndex = np.where(np.isclose(doseArray[1:,0],time))[0][0] + 1
-        dose = doseArray[timeIndex,voiIndex]
+        dose = np.sum(doseArray[timeIndex:timeIndex+timeRange,voiIndex])
     except:
         dose = 0
+        print("aaaaaa")
 
     return dose 
 #%%Location class
@@ -177,6 +184,8 @@ class Location (object):
     def IntVOIMap (self, number,xx): 
         if xx == 'AP':
             VOIMappingArrayPath = os.path.join(cd,mapping_filename_AP,str(number)+'.npy')
+        else:
+            VOIMappingArrayPath = os.path.join(cd,mapping_filename_PA,str(number)+'.npy')        
         VOIMappingArray = np.load(VOIMappingArrayPath)
         VOIMappingArray[:,0] = VOIMappingArray[:,0] / 1000 #mm -> m
         self._VOIMap = VOIMappingArray
@@ -190,6 +199,8 @@ class Location (object):
             number = 15    
         if xx == 'AP':
             DVHArrayPath = os.path.join(cd,compartment_AP,str(number)+'DVH.npy')
+        else:
+            DVHArrayPath = os.path.join(cd,compartment_PA,str(number)+'DVH.npy')    
         DVHArray = np.load(DVHArrayPath)  
         self._DVH = DVHArray
     def IntEventFreq (self,number, xx):
@@ -200,7 +211,9 @@ class Location (object):
             elif number == 16 or number == 17:
                 number = 15    
             if xx == 'AP':
-                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace100ms.npy')
+                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace500ms.npy')
+            else:
+               EventFreqArrayPath = os.path.join(cd,compartment_PA,str(number)+'eventTrace500ms.npy')    
             EventFreqArray = np.load(EventFreqArrayPath)  
             self._EventFreq = EventFreqArray
         
@@ -295,7 +308,9 @@ class BloodVolume (object):
         self._tottime = 0
         self._dwelltime = 0
         self._distance = 0
-        self._dose = 0 
+        self._dose_comp = 0
+        self._dose_ves = 0
+        self._vesselTime = 0
         
         
     @property
@@ -340,16 +355,37 @@ class BloodVolume (object):
         self._distance = value  
     
     @property 
-    def dose(self):
+    def dose_comp(self):
         """
-        Dose to the BV
+        Dose to the BV while in compartments
         """
-        return self._dose
+        return self._dose_comp
     
-    @dose.setter 
-    def dose(self,value):
-        self._dose = value
-
+    @dose_comp.setter 
+    def dose_comp(self,value):
+        self._dose_comp = value
+ 
+    @property 
+    def dose_ves(self):
+        """
+        Dose to the BV while in vessels
+        """
+        return self._dose_ves
+    
+    @dose_ves.setter 
+    def dose_ves(self,value):
+        self._dose_ves = value        
+        
+    @property 
+    def vesselTime(self):
+        """
+        Time the vessels spend accumulating dose in the vessels 
+        """
+        return self._vesselTime
+    
+    @vesselTime.setter 
+    def vesselTime(self,value):
+        self._vesselTime = value
 
     
 #%% Define Network Class
@@ -486,13 +522,121 @@ class Network (object):
         self._progress = 0
         localTime = 0
         localTimeSweep = 0
-        #Load in the first set of dose data
         
-        self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP))
+        #Load in the first set of dose data
+        current_file = 2
+        self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP+"1.npy"))
+     
      
 ############# Begin AP Field ###########################
         while localTime < self.Tfield:
 
+            #Check to see if we need to update the dose date
+            if localTimeSweep > (0.45*60) and current_file != 16:
+                 self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP+str(current_file)+".npy" ) )
+                 current_file += 1
+                 localTimeSweep = 0
+                 localTime = localTime - self.dt
+                 
+                 
+            #Calculate the t w/in the period for table look ups
+            pt = periodic(self.Nettime, self.T) 
+            
+            #Iterate through each BV
+            for BV in self.BVs:
+                #BV determine their location type
+                clocation = self.locations[BV.location]
+                
+                if clocation.IDnum > 27: #outside of an organ
+                   #Determine velocity value at exact position and time
+                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
+                   
+                   #Update position and exp time
+                    newdistance = velocity * self.dt + BV.distance
+    
+                   #Determine wether the BV is in the vessel
+                    if newdistance >= clocation.flowdata[0,-1]: 
+                       
+                       #Move BV to next location
+                       if clocation.splittingratios is None:
+                           BV._location = clocation.outflow[0]
+                           BV._dwelltime = 0
+                           BV._distance = 0
+                       else:
+                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                           BV._dwelltime = 0
+                           BV._distance = 0
+                   #Advance BV down vessel        
+                    else:
+                       BV._distance = newdistance
+
+                #BV within organ
+                else:
+                    #Stays in organ
+                    if BV.dwelltime < clocation.dwelltime:
+                        BV._dwelltime += self.dt
+                    #Leaves organ    
+                    else:
+                        if clocation.splittingratios is None:
+                            BV._location = clocation.outflow[0]
+                            BV._dwelltime = 0
+                        else:
+                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                            BV._dwelltime = 0 
+                            
+                ######ADD DOSE HERE #####                
+                if int(localTime*1000) % int(dst*1000) == 0:
+                    if BV.location > 27:
+                        newlocation = self.locations[BV.location]
+                        VOIArray = newlocation.VOIMap
+                        VOI = VOISelector(BV.distance, VOIArray)
+                        doseStep = DoseDataSampler (self._currentDoseData,localTimeSweep,VOI)
+                        if doseStep > 0:
+                            absdoseStep = doseStep * 9.76E14 #Gy/min
+                            BV._dose_ves = BV.dose_ves + absdoseStep
+                            BV._vesselTime = BV.vesselTime + (dst/60) #min
+
+                    else:
+                       doselocation = self.locations[BV.location]
+                       DVHArray = doselocation.DVH
+                       doseDVH = DVHSampler(DVHArray) #Gy
+                       DoseRateArray = doselocation.EventFreq
+                       doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
+                       doseStep = doseDVH * doseRate * dst 
+                       BV._dose_comp = BV.dose_comp + doseStep
+
+                   
+                   
+                   
+
+            self.timestep()
+            localTime += self.dt
+            localTime = round(localTime,3)
+            localTimeSweep += self.dt
+            localTimeSweep = round(localTimeSweep,3)
+            self.print_status(localTime,self.Tfield)
+
+######################End AP############################
+#Prep for PA 
+        #Load in new VOI Map
+        for location in self.locations:
+            if location.IDnum > 27:
+                location.IntVOIMap (location.IDnum, 'PA')
+            else:    
+                location.IntDVH(location.IDnum, 'PA')
+                location.IntEventFreq(location.IDnum, 'PA')
+        print( '\n AP Field Delievered ')
+        self._progress = 0
+        localTime = 0
+         
+        #Load in the first set of dose data
+        current_file = 2
+        self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+"1.npy"))    
+        self.shuffleBVs()
+        
+################ Run Tranistion Time without Field #################
+        while localTime < self.Ttrans:
+            
             #Calculate the t w/in the period for table look ups
             pt = periodic(self.Nettime, self.T) 
             
@@ -537,6 +681,76 @@ class Network (object):
                         else:
                             BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
                             BV._dwelltime = 0 
+
+            self.timestep()
+            localTime += self.dt
+            localTime = round(localTime,3)
+            self.print_status(localTime,self.Ttrans)
+            
+            
+###############Patient is ready to be treated ######################            
+        print( '\n Patient Flipped ')
+        self._progress = 0
+        localTime = 0
+        localTimeSweep = 0
+
+
+########################## Deliver PA Field ############################
+
+        while localTime < self.Tfield:
+    
+            #Check to see if we need to update the dose date
+            if localTimeSweep > (0.45*60) and current_file != 16:
+                 self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+str(current_file)+".npy" ) )
+                 current_file += 1
+                 localTimeSweep = 0
+                 localTime = localTime - self.dt
+                      
+                 
+            #Calculate the t w/in the period for table look ups
+            pt = periodic(self.Nettime, self.T) 
+            
+            #Iterate through each BV
+            for BV in self.BVs:
+                #BV determine their location type
+                clocation = self.locations[BV.location]
+                
+                if clocation.IDnum > 27: #outside of an organ
+                   #Determine velocity value at exact position and time
+                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
+                   
+                   #Update position and exp time
+                    newdistance = velocity * self.dt + BV.distance
+    
+                   #Determine wether the BV is in the vessel
+                    if newdistance > clocation.flowdata[0,-1]: 
+                       
+                       #Move BV to next location
+                       if clocation.splittingratios is None:
+                           BV._location = clocation.outflow[0]
+                           BV._dwelltime = 0
+                           BV._distance = 0
+                       else:
+                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                           BV._dwelltime = 0
+                           BV._distance = 0
+                   #Advance BV down vessel        
+                    else:
+                       BV._distance = newdistance
+ 
+                #BV within organ
+                else:
+                    #Stays in organ
+                    if BV.dwelltime < clocation.dwelltime:
+                        BV._dwelltime += self.dt
+                    #Leaves organ    
+                    else:
+                        if clocation.splittingratios is None:
+                            BV._location = clocation.outflow[0]
+                            BV._dwelltime = 0
+                        else:
+                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                            BV._dwelltime = 0 
                             
                 ######ADD DOSE HERE #####                
                 if int(localTime*1000) % int(dst*1000) == 0:
@@ -544,11 +758,12 @@ class Network (object):
                         newlocation = self.locations[BV.location]
                         VOIArray = newlocation.VOIMap
                         VOI = VOISelector(BV.distance, VOIArray)
-                        doseStep = DoseDataSampler (self._currentDoseData,localTime,VOI)
+                        doseStep = DoseDataSampler (self._currentDoseData,localTimeSweep,VOI)
                         if doseStep > 0:
-                            absdoseStep = doseStep * 9.76E14  * (dst) * 60
-                            BV._dose = BV.dose + absdoseStep
-
+                            absdoseStep = doseStep * 9.76E14 #Gy/min
+                            BV._dose_ves = BV.dose_ves  + absdoseStep
+                            BV._vesselTime = BV.vesselTime + (dst/60) #min
+ 
                     else:
                        doselocation = self.locations[BV.location]
                        DVHArray = doselocation.DVH
@@ -556,19 +771,16 @@ class Network (object):
                        DoseRateArray = doselocation.EventFreq
                        doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
                        doseStep = doseDVH * doseRate * dst 
-                       BV._dose = BV.dose + doseStep
-
-                   
-                   
-                   
-
+                       BV._dose_comp = BV.dose_comp + doseStep  
+                       
             self.timestep()
             localTime += self.dt
             localTime = round(localTime,3)
             localTimeSweep += self.dt
             localTimeSweep = round(localTimeSweep,3)
             self.print_status(localTime,self.Tfield)
-        
+        print( '\n PA field delivered ')
+                       
 ######## DONE ##############
     def shuffleBVs (self):
         """
@@ -740,38 +952,42 @@ class Network (object):
         
  
 #%% Excute Simulation
-dsts = [0.002,0.1,0.2,0.3,0.4,0.5]#Dose sample time step size (s)
-
+dsts = np.arange(0.002,0.2002,0.002) #Dose sample time step size (s)
+dsts = dsts[::-1]
+results = np.zeros([len(dsts),3])
+j= 0
 for dst in dsts:
-    timeName = str(int(dst*1000))
-    dose_filename_AP = timeName+"ms_SingleSweep.npy"
     
+    timeName = str(int(dst*1000))
     def runSimulation(dummy_input):
         nt = Network(dt, BV_num)
         nt.setTimes(T, Tss, Tfield)
         nt.intializeLocations()
-      
         nt.runNT()
-    
         BVolumes = nt.BVs
-        #%% Process Data 
-        BV_data = np.zeros([len(BVolumes),2])
-        i=0
-        for BV in BVolumes:
-            dose = BV.dose
-            location = BV.location
-            try:
-                BV_data[i,0] = dose[0]
-            except:
-                BV_data[i,0] = dose
-            BV_data[i,1] = location
-            i += 1   
-        return BV_data, BVolumes    
         
-    results, BVolumes = runSimulation(0)
+        return BVolumes
+       
+    #%% Process Data 
+    BVolumes = runSimulation(0)
      
-    BV_data = results
-    dose = BV_data[:,0]
+    
+    BV_data = np.zeros([len(BVolumes),3])
+    i=0
+    for BV in BVolumes:
+        dose_compartment = BV.dose_comp
+        dose_vessel = BV.dose_ves
+        time = BV.vesselTime
+        BV_data[i,0] = dose_compartment
+        BV_data[i,1] = dose_vessel
+        BV_data[i,2] = time
+        i += 1
+    
+    dose =  BV_data[:,0] + (BV_data[:,1] * BV_data[:,2])
+    doseVessel = (BV_data[:,1] * BV_data[:,2])
+    
+    
+    
     # Calculate mean and standard deviation
     mean = np.mean(dose)
     std_dev = np.std(dose)
@@ -779,54 +995,59 @@ for dst in dsts:
     print("mean: " + str(mean))
     print("std: " + str(std_dev))
     
-    # Create the histogram
-    plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
+    print("vessel mean:" + str(np.mean(doseVessel)))
+    print("comp mean:" + str(np.mean(BV_data[:,1])))
     
-    # Add vertical lines for mean and standard deviation
-    plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
-    plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
-    plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
+    # # Create the histogram
+    # plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
     
-    # Add labels and title
-    plt.xlabel('Dose (Gy)')
-    plt.ylabel('Blood Volume Count')
-    plt.title('Single AP Fields ' + str(dst))
-    plt.legend()
-    plt.grid(axis='y', alpha=0.75)
+    # # Add vertical lines for mean and standard deviation
+    # plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
+    # plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
+    # plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
     
-    # Display the plot
-    plt.show()
+    # # Add labels and title
+    # plt.xlabel('Dose (Gy)')
+    # plt.ylabel('Blood Volume Count')
+    # plt.title('Single Fraction with ' + str(dst)+ " s dose sampling step")
+    # plt.legend()
+    # plt.grid(axis='y', alpha=0.75)
     
+    # # Display the plot
+    # plt.show()
+    results[j,0] = mean
+    results[j,1] = std_dev
+    results[j,2] = dst
+    j += 1
+np.save(os.join.path(cd,"dstResults.npy"))
 
-    t.toc()   
-
-# #%% Scratch Pad
-# vessel_dose = []
-# comp_data = []
-# for BV in BVolumes:
-#     location = BV.location
-#     if location > 27:
-#         try:
-#             vessel_dose.append(round(BV.dose[0],3))
-#         except:
+#%% Scratch Pad
+    # vessel_dose = []
+    # comp_data = []
+    # for BV in BVolumes:
+    #     location = BV.location
+    #     if location > 27:
+    #         try:
+    #             vessel_dose.append(round(BV.dose[0],3)*BV.vesselTime)
+    #         except:
+                
+    #             vessel_dose.append(round(BV.dose,3)*BV.vesselTime)
+    #     else:
+    #         try:
+    #             comp_data.append(round(BV.dose[0],3))
+    #         except:
+                
+    #             comp_data.append(round(BV.dose,3))
             
-#             vessel_dose.append(round(BV.dose,3))
-#     else:
-#         try:
-#             comp_data.append(round(BV.dose[0],3))
-#         except:
-            
-#             comp_data.append(round(BV.dose,3))
-        
-# vessel_mean = np.mean(vessel_dose)
-# comp_mean = np.mean(comp_data)
-
-# plt. hist(vessel_dose, bins=25 )
-# plt.title('Vessels')
-# print(np.mean(vessel_dose))
-# plt.show()
-# plt.hist(comp_data,  bins=25)
-# plt.title('Comp')
-# print(np.mean(comp_data))
-# plt.show()       
+    # vessel_mean = np.mean(vessel_dose)
+    # comp_mean = np.mean(comp_data)
+    
+    # plt. hist(vessel_dose, bins=25 )
+    # plt.title('Vessels')
+    # print(np.mean(vessel_dose))
+    # plt.show()
+    # plt.hist(comp_data,  bins=25)
+    # plt.title('Comp')
+    # print(np.mean(comp_data))
+    # plt.show()       
 

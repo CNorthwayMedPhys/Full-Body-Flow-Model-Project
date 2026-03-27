@@ -15,22 +15,29 @@ import random
 import matplotlib.pyplot as plt
 from pytictoc import TicToc
 t = TicToc()          # Create an instance
-t.tic()   
+t.tic()  
+ 
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1E2 #total number BV
+BV_num = 1E3 #total number BV
 Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
 
 #Dose file locations 
 cd = os.getcwd()
 
+dose_filename_AP = "2ms_SingleSweep.npy"
+dose_filename_AP = "4DDoseData\\Individual Sweeps\\AP\\XCAT_AP_Sweep"
+dose_filename_PA = "4DDoseData\\Individual Sweeps\\PA\\XCAT_PA_Sweep"
+
 #Get Voxel Mapping Array
 mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
+mapping_filename_PA = "VOIMappingArrays\\Hi-Res\\PA\\"
 
 #Compartment data locations
 compartment_AP = "CompartmentData\\AP\\"
+compartment_PA = "CompartmentData\\PA\\"
 
 
 #%% Utility functions
@@ -125,14 +132,15 @@ def DoseRateSampler(EventFreqArray, time):
         DoseRate = 0
     else: 
         index = np.searchsorted(EventFreqArray[0,:],time, side ='right')
-        DoseRate =  EventFreqArray[1,index-1]
+        DoseRate =  np.interp(time, [EventFreqArray[0,index-1], EventFreqArray[0,index]],[EventFreqArray[1,index-1],EventFreqArray[1,index]])
     return DoseRate #1/s
     
-def DoseDataSampler (doseArray,time,voi):
+def DoseDataSampler (doseArray,time,voi,dst):
     try:
+        timeRange = int(dst/0.002)
         voiIndex = np.where(doseArray[0,:] == int(voi))[0][0]
         timeIndex = np.where(np.isclose(doseArray[1:,0],time))[0][0] + 1
-        dose = doseArray[timeIndex,voiIndex]
+        dose = np.mean(doseArray[timeIndex:timeIndex+timeRange,voiIndex])
     except:
         dose = 0
 
@@ -177,6 +185,8 @@ class Location (object):
     def IntVOIMap (self, number,xx): 
         if xx == 'AP':
             VOIMappingArrayPath = os.path.join(cd,mapping_filename_AP,str(number)+'.npy')
+        else:
+            VOIMappingArrayPath = os.path.join(cd,mapping_filename_PA,str(number)+'.npy')    
         VOIMappingArray = np.load(VOIMappingArrayPath)
         VOIMappingArray[:,0] = VOIMappingArray[:,0] / 1000 #mm -> m
         self._VOIMap = VOIMappingArray
@@ -190,6 +200,8 @@ class Location (object):
             number = 15    
         if xx == 'AP':
             DVHArrayPath = os.path.join(cd,compartment_AP,str(number)+'DVH.npy')
+        else:
+            DVHArrayPath = os.path.join(cd,compartment_PA,str(number)+'DVH.npy')    
         DVHArray = np.load(DVHArrayPath)  
         self._DVH = DVHArray
     def IntEventFreq (self,number, xx):
@@ -200,7 +212,9 @@ class Location (object):
             elif number == 16 or number == 17:
                 number = 15    
             if xx == 'AP':
-                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace100ms.npy')
+                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace500ms.npy')
+            else:
+               EventFreqArrayPath = os.path.join(cd,compartment_PA,str(number)+'eventTrace500ms.npy')    
             EventFreqArray = np.load(EventFreqArrayPath)  
             self._EventFreq = EventFreqArray
         
@@ -486,12 +500,187 @@ class Network (object):
         self._progress = 0
         localTime = 0
         localTimeSweep = 0
-        #Load in the first set of dose data
         
-        self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP))
+        #Load in the first set of dose data
+        current_file = 2
+        self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP+"1.npy"))
      
 ############# Begin AP Field ###########################
         while localTime < self.Tfield:
+            
+            #Check to see if we need to update the dose date
+            if localTimeSweep > (0.45*60) and current_file != 16:
+                 self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP+str(current_file)+".npy" ) )
+                 current_file += 1
+                 localTimeSweep = 0.002
+                 flag = 0
+            
+            #Calculate the t w/in the period for table look ups
+            pt = periodic(self.Nettime, self.T) 
+            
+            #Iterate through each BV
+            for BV in self.BVs:
+                #BV determine their location type
+                clocation = self.locations[BV.location]
+                
+                if clocation.IDnum > 27: #outside of an organ
+                   #Determine velocity value at exact position and time
+                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
+                   
+                   #Update position and exp time
+                    newdistance = velocity * self.dt + BV.distance
+    
+                   #Determine wether the BV is in the vessel
+                    if newdistance > clocation.flowdata[0,-1]: 
+                       
+                       #Move BV to next location
+                       if clocation.splittingratios is None:
+                           BV._location = clocation.outflow[0]
+                           BV._dwelltime = 0
+                           BV._distance = 0
+                       else:
+                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                           BV._dwelltime = 0
+                           BV._distance = 0
+                   #Advance BV down vessel        
+                    else:
+                       BV._distance = newdistance
+
+                #BV within organ
+                else:
+                    #Stays in organ
+                    if BV.dwelltime < clocation.dwelltime:
+                        BV._dwelltime += self.dt
+                    #Leaves organ    
+                    else:
+                        if clocation.splittingratios is None:
+                            BV._location = clocation.outflow[0]
+                            BV._dwelltime = 0
+                        else:
+                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                            BV._dwelltime = 0 
+                            
+                ######ADD DOSE HERE #####                
+                if int(localTime*1000) % int(dst*1000) == 0:
+                    if BV.location > 27:
+                        newlocation = self.locations[BV.location]
+                        VOIArray = newlocation.VOIMap
+                        VOI = VOISelector(BV.distance, VOIArray)
+                        doseStep = DoseDataSampler (self._currentDoseData,localTime,VOI,dst)
+                        if doseStep > 0:
+                            absdoseStep = doseStep * 9.76E14  * (dst) * 60
+                            BV._dose = BV.dose + absdoseStep
+
+                    else:
+                       doselocation = self.locations[BV.location]
+                       DVHArray = doselocation.DVH
+                       doseDVH = DVHSampler(DVHArray) #Gy
+                       DoseRateArray = doselocation.EventFreq
+                       doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
+                       doseStep = doseDVH * doseRate * dst 
+                       BV._dose = BV.dose + doseStep
+
+                   
+                   
+                   
+
+            self.timestep()
+            localTime += self.dt
+            localTime = round(localTime,3)
+            localTimeSweep += self.dt
+            localTimeSweep = round(localTimeSweep,3)
+            self.print_status(localTime,self.Tfield)
+            
+#######################End AP############################
+#Prep for PA 
+        #Load in new VOI Map
+        for location in self.locations:
+            if location.IDnum > 27:
+                location.IntVOIMap (location.IDnum, 'PA')
+            else:    
+                location.IntDVH(location.IDnum, 'PA')
+                location.IntEventFreq(location.IDnum, 'PA')
+        print( '\n AP Field Delievered ')
+        self._progress = 0
+        localTime = 0
+         
+        #Load in the first set of dose data
+        current_file = 2
+        self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+"1.npy"))    
+        self.shuffleBVs()
+        
+################# Run Tranistion Time without Field #################
+        while localTime < self.Ttrans:
+            
+            #Calculate the t w/in the period for table look ups
+            pt = periodic(self.Nettime, self.T) 
+            
+            #Iterate through each BV
+            for BV in self.BVs:
+                #BV determine their location type
+                clocation = self.locations[BV.location]
+                
+                if clocation.IDnum > 27: #outside of an organ
+                   #Determine velocity value at exact position and time
+                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
+                   
+                   #Update position and exp time
+                    newdistance = velocity * self.dt + BV.distance
+    
+                   #Determine wether the BV is in the vessel
+                    if newdistance > clocation.flowdata[0,-1]: 
+                       
+                       #Move BV to next location
+                       if clocation.splittingratios is None:
+                           BV._location = clocation.outflow[0]
+                           BV._dwelltime = 0
+                           BV._distance = 0
+                       else:
+                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                           BV._dwelltime = 0
+                           BV._distance = 0
+                   #Advance BV down vessel        
+                    else:
+                       BV._distance = newdistance
+
+                #BV within organ
+                else:
+                    #Stays in organ
+                    if BV.dwelltime < clocation.dwelltime:
+                        BV._dwelltime += self.dt
+                    #Leaves organ    
+                    else:
+                        if clocation.splittingratios is None:
+                            BV._location = clocation.outflow[0]
+                            BV._dwelltime = 0
+                        else:
+                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                            BV._dwelltime = 0 
+
+            self.timestep()
+            localTime += self.dt
+            localTime = round(localTime,3)
+            self.print_status(localTime,self.Ttrans)
+            
+            
+###############Patient is ready to be treated ######################            
+        print( '\n Patient Flipped ')
+        self._progress = 0
+        localTime = 0
+        localTimeSweep = 0
+
+
+########################## Deliver PA Field ############################
+
+        while localTime < self.Tfield:
+    
+            #Check to see if we need to update the dose date
+            if localTimeSweep > (0.45*60) and current_file != 16:
+                 self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+str(current_file)+".npy" ) )
+                 current_file += 1
+                 localTimeSweep = 0.002
+                 flag = 0
+
 
             #Calculate the t w/in the period for table look ups
             pt = periodic(self.Nettime, self.T) 
@@ -544,10 +733,10 @@ class Network (object):
                         newlocation = self.locations[BV.location]
                         VOIArray = newlocation.VOIMap
                         VOI = VOISelector(BV.distance, VOIArray)
-                        doseStep = DoseDataSampler (self._currentDoseData,localTime,VOI)
-                        if doseStep > 0:
-                            absdoseStep = doseStep * 9.76E14  * (dst) * 60
-                            BV._dose = BV.dose + absdoseStep
+                        energy_index = np.where((self.currentDoseData[1,:] == VOI) & (self.currentDoseData[2,:] == localTimeSweep))[0]
+                        if energy_index.size > 0:
+                            doseStep = self.currentDoseData[0,energy_index] * 9.76E14  * (dst) * 60
+                            BV._dose = BV.dose + doseStep
 
                     else:
                        doselocation = self.locations[BV.location]
@@ -561,14 +750,17 @@ class Network (object):
                    
                    
                    
-
+                   
             self.timestep()
             localTime += self.dt
             localTime = round(localTime,3)
             localTimeSweep += self.dt
             localTimeSweep = round(localTimeSweep,3)
             self.print_status(localTime,self.Tfield)
-        
+        print( '\n PA field delivered ')
+           
+      
+          
 ######## DONE ##############
     def shuffleBVs (self):
         """
@@ -740,11 +932,9 @@ class Network (object):
         
  
 #%% Excute Simulation
-dsts = [0.002,0.1,0.2,0.3,0.4,0.5]#Dose sample time step size (s)
+dsts = [0.002,0.02,0.1,0.2,0.3,0.4,0.5]#Dose sample time step size (s)
 
 for dst in dsts:
-    timeName = str(int(dst*1000))
-    dose_filename_AP = timeName+"ms_SingleSweep.npy"
     
     def runSimulation(dummy_input):
         nt = Network(dt, BV_num)

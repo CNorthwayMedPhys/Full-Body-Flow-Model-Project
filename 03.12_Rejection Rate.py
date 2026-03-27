@@ -13,15 +13,14 @@ import os
 import sys
 import random
 import matplotlib.pyplot as plt
-from pytictoc import TicToc
-t = TicToc()          # Create an instance
-t.tic()   
+
+ 
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1E2 #total number BV
+BV_num = 1E4 #total number BV
 Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
-Tfield = round((0.45*15) * 60, 3) #Time per field (s)
+Tfield = round((0.45) * 60, 3) #Time per field (s)
 
 #Dose file locations 
 cd = os.getcwd()
@@ -130,11 +129,12 @@ def DoseRateSampler(EventFreqArray, time):
     
 def DoseDataSampler (doseArray,time,voi):
     try:
+        timeRange = int(dst/0.002)
         voiIndex = np.where(doseArray[0,:] == int(voi))[0][0]
         timeIndex = np.where(np.isclose(doseArray[1:,0],time))[0][0] + 1
-        dose = doseArray[timeIndex,voiIndex]
+        dose = np.sum(doseArray[timeIndex:timeIndex+timeRange,voiIndex])
     except:
-        dose = 0
+        dose = -1
 
     return dose 
 #%%Location class
@@ -200,7 +200,7 @@ class Location (object):
             elif number == 16 or number == 17:
                 number = 15    
             if xx == 'AP':
-                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace100ms.npy')
+                EventFreqArrayPath = os.path.join(cd,compartment_AP,str(number)+'eventTrace500ms.npy')
             EventFreqArray = np.load(EventFreqArrayPath)  
             self._EventFreq = EventFreqArray
         
@@ -296,6 +296,7 @@ class BloodVolume (object):
         self._dwelltime = 0
         self._distance = 0
         self._dose = 0 
+        self._vesselTime = 0
         
         
     @property
@@ -349,7 +350,17 @@ class BloodVolume (object):
     @dose.setter 
     def dose(self,value):
         self._dose = value
-
+        
+    @property 
+    def vesselTime(self):
+        """
+        Time the vessels spend accumulating dose in the vessels 
+        """
+        return self._vesselTime
+    
+    @vesselTime.setter 
+    def vesselTime(self,value):
+        self._vesselTime = value
 
     
 #%% Define Network Class
@@ -489,7 +500,8 @@ class Network (object):
         #Load in the first set of dose data
         
         self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP))
-     
+        reject = 0
+        accept = 0
 ############# Begin AP Field ###########################
         while localTime < self.Tfield:
 
@@ -545,9 +557,14 @@ class Network (object):
                         VOIArray = newlocation.VOIMap
                         VOI = VOISelector(BV.distance, VOIArray)
                         doseStep = DoseDataSampler (self._currentDoseData,localTime,VOI)
-                        if doseStep > 0:
-                            absdoseStep = doseStep * 9.76E14  * (dst) * 60
+                        if doseStep >= 0:
+                            absdoseStep = doseStep * 9.76E14 #Gy/min
                             BV._dose = BV.dose + absdoseStep
+                            BV._vesselTime = BV.vesselTime + (dst/60) #min
+                            accept += 1
+                        else:
+                            reject += 1
+                       
 
                     else:
                        doselocation = self.locations[BV.location]
@@ -568,6 +585,7 @@ class Network (object):
             localTimeSweep += self.dt
             localTimeSweep = round(localTimeSweep,3)
             self.print_status(localTime,self.Tfield)
+        print( "Rejection rate = " +str(np.round((reject/(accept+reject)*100), decimals =2)) + "%") 
         
 ######## DONE ##############
     def shuffleBVs (self):
@@ -740,11 +758,11 @@ class Network (object):
         
  
 #%% Excute Simulation
-dsts = [0.002,0.1,0.2,0.3,0.4,0.5]#Dose sample time step size (s)
+dsts = [0.1]#Dose sample time step size (s)
 
 for dst in dsts:
     timeName = str(int(dst*1000))
-    dose_filename_AP = timeName+"ms_SingleSweep.npy"
+    dose_filename_AP = "2ms_SingleSweep_new.npy"
     
     def runSimulation(dummy_input):
         nt = Network(dt, BV_num)
@@ -755,16 +773,19 @@ for dst in dsts:
     
         BVolumes = nt.BVs
         #%% Process Data 
-        BV_data = np.zeros([len(BVolumes),2])
+        BV_data = np.zeros([len(BVolumes),3])
         i=0
         for BV in BVolumes:
             dose = BV.dose
             location = BV.location
+            time = BV.vesselTime
+            
             try:
                 BV_data[i,0] = dose[0]
             except:
                 BV_data[i,0] = dose
             BV_data[i,1] = location
+            BV_data[i,2] = time
             i += 1   
         return BV_data, BVolumes    
         
@@ -798,35 +819,34 @@ for dst in dsts:
     plt.show()
     
 
-    t.toc()   
 
 # #%% Scratch Pad
-# vessel_dose = []
-# comp_data = []
-# for BV in BVolumes:
-#     location = BV.location
-#     if location > 27:
-#         try:
-#             vessel_dose.append(round(BV.dose[0],3))
-#         except:
+#     vessel_dose = []
+#     comp_data = []
+#     for BV in BVolumes:
+#         location = BV.location
+#         if location > 27:
+#             try:
+#                 vessel_dose.append(round(BV.dose[0],3)*BV.vesselTime)
+#             except:
+                
+#                 vessel_dose.append(round(BV.dose,3)*BV.vesselTime)
+#         else:
+#             try:
+#                 comp_data.append(round(BV.dose[0],3))
+#             except:
+                
+#                 comp_data.append(round(BV.dose,3))
             
-#             vessel_dose.append(round(BV.dose,3))
-#     else:
-#         try:
-#             comp_data.append(round(BV.dose[0],3))
-#         except:
-            
-#             comp_data.append(round(BV.dose,3))
-        
-# vessel_mean = np.mean(vessel_dose)
-# comp_mean = np.mean(comp_data)
-
-# plt. hist(vessel_dose, bins=25 )
-# plt.title('Vessels')
-# print(np.mean(vessel_dose))
-# plt.show()
-# plt.hist(comp_data,  bins=25)
-# plt.title('Comp')
-# print(np.mean(comp_data))
-# plt.show()       
+#     vessel_mean = np.mean(vessel_dose)
+#     comp_mean = np.mean(comp_data)
+    
+#     plt. hist(vessel_dose, bins=25 )
+#     plt.title('Vessels')
+#     print(np.mean(vessel_dose))
+#     plt.show()
+#     plt.hist(comp_data,  bins=25)
+#     plt.title('Comp')
+#     print(np.mean(comp_data))
+#     plt.show()       
 

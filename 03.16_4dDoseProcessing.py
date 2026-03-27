@@ -11,11 +11,11 @@ import numpy as np
 #%%Files names and manual data 
 
 cd = os.getcwd()
-filename = "4DDoseData\Individual Sweeps\TestData\XCAT_AP"
+filename = "4DDoseData\ModEgsvoi\XCAT_AP_SI_new"
 num_files  = 80
 
 egsphantfile = os.path.join(cd,'XCAT_AP.egsphant')
-egsvoifile = os.path.join(cd,"4DDoseData\Individual Sweeps\TestData\XCAT_AP.egsvoi")
+egsvoifile = os.path.join(cd,"XCAT_AP_stacked_new.egsvoi")
 
 #Treatment time (min/field)
 rxTime= 0.45
@@ -24,17 +24,10 @@ rxTime = rxTime * 60 #(s)
 
 #Is the volume stacked (Co-60 with filters)?
 stacked_flag = 1 #set to 1 if true, set to zero otherwise
-stackmap_filename = "StackToUnstackMaps\\APVOIUnstackToStackMapHiRes.npy"
+stackmap_filename = "StackToUnstackMaps\\APVOIUnstackToStackMapHiRes_new.npy"
 stackmap_path = os.path.join(cd,stackmap_filename)
 
-#Load in the relevant voxel indices
-mapping_filename = "VOIMappingArrays\\Hi-Res\\AP\\"
-voxelMaps = np.zeros((0,2))
-for i in range(28,127):
-    voxelMapSub =np.load(os.path.join(cd,mapping_filename+str(i)+".npy"))
-    voxelMaps = np.append(voxelMaps,voxelMapSub,axis =0)
-mapVoxels = np.unique(voxelMaps[:,1])  
-mapVoxels = [int(item) for item in mapVoxels]
+
 #%% FCN: Read edepheader
 def read_edepheader(headerfile):
     # read phsp source data: xsrc, ysrc, muindx and num of voxel
@@ -333,15 +326,10 @@ if stacked_flag == 1:
         unstacked = unstack(voiMap,voiArray[i])
         voiArray[i] = unstacked 
 
-#Remove events which don't have Voxel Indices found in the mapping array
-mask = np.isin(voiArray,mapVoxels)
-voiArray = voiArray[mask]
-
-   
 
 
 #%%
-for step_size in [0.002,0.1,0.2,0.3,0.4,0.5]:
+for step_size in [0.002]:
     
     #Determine number of time intervals
     timeArray = np.arange(0,rxTime + step_size, step_size)
@@ -398,11 +386,7 @@ for step_size in [0.002,0.1,0.2,0.3,0.4,0.5]:
                 unstacked = unstack(voiMap,eventArray[1,i])
                 eventArray[1,i] = unstacked
     
-    
-        #Remove events which aren't in the voxel of interest 
-        eventVoxels = eventArray[1,:]
-        mask = np.isin(eventVoxels,mapVoxels)
-        eventArray = eventArray[:,mask]
+
         
     #%% Fill E_Array
         for i in range(np.size(eventArray, axis = 1)):
@@ -437,7 +421,7 @@ for step_size in [0.002,0.1,0.2,0.3,0.4,0.5]:
     finalArray[0,1:] = voiArray
     finalArray[1:,1:] = doseArray  
     
-    arrayname = str(int(step_size*1000))+"ms_SingleSweep.npy"
+    arrayname = str(int(step_size*1000))+"ms_SingleSweep_new.npy"
     np.save(arrayname,finalArray)
                        
                    

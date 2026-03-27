@@ -7,42 +7,8 @@ Created on Wed Oct  8 16:07:20 2025
 
 import os
 import numpy as np
+import glob
 
-#%%Files names and manual data 
-
-cd = os.getcwd()
-filename = "4DDoseData\Individual Sweeps\TestData\XCAT_AP"
-num_files  = 80
-
-egsphantfile = os.path.join(cd,'XCAT_AP.egsphant')
-egsvoifile = os.path.join(cd,"4DDoseData\Individual Sweeps\TestData\XCAT_AP.egsvoi")
-
-#Treatment time (min/field)
-rxTime= 0.45
-rxTime = rxTime * 60 #(s)
-
-
-#Is the volume stacked (Co-60 with filters)?
-stacked_flag = 1 #set to 1 if true, set to zero otherwise
-stackmap_filename = "StackToUnstackMaps\\APVOIUnstackToStackMapHiRes.npy"
-stackmap_path = os.path.join(cd,stackmap_filename)
-
-#Load in the relevant voxel indices
-mapping_filename = "VOIMappingArrays\\Hi-Res\\AP\\"
-voxelMaps = np.zeros((0,2))
-for i in range(28,127):
-    voxelMapSub =np.load(os.path.join(cd,mapping_filename+str(i)+".npy"))
-    voxelMaps = np.append(voxelMaps,voxelMapSub,axis =0)
-mapVoxels = np.unique(voxelMaps[:,1])  
-mapVoxels = [int(item) for item in mapVoxels]
-#%% FCN: Read edepheader
-def read_edepheader(headerfile):
-    # read phsp source data: xsrc, ysrc, muindx and num of voxel
-    with open(headerfile, 'r') as fid:
-        header = fid.read().split()
-        header = list(map(float, header))
-    header = [header[i:i+4] for i in range(0, len(header), 4)]
-    return header
 
 #%% FCN: Read edepdat
 def read_edepdat(datafile):
@@ -66,38 +32,22 @@ def read_edepdat(datafile):
 
     return edep
 
+#%% FCN: Read edepheader
+def read_edepheader(headerfile):
+    # read phsp source data: xsrc, ysrc, muindx and num of voxel
+    with open(headerfile, 'r') as fid:
+        header = fid.read().split()
+        header = list(map(float, header))
+    header = [header[i:i+4] for i in range(0, len(header), 4)]
+    return header
+
 #%% FCN: Read ainflu
 def read_ainflu(ainflufile):
     # read ainflu of each parallel job
     with open(ainflufile, 'r') as fid:
         ainflu = float(fid.read().strip().split()[0])
     return ainflu
-
-#%% FCN: Check for duplicate location, time events
-def has_duplicates(arr):
-    seen = {}
-    dup_keys = []
-    for i in range(np.shape(arr)[1]):
-        key = str(arr[:,i])
-        if key in seen:
-            index = seen.get(key)
-            index.append(i)
-            seen[key] = index
-            dup_keys.append(key)
-        else:    
-            seen[key] = [i]
-    newdict = {k: seen[k] for k in dup_keys}        
-    return newdict
-#%% FCN: "Unstack the VOI values for the phantom"
-if stacked_flag == 1:
-    voiMap = np.load(stackmap_path)
-            
-def unstack(voiMap,StackedVoiValue):
-    ind = np.where(voiMap[1,:] == int(StackedVoiValue))[0]
-    unStackedVOI = voiMap[0,ind[0]]
-
-    return int(unStackedVOI)
-
+#%%Files names and manual data 
 #%% FCN and class: Read egsphant and voi
 class egsphant:
     
@@ -210,116 +160,55 @@ def readEgsphant(egsphantfile):
 
 
     egsphantObject=egsphant(nmaterials, materialList, [xdim, ydim, zdim], [xedgesList, yedgesList, zedgesList], [xcenterList, ycenterList, zcenterList], materialArray, densityArray, []) 
-    
-
-    
     return egsphantObject
 
-class dose:
-    
-    def __init__(self, dimensions, edges, centers, doseArray, unCertArray):
-        self._dimensions = dimensions
-        self._edges = edges
-        self._centers = centers
-        self._doseArray = doseArray
-        self._unCertArray = unCertArray
-    @property
-    def dimensions(self):
-        return self._dimensions
-    @property
-    def doseArray(self):
-        return self._doseArray
-
-    @property
-    def edges(self):
-        return self._edges  
-    @property
-    def unCertArray(self):
-        
-        return self._unCertArray
-def readDose(dosefile):
-
-    #Parses file line by line
-    with open(dosefile) as x:
-    
-        #Read dimensions
-        xdim, ydim, zdim = x.readline().split()
-        xdim = int(xdim)
-        ydim = int(ydim)
-        zdim = int(zdim)
-        
-        #Read voxel edges, not in one consitent line in the complete version so this looks for 
-        #lines going from pos to negative
-        xedgesList = []
-        yedgesList = []
-        zedgesList = []
-        #Read voxel edges
-        xedgesList = x.readline().split()
-        xedgesList = [float(item) for item in xedgesList]
-        yedgesList = x.readline().split()
-        yedgesList = [float(item) for item in yedgesList]
-        zedgesList = x.readline().split()
-        zedgesList = [float(item) for item in zedgesList]
-                
-        
-        
-        
-        #Determine the center of the voxels
-        xcenterList = []
-        ycenterList = []
-        zcenterList = []
-        for i in range(xdim):
-            edge1 = xedgesList[i]
-            edge2 = xedgesList[i+1]
-            xcenterList.append((edge1+edge2)/2)
-        for i in range(ydim):
-            edge1 = yedgesList[i]
-            edge2 = yedgesList[i+1]
-            ycenterList.append((edge1+edge2)/2)
-        for i in range(zdim):
-            edge1 = zedgesList[i]
-            edge2 = zedgesList[i+1]
-            zcenterList.append((edge1+edge2)/2)
-        
-        #Build dose image
-        doseArray = np.zeros((xdim,ydim,zdim))
-        doseList = x.readline().strip().split()
-        m = 0
-
-        for k in range(zdim):
-            for j in range(ydim):
-                    for i in range(xdim):
-                            doseArray[i,j,k] = doseList[m]
-                            m += 1
-        unCertArray = np.zeros((xdim,ydim,zdim))                    
-        unCertList = x.readline().strip().split()
-        m = 0
-
-        for k in range(zdim):
-            for j in range(ydim):
-                    for i in range(xdim):
-                            unCertArray[i,j,k] = unCertList[m]
-                            m += 1                    
-
-        
-        
 
 
-        doseObject = dose([xdim, ydim, zdim], [xedgesList, yedgesList, zedgesList], [xcenterList, ycenterList, zcenterList], doseArray,unCertArray) 
-    return doseObject
 
+
+
+#%%Files names and manual data 
+
+cd = os.getcwd()
+num = list(range(1,16))
+num_files  = 80
+
+filePath = "4DDoseData\\Individual Sweeps\\PA"
+
+majorDir = os.path.join(cd,filePath)
+subDirs = [d for d in os.listdir(majorDir) if os.path.isdir(os.path.join(majorDir, d))]
+
+egsphantfile = os.path.join(cd,'XCAT_PA.egsphant')
+egsvoifile = os.path.join(cd,"XCAT_PA_stacked_new.egsvoi")
+
+#Treatment time (min/field)
+rxTime= 0.45
+rxTime = rxTime * 60 #(s)
+step_size = 0.002
+
+
+#Is the volume stacked (Co-60 with filters)?
+stacked_flag = 1 #set to 1 if true, set to zero otherwise
+stackmap_filename = "StackToUnstackMaps\\PAVOIUnstackToStackMapHiRes_new.npy"
+stackmap_path = os.path.join(cd,stackmap_filename)
+
+#%% FCN: "Unstack the VOI values for the phantom"
+if stacked_flag == 1:
+    voiMap = np.load(stackmap_path)
+            
+def unstack(voiMap,StackedVoiValue):
+    ind = np.where(voiMap[1,:] == int(StackedVoiValue))[0]
+    unStackedVOI = voiMap[0,ind[0]]
+
+    return int(unStackedVOI)
 #%%Begin file processing 
 egsphantom = readEgsphant(egsphantfile)
-
-   
+  
 #For this need to use the the volume and density of each voxel
 [xdim,ydim,zdim] = egsphantom.dimensions
 [xbnds,ybnds,zbnds] = egsphantom.edges
 
-
-#%%Prepare array for E_values
-
-#Read number of VOI
+#%%Read number of VOI
 voiArray = []
 
 with open(egsvoifile) as x:
@@ -333,15 +222,11 @@ if stacked_flag == 1:
         unstacked = unstack(voiMap,voiArray[i])
         voiArray[i] = unstacked 
 
-#Remove events which don't have Voxel Indices found in the mapping array
-mask = np.isin(voiArray,mapVoxels)
-voiArray = voiArray[mask]
 
-   
-
-
-#%%
-for step_size in [0.002,0.1,0.2,0.3,0.4,0.5]:
+for subDir in subDirs:
+    path = os.path.join(cd,filePath,subDir)
+    nameNum = "".join(char for char in subDir if char.isdigit())
+    filename = "XCAT_PA_"+str(nameNum)
     
     #Determine number of time intervals
     timeArray = np.arange(0,rxTime + step_size, step_size)
@@ -352,18 +237,16 @@ for step_size in [0.002,0.1,0.2,0.3,0.4,0.5]:
     ainflu_sum = 0
     
     for sub_files in range(1,num_files+1):
-        headerfile = os.path.join(cd,filename +"_w" + str(sub_files) + '.edepheader')
-        datafile = os.path.join(cd,filename +"_w" + str(sub_files)+ '.edepdat')
-        ainflufile = os.path.join(cd,filename +"_w" + str(sub_files) +'.ainflu')
+        headerfile = os.path.join(cd,filePath,subDir,filename +"_w" + str(sub_files) + '.edepheader')
+        datafile = os.path.join(cd,filePath,subDir,filename +"_w" + str(sub_files) + '.edepdat')
+        ainflufile = os.path.join(cd,filePath,subDir,filename +"_w" + str(sub_files) + '.ainflu')
         header = read_edepheader(headerfile)
         data = read_edepdat(datafile)
         ainflu = read_ainflu(ainflufile)
         
         ainflu_sum = ainflu_sum + ainflu
-    
-    
-    
-    #%%Create array of for all interactions 
+        
+        #%%Create array of for all interactions 
         eventArray = np.zeros((4, len(data)))
         
         #for each incident particle in header, write particle with MU tag
@@ -398,11 +281,7 @@ for step_size in [0.002,0.1,0.2,0.3,0.4,0.5]:
                 unstacked = unstack(voiMap,eventArray[1,i])
                 eventArray[1,i] = unstacked
     
-    
-        #Remove events which aren't in the voxel of interest 
-        eventVoxels = eventArray[1,:]
-        mask = np.isin(eventVoxels,mapVoxels)
-        eventArray = eventArray[:,mask]
+
         
     #%% Fill E_Array
         for i in range(np.size(eventArray, axis = 1)):
@@ -411,9 +290,9 @@ for step_size in [0.002,0.1,0.2,0.3,0.4,0.5]:
             timeIndex = np.where(timeArray == eventArray[2,i])[0][0]
             E_array[timeIndex,voiIndex] = E_array[timeIndex,voiIndex] + eventArray[0,i]
             uE_array[timeIndex,voiIndex] = uE_array[timeIndex,voiIndex] + eventArray[0,i]**2
-        print(str(sub_files))
+   
             
-         
+        print(sub_files) 
     #%% Generate Mass Array
     massArray = np.zeros_like(E_array)
     
@@ -437,15 +316,16 @@ for step_size in [0.002,0.1,0.2,0.3,0.4,0.5]:
     finalArray[0,1:] = voiArray
     finalArray[1:,1:] = doseArray  
     
-    arrayname = str(int(step_size*1000))+"ms_SingleSweep.npy"
+    arrayname = os.path.join(cd,filePath,"Sweep" + str(nameNum)+".npy")
     np.save(arrayname,finalArray)
-                       
-                   
+    print(nameNum)
 
 
 
 
-
-    
-    
-
+        
+        
+       
+        
+       
+        
