@@ -71,21 +71,26 @@ def velocity_interp(flowdata,t,x):
     tarray = flowdata[1:,0]
     varray = flowdata[1:,1:]
     it = np.searchsorted(tarray,t,side = 'left')
-    ix = np.searchsorted(xarray,x,side = 'left')    
-    x1 = xarray[ix]
-    x0 = xarray[ix-1]
-    t1 = tarray[it]
-    t0 = tarray[it-1]
-    if it == 1 and ix == 1:
-        p00 = 0
-
-    else:
-        p00 = varray[it-1,ix-1]
-    p10 = varray[it,ix-1]
-    p01 = varray[it-1,ix]
-    p11 = varray[it,ix]
-    p = p00 + (p10-p00)*((t-t0)/(t1-t0))+(p01-p00)*((x-x0)/(x1-x0))+\
-        (p11-p01-p10+p00)*((t-t0)/(t1-t0))*((x-x0)/(x1-x0))
+    ix = np.searchsorted(xarray,x,side = 'left')
+    if ix  == len(xarray):
+        print(x)
+        print(xarray[-1])
+        p = 1000
+    else:       
+        x1 = xarray[ix]
+        x0 = xarray[ix-1]
+        t1 = tarray[it]
+        t0 = tarray[it-1]
+        if it == 1 and ix == 1:
+            p00 = 0
+    
+        else:
+            p00 = varray[it-1,ix-1]
+        p10 = varray[it,ix-1]
+        p01 = varray[it-1,ix]
+        p11 = varray[it,ix]
+        p = p00 + (p10-p00)*((t-t0)/(t1-t0))+(p01-p00)*((x-x0)/(x1-x0))+\
+            (p11-p01-p10+p00)*((t-t0)/(t1-t0))*((x-x0)/(x1-x0))
     return p
 
 
@@ -480,12 +485,13 @@ class Network (object):
                 if clocation.IDnum > 27: #outside of an organ
                    #Determine velocity value at exact position and time
                     velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
+                    if velocity == 1000:
+                        raise Exception("X issue")
                    #Update position and exp time
                     newdistance = velocity * self.dt + BV.distance
     
                    #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
+                    if newdistance >= clocation.flowdata[0,-1]: 
                        
                        #Move BV to next location
                        if clocation.splittingratios is None:
@@ -498,7 +504,9 @@ class Network (object):
                            BV._distance = 0
                    #Advance BV down vessel        
                     else:
-                       BV._distance = newdistance
+                        if newdistance >= clocation.flowdata[0,-1]:
+                            raise Exception("WTF")
+                        BV._distance = newdistance
                        
                 
                 #BV within organ
@@ -550,7 +558,8 @@ class Network (object):
                 if clocation.IDnum > 27: #outside of an organ
                    #Determine velocity value at exact position and time
                     velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
+                    if velocity == 1000:
+                        raise Exception("X issue")
                    #Update position and exp time
                     newdistance = velocity * self.dt + BV.distance
     
@@ -568,7 +577,9 @@ class Network (object):
                            BV._distance = 0
                    #Advance BV down vessel        
                     else:
-                       BV._distance = newdistance
+                        if newdistance >= clocation.flowdata[0,-1]:
+                            raise Exception("WTF")
+                        BV._distance = newdistance
 
                 #BV within organ
                 else:
@@ -648,12 +659,13 @@ class Network (object):
                 if clocation.IDnum > 27: #outside of an organ
                    #Determine velocity value at exact position and time
                     velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
+                    if velocity == 1000:
+                        raise Exception("X issue")
                    #Update position and exp time
                     newdistance = velocity * self.dt + BV.distance
     
                    #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
+                    if newdistance >= clocation.flowdata[0,-1]: 
                        
                        #Move BV to next location
                        if clocation.splittingratios is None:
@@ -666,7 +678,10 @@ class Network (object):
                            BV._distance = 0
                    #Advance BV down vessel        
                     else:
-                       BV._distance = newdistance
+                        if newdistance >= clocation.flowdata[0,-1]:
+                            raise Exception("WTF")
+                        BV._distance = newdistance
+                      
 
                 #BV within organ
                 else:
@@ -718,12 +733,13 @@ class Network (object):
                 if clocation.IDnum > 27: #outside of an organ
                    #Determine velocity value at exact position and time
                     velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
+                    if velocity == 1000:
+                        raise Exception("X issue")
                    #Update position and exp time
-                    newdistance = velocity * self.dt + BV.distance
+                    newdistance = (velocity * self.dt) + BV.distance
     
                    #Determine wether the BV is in the vessel
-                    if newdistance > clocation.flowdata[0,-1]: 
+                    if newdistance >= clocation.flowdata[0,-1]: 
                        
                        #Move BV to next location
                        if clocation.splittingratios is None:
@@ -736,7 +752,9 @@ class Network (object):
                            BV._distance = 0
                    #Advance BV down vessel        
                     else:
-                       BV._distance = newdistance
+                        if newdistance >= clocation.flowdata[0,-1]:
+                            raise Exception("WTF")
+                        BV._distance = newdistance
  
                 #BV within organ
                 else:
