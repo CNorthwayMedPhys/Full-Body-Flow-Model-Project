@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1E2 #total number BV
+BV_num = 1E1 #total number BV
 Tss =  10#round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
 
@@ -72,10 +72,17 @@ def velocity_interp(flowdata,t,x):
     varray = flowdata[1:,1:]
     it = np.searchsorted(tarray,t,side = 'left')
     ix = np.searchsorted(xarray,x,side = 'right')
+    if ix == len(xarray):
+        print(x)
+        print(xarray)
+        ix = len(xarray) - 1
+  
     x1 = xarray[ix]
     x0 = xarray[ix-1]
     t1 = tarray[it]
     t0 = tarray[it-1]
+    
+
     if it == 1 and ix == 1:
         p00 = 0
 

@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 dt = 0.002 #BFS Time step size (s)
 T = 0.955 #Length of one period (s)
 BV_num = 1E2 #total number BV
-Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round nubmer!!!
+Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
 Ttrans = round(30*T,3) #(s)
 #Dose file locations 
@@ -73,8 +73,8 @@ def velocity_interp(flowdata,t,x):
     it = np.searchsorted(tarray,t,side = 'left')
     ix = np.searchsorted(xarray,x,side = 'left')
     if ix  == len(xarray):
-        print(str(x))
-        print(str(flowdata[0,-1]))
+        print(x)
+        print(flowdata[0,-1])
         ix = ix - 1 
 
     x1 = xarray[ix]
@@ -1020,7 +1020,7 @@ for dst in dsts:
     results[j,1] = std_dev
     results[j,2] = dst
     j += 1
-np.save(os.path.join(cd,"dstResults.npy"))
+np.save(os.path.join(cd,"dstResults.npy"),results)
 
 #%% Scratch Pad
     # vessel_dose = []
