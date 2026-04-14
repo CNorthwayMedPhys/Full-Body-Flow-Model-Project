@@ -12,13 +12,13 @@ import pandas as pd
 import os
 import sys
 import random
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
  
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
 T = 0.955 #Length of one period (s)
-BV_num = 1E3 #total number BV
+#BV_num = 1E3 #total number BV
 Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
 Ttrans = round(30*T,3) #(s)
@@ -674,6 +674,7 @@ class Network (object):
         current_file = 2
         self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+"1.npy"))    
         
+        self.shuffleBVs ()
         
 ################ Run Tranistion Time without Field #################
         while localTime < self.Ttrans:
@@ -854,13 +855,14 @@ class Network (object):
             tag = position_data[i,3]
             
             if tag == 0: #Vessels
-                BV._loction = int(loc)
+                BV._location = int(loc)
                 BV._dwelltime = 0
                 BV._distance = position_data[i,2]
             else: #Compartment
                 BV._location = int(loc)
                 BV._distance = 0
                 BV._dwelltime = position_data[i,1]
+            i += 1    
         self._BVs = BV_data         
             
             
@@ -994,82 +996,58 @@ class Network (object):
         
  
 #%% Excute Simulation
-#dsts = np.arange(0.002,0.2002,0.002) #Dose sample time step size (s)
-#dsts = np.append(dsts,[0.3,0.4,0.5,0.6,0.7,0.8,0.995])
-#dsts = dsts[::-1]
-dsts = [5,4,3,2,1]
 
-results = np.zeros([len(dsts),3])
-j= 0
+dsts = [0.2,0.02,0.002]
+BVNums = np.arange(100,1E4+100,100)
 for dst in dsts:
-    
-    timeName = str(int(dst*1000))
-    def runSimulation(dummy_input):
-        nt = Network(dt, BV_num)
-        nt.setTimes(T, Tss, Tfield, Ttrans)
-        nt.intializeLocations()
-        nt.runNT()
-        BVolumes = nt.BVs
+    results = np.zeros([len(BVNums),3])
+    for BV_num in BVNums:
+        j= 0
+        timeName = str(int(dst*1000))
+        def runSimulation(dummy_input):
+            nt = Network(dt, BV_num)
+            nt.setTimes(T, Tss, Tfield, Ttrans)
+            nt.intializeLocations()
+            nt.runNT()
+            BVolumes = nt.BVs
         
-        return BVolumes
+            return BVolumes
        
     #%% Process Data 
-    BVolumes = runSimulation(0)
+        BVolumes = runSimulation(0)
      
     
-    BV_data = np.zeros([len(BVolumes),5])
-    i=0
-    for BV in BVolumes:
-        dose_compartment = BV.dose_comp
-        dose_vesselAP = BV.dose_vesAP
-        timeAP = BV.vesselTimeAP
-        dose_vesselPA = BV.dose_vesPA
-        timePA = BV.vesselTimePA
-        BV_data[i,0] = dose_compartment
-        BV_data[i,1] = dose_vesselAP
-        BV_data[i,2] = timeAP
-        BV_data[i,3] = dose_vesselPA
-        BV_data[i,4] = timePA
-        i += 1
+        BV_data = np.zeros([len(BVolumes),5])
+        i=0
+        for BV in BVolumes:
+            dose_compartment = BV.dose_comp
+            dose_vesselAP = BV.dose_vesAP
+            timeAP = BV.vesselTimeAP
+            dose_vesselPA = BV.dose_vesPA
+            timePA = BV.vesselTimePA
+            BV_data[i,0] = dose_compartment
+            BV_data[i,1] = dose_vesselAP
+            BV_data[i,2] = timeAP
+            BV_data[i,3] = dose_vesselPA
+            BV_data[i,4] = timePA
+            i += 1
     
-    dose =  BV_data[:,0] + (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
-    doseVessel = (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
+        dose =  BV_data[:,0] + (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
+        doseVessel = (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
     
     
     
     # Calculate mean and standard deviation
-    mean = np.mean(dose)
-    std_dev = np.std(dose)
+        mean = np.mean(dose)
+        std_dev = np.std(dose)
     
-    print("Time step size: " + str(dst))
-    print("mean: " + str(mean))
-    print("std: " + str(std_dev))
-    
-    print("vessel mean:" + str(np.mean(doseVessel)))
-    print("comp mean:" + str(np.mean(BV_data[:,0])))
-    
-    # Create the histogram
-    plt.hist(dose, bins=25, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
-    
-    # Add vertical lines for mean and standard deviation
-    plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
-    plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
-    plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
-    
-    # Add labels and title
-    plt.xlabel('Dose (Gy)')
-    plt.ylabel('Blood Volume Count')
-    plt.title('Single Fraction with ' + str(dst)+ " s dose sampling step")
-    plt.legend()
-    plt.grid(axis='y', alpha=0.75)
-    
-    # Display the plot
-    plt.show()
-    results[j,0] = mean
-    results[j,1] = std_dev
-    results[j,2] = dst
-    j += 1
-np.save(os.path.join(cd,"dstResultsLarge.npy"), results)
+        results[j,0] = mean
+        results[j,1] = std_dev
+        results[j,2] = BV_num
+        j += 1
+        
+        print(str(BV_num) + " done!")
+        np.save(os.path.join(cd,"BVResults" + str(timeName) + ".npy"), results)
 
 #%% Scratch Pad
     # vessel_dose = []
