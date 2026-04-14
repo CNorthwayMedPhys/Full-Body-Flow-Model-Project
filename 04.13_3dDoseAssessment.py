@@ -13,10 +13,9 @@ import scipy as sp
 
 cd = os.getcwd()
 
-egsphantfileAP = os.path.join(cd,'XCAT_AP.egsphant')
-egsphantfilePA = os.path.join(cd,'XCAT_PA.egsphant')
-dosefileAP = os.path.join(cd,"sgolay_XCAT_AP_200Billion_trimmed_conv.3ddose")
-dosefilePA = os.path.join(cd,"sgolay_XCAT_PA_2E11_trimmed_conv.3ddose")
+egsphantfile = os.path.join(cd,'XCAT_AP.egsphant')
+dosefile = os.path.join(cd,"TBI_XCAT_2E11.3ddose")
+
 
 
 #%% FCN and class: Read egsphant and voi
@@ -206,48 +205,48 @@ def readDose(dosefile):
         
         #Build dose image
         doseArray = np.zeros((xdim,ydim,zdim))
-        doseList = []
-        m=0
-        for z in range(ydim*zdim):
-                tempList = x.readline().strip().split()
-                doseList.extend(tempList)
-        for k in range(zdim):
-            for j in range(ydim):
-                    for i in range(xdim):
-                            doseArray[i,j,k] = doseList[m]
-                            m += 1        
-                
-                
-        unCertArray = np.zeros((xdim,ydim,zdim))
-        unCertList = []
-        m=0
-        for z in range(ydim*zdim):
-                tempList = x.readline().strip().split()
-                unCertList.extend(tempList)
-        for k in range(zdim):
-            for j in range(ydim):
-                    for i in range(xdim):
-                            unCertArray[i,j,k] = unCertList[m]
-                            m += 1
-        
-  #####Normally use this for combined dose   #####   
-        # doseList = x.readline().strip().split()
-        # m = 0
-    
+        # doseList = []
+        # m=0
+        # for z in range(ydim*zdim):
+        #         tempList = x.readline().strip().split()
+        #         doseList.extend(tempList)
         # for k in range(zdim):
         #     for j in range(ydim):
         #             for i in range(xdim):
         #                     doseArray[i,j,k] = doseList[m]
-        #                     m += 1
-        # unCertArray = np.zeros((xdim,ydim,zdim))                    
-        # unCertList = x.readline().strip().split()
-        # m = 0
-
+        #                     m += 1        
+                
+                
+        # unCertArray = np.zeros((xdim,ydim,zdim))
+        # unCertList = []
+        # m=0
+        # for z in range(ydim*zdim):
+        #         tempList = x.readline().strip().split()
+        #         unCertList.extend(tempList)
         # for k in range(zdim):
         #     for j in range(ydim):
         #             for i in range(xdim):
         #                     unCertArray[i,j,k] = unCertList[m]
-        #                     m += 1                    
+        #                     m += 1
+        
+  ####Normally use this for combined dose   #####   
+        doseList = x.readline().strip().split()
+        m = 0
+    
+        for k in range(zdim):
+            for j in range(ydim):
+                    for i in range(xdim):
+                            doseArray[i,j,k] = doseList[m]
+                            m += 1
+        unCertArray = np.zeros((xdim,ydim,zdim))                    
+        unCertList = x.readline().strip().split()
+        m = 0
+
+        for k in range(zdim):
+            for j in range(ydim):
+                    for i in range(xdim):
+                            unCertArray[i,j,k] = unCertList[m]
+                            m += 1                    
 
             
         
@@ -257,99 +256,29 @@ def readDose(dosefile):
     return doseObject
 
 #%%Begin file processing 
-egsphantAP = readEgsphant(egsphantfileAP)
-egsphantPA = readEgsphant(egsphantfilePA)
-doseObjAP = readDose(dosefileAP)
-doseObjPA = readDose(dosefilePA)
+egsphant = readEgsphant(egsphantfile)
+doseObj = readDose(dosefile)
 
-AP_dose = doseObjAP.doseArray
-PA_dose = doseObjPA.doseArray
 
 
 #%%
 #Firstly check dims and crop if an empty slice leads to a mismatch
-[xedges,yedges,zedges] = doseObjAP.edges
+[xedges,yedges,zedges] = doseObj.edges
 
-if egsphantAP.dimensions[0] != egsphantPA.dimensions[0]:
-    if egsphantAP.dimensions[0] > egsphantPA.dimensions[0]:
-        if (egsphantAP.materialArray[0,:,:] == 1).all() :
-            AP_dose = AP_dose[1:0,:,:]
-            #AP_uncert = AP_uncert[1:0,:,:]
-            xedges = egsphantAP.edges[0][1:0]
-        elif (egsphantAP.materialArray[-1,:,:] == 1).all():
-            AP_dose = AP_dose[0:-1,:,:]
-            #AP_uncert = AP_uncert[0:-1,:,:]
-            xedges = egsphantAP.edges[0][0:-1]
-       
-    else:
-        if (egsphantPA.materialArray[0,:,:] == 1).all() :
-            PA_dose = PA_dose[1:0,:,:]
-            #PA_uncert = PA_uncert[1:0,:,:]
-            xedges = egsphantAP.edges[0]
-        elif (egsphantPA.materialArray[-1,:,:] == 1).all():
-            PA_dose = PA_dose[0:-1,:,:]
-            #PA_uncert = PA_uncert[0:-1,:,:]
-            xedges = egsphantAP.edges[0]
-         
-if egsphantAP.dimensions[1] != egsphantPA.dimensions[1]:
-    if egsphantAP.dimensions[1] > egsphantPA.dimensions[1]:
-        if (egsphantAP.materialArray[:,0,:] == 1).all() :
-            AP_dose = AP_dose[:,1:0,:]
-            #AP_uncert = AP_uncert[:,1:0,:]
-            yedges = egsphantAP.edges[1][1:0]
-        elif (egsphantAP.materialArray[:,-1,:] == 1).all():
-            AP_dose = AP_dose[:,0:-1,:]
-            #AP_uncert = AP_uncert[:,0:-1,:]
-            yedges = egsphantAP.edges[1][0:-1]
-
-    else:
-        if (egsphantPA.materialArray[:,0,:] == 1).all() :
-            PA_dose = PA_dose[:,1:0,:]
-           
-            yedges = egsphantAP.edges[1]
-        elif (egsphantPA.materialArray[:,-1,:] == 1).all():
-            PA_dose = PA_dose[:,0:-1,:]
-           
-            yedges = egsphantAP.edges[1]
-                
-if egsphantAP.dimensions[2] != egsphantPA.dimensions[2]:
-    if egsphantAP.dimensions[2] > egsphantPA.dimensions[2]:
-        if (egsphantAP.materialArray[:,:,0] == 1).all() :
-            AP_dose = AP_dose[:,:,1:0]
-           
-            zedges = egsphantAP.edges[2][1:0]
-        elif (egsphantAP.materialArray[:,:,-1] == 1).all():
-            AP_dose = AP_dose[:,:,0:-1]
-            
-            zedges = egsphantAP.edges[2][0:-1]
-        
-    else:
-        if (egsphantPA.materialArray[:,:,0] == 1).all() :
-            PA_dose = PA_dose[:,:,1:0]
-            
-            zedges = egsphantAP.edges[2]
-        elif (egsphantPA.materialArray[:,:,-1] == 1).all():
-            PA_dose = PA_dose[:,:,0:-1]
-           
-            zedges = egsphantAP.edges[2]
-        
-
-
-#%%
 xMidIndex = 128
 yMidIndex = 50 
 zMidIndex= 439 #based on ct looks good
-doseObj = doseObjAP
+
 
 doseIso = np.mean(doseObj.doseArray[xMidIndex-1:xMidIndex+2,yMidIndex-1:yMidIndex+2,zMidIndex-1:zMidIndex+2])
 unCertIso= np.mean(doseObj.unCertArray[xMidIndex-1:xMidIndex+2,yMidIndex-1:yMidIndex+2,zMidIndex-1:zMidIndex+2])
 
 dosePlane = doseObj.doseArray[:,yMidIndex,zMidIndex]
 
-PA_dose_rot = sp.ndimage.rotate(PA_dose, 180)
+
 
 #%% 
-Summed = egsphantAP.materialArray
+Summed = egsphant.materialArray
 Summed[:,yMidIndex,zMidIndex] = 8
 Summed[xMidIndex, yMidIndex,:] = 8
 
