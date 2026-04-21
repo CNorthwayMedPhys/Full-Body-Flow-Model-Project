@@ -1001,9 +1001,10 @@ dsts = [0.2,0.02,0.002]
 BVNums = np.arange(100,1E4+100,100)
 for dst in dsts:
     results = np.zeros([len(BVNums),3])
+    j = 0
+    timeName = str(int(dst*1000))
     for BV_num in BVNums:
-        j= 0
-        timeName = str(int(dst*1000))
+        
         def runSimulation(dummy_input):
             nt = Network(dt, BV_num)
             nt.setTimes(T, Tss, Tfield, Ttrans)
