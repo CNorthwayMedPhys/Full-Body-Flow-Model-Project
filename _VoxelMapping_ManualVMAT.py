@@ -184,7 +184,7 @@ path = dir_path + "\\FlowTracker.xlsx"
 df = pd.read_excel(path)
 
 #%%Load in the relevant egsphant
-path = dir_path + "\\XCAT_AP.egsphant"
+path = dir_path + "\\VCCN_XCAT.egsphant"
 egsphantObj = readEgsphant(path)
 #path = dir_path + "\\CN_XCATPulm.egsvoi"
 #addVOI(path, egsphantObj)  
@@ -220,10 +220,10 @@ for vesselNum in range( 125+1,127):
     [0.8668,   -1.8732,   28.5000]])*10 #[x,y,z] mm
     
     # tempY =vesselArray[:,0]
-    # tempX = vesselArray[:,1]
+    tempX = vesselArray[:,1]
  
     # vesselArray[:,0] = -tempY
-    # vesselArray[:,1] = -tempX
+    vesselArray[:,1] = -tempX
  
 
     interSlices = np.empty((15,3)) 
@@ -255,14 +255,14 @@ for vesselNum in range( 125+1,127):
     
     #%% Map positions in orginal vessels location to finalized egsphant coords
 
-    transition_map = [(11.97 - 12.5)-16,(-14.1 + 1.5)+86,(0.8 - 35)+36]
+    transition_map = [300 + 12.8 ,-140.2 +0.8, -663.4 -5.0+0.2 ]
     vesselArray[:,0:3] = vesselArray[:,0:3] + transition_map
     
     #%% Determine which positions are in which voxel
     #HARD CODED THE VOXEL SIZE AS 0.5,0.5,0.5 cm
     #HARD CODED the VOXEL ARRAY ORIGIN -32.21, -15.37, -110.5 cm
     voxelArray = np.zeros(np.shape(vesselArray)[0])
-    origin = np.array ([-33.64,-7.97,-110.5]) * 10 #mm
+    origin = np.array ([0,0,0]) * 10 #mm
     size = np. array ([0.25,0.25,0.25]) * 10 # mm
     for i in range(np.shape(vesselArray)[0]):
         voxels = []
@@ -288,19 +288,19 @@ for vesselNum in range( 125+1,127):
 
 # #%%Compelte a rigid registration of the two VOI Arrays to determine the transform 
 #     #to apply to the vessels
-# shift_values, error, phasediff = phase_cross_correlation(egsphantObj.VOIArray,  VOIFittedArray, upsample_factor=10)
-# print(f"Detected translation: {shift_values}")
+#shift_values, error, phasediff = phase_cross_correlation(egsphantObj.VOIArray,  VOIFittedArray, upsample_factor=10)
+#print(f"Detected translation: {shift_values}")
 
-# #%%
-voiindex = np.where(VOIFittedArray>0)
-Summed = egsphantObj.densityArray - VOIFittedArray
-for i in range(np.min(voiindex[2]),np.max(voiindex[2])):  
-    plt.figure()         
-    plt.imshow(Summed[:,:,i], cmap='hot')   
+#%%
+# voiindex = np.where( VOIFittedArray>0)
+# Summed = egsphantObj.densityArray - VOIFittedArray*2
+# for i in range(np.min(voiindex[2]),np.max(voiindex[2])):  
+#     plt.figure()         
+#     plt.imshow(Summed[:,:,i], cmap='hot')   
 
-# # truth = egsphantObj.materialArray + egsphantObj.VOIArray*10
-# # plt.figure()         
-# # plt.imshow(truth[:,:,545], cmap='hot') 
+# truth = egsphantObj.densityArray - VOIFittedArray*10
+# plt.figure()         
+# plt.imshow(truth[:,:,528], cmap='hot') 
    
 # index = np.where(VOIFittedArray>0)
 # print(np.max(index[2]))
@@ -319,5 +319,6 @@ for i in range(np.min(voiindex[2]),np.max(voiindex[2])):
         dist_voxel_match = np.vstack([vesselArray[transition_index,3], vesselArray[transition_index,4]]).T    #mm, voxel num
          
 #%%Write to an excel document
-    np.save(dir_path + '\\VOIMappingArrays\\Hi-Res\\AP\\' + str(vesselNum) + '.npy', dist_voxel_match)
+
+    np.save(dir_path + "\\VMAT_Files\\VOIMappingArrays\\" + str(vesselNum) + '.npy', dist_voxel_match)
 

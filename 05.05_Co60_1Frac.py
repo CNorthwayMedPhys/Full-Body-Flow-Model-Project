@@ -12,16 +12,20 @@ import pandas as pd
 import os
 import sys
 import random
+from pytictoc import TicToc
+t = TicToc()
+t.tic()
 #import matplotlib.pyplot as plt
 
  
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
+dst = 0.2 #Dose sampling time step size (s)
 T = 0.955 #Length of one period (s)
-#BV_num = 1E3 #total number BV
+BV_num = 1E4 #total number BV
 Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
-Ttrans = round(30*T,3) #(s)
+Ttrans = round(120*T,3) #(s)
 
 #Dose file locations 
 cd = os.getcwd()
@@ -642,22 +646,7 @@ class Network (object):
 
 ######################End AP############################
 #Prep for PA 
-    
-        # BV_data = np.zeros([len(self.BVs),3])
-        # i = 0
-        # for BV in self.BVs:
-        #     dose_compartment = BV.dose_comp
-        #     dose_vessel = BV.dose_ves
-        #     time = BV.vesselTime
-        #     BV_data[i,0] = dose_compartment
-        #     BV_data[i,1] = dose_vessel
-        #     BV_data[i,2] = time
-        #     i += 1
-        
-        
-        # doseVessel = (BV_data[:,1] * BV_data[:,2])
-        # print("vessel mean:" + str(np.mean(doseVessel)))
-        # print("comp mean:" + str(np.mean(BV_data[:,1])))
+
         
         #Load in new VOI Map
         for location in self.locations:
@@ -996,87 +985,40 @@ class Network (object):
         
  
 #%% Excute Simulation
+      
+def runSimulation(dummy_input):
+    nt = Network(dt, BV_num)
+    nt.setTimes(T, Tss, Tfield, Ttrans)
+    nt.intializeLocations()
+    nt.runNT()
+    BVolumes = nt.BVs
 
-dsts = [0.02]
-BVNums = np.arange(100,1E4+100,100)
-for dst in dsts:
-    results = np.zeros([len(BVNums),3])
-    j = 0
-    timeName = str(int(dst*1000))
-    for BV_num in BVNums:
-        
-        def runSimulation(dummy_input):
-            nt = Network(dt, BV_num)
-            nt.setTimes(T, Tss, Tfield, Ttrans)
-            nt.intializeLocations()
-            nt.runNT()
-            BVolumes = nt.BVs
-        
-            return BVolumes
-       
-    #%% Process Data 
-        BVolumes = runSimulation(0)
-     
-    
-        BV_data = np.zeros([len(BVolumes),5])
-        i=0
-        for BV in BVolumes:
-            dose_compartment = BV.dose_comp
-            dose_vesselAP = BV.dose_vesAP
-            timeAP = BV.vesselTimeAP
-            dose_vesselPA = BV.dose_vesPA
-            timePA = BV.vesselTimePA
-            BV_data[i,0] = dose_compartment
-            BV_data[i,1] = dose_vesselAP
-            BV_data[i,2] = timeAP
-            BV_data[i,3] = dose_vesselPA
-            BV_data[i,4] = timePA
-            i += 1
-    
-        dose =  BV_data[:,0] + (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
-        doseVessel = (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
-    
-    
-    
-    # Calculate mean and standard deviation
-        mean = np.mean(dose)
-        std_dev = np.std(dose)
-    
-        results[j,0] = mean
-        results[j,1] = std_dev
-        results[j,2] = BV_num
-        j += 1
-        
-        print(str(BV_num) + " done!")
-        np.save(os.path.join(cd,"BVResults" + str(timeName) + ".npy"), results)
+    return BVolumes
 
-#%% Scratch Pad
-    # vessel_dose = []
-    # comp_data = []
-    # for BV in BVolumes:
-    #     location = BV.location
-    #     if location > 27:
-    #         try:
-    #             vessel_dose.append(round(BV.dose[0],3)*BV.vesselTime)
-    #         except:
-                
-    #             vessel_dose.append(round(BV.dose,3)*BV.vesselTime)
-    #     else:
-    #         try:
-    #             comp_data.append(round(BV.dose[0],3))
-    #         except:
-                
-    #             comp_data.append(round(BV.dose,3))
-            
-    # vessel_mean = np.mean(vessel_dose)
-    # comp_mean = np.mean(comp_data)
+BVolumes = runSimulation(0)       
+#%% Process Data 
     
-    # plt. hist(vessel_dose, bins=25 )
-    # plt.title('Vessels')
-    # print(np.mean(vessel_dose))
-    # plt.show()
-    # plt.hist(comp_data,  bins=25)
-    # plt.title('Comp')
-    # print(np.mean(comp_data))
-    # plt.show()       
+BV_data = np.zeros([len(BVolumes),5])
+i=0
+for BV in BVolumes:
+    dose_compartment = BV.dose_comp
+    dose_vesselAP = BV.dose_vesAP
+    timeAP = BV.vesselTimeAP
+    dose_vesselPA = BV.dose_vesPA
+    timePA = BV.vesselTimePA
+    BV_data[i,0] = dose_compartment
+    BV_data[i,1] = dose_vesselAP
+    BV_data[i,2] = timeAP
+    BV_data[i,3] = dose_vesselPA
+    BV_data[i,4] = timePA
+    i += 1
+
+dose =  BV_data[:,0] + (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
+doseVessel = (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
+
+results = dose
+
+np.save(os.path.join(cd,"SingleFracCo60_4.npy"), results)
+t.toc()
+
 

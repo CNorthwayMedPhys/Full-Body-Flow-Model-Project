@@ -180,12 +180,12 @@ egsphantObj=readEgsphant()
 
 addVOI(egsphantObj)  
 #%% 
-Summed = egsphantObj.densityArray + egsphantObj.VOIArray 
+Summed = egsphantObj.densityArray + egsphantObj.VOIArray*2
 index = np.where(Summed > 1)
 # plt.figure()         
-# plt.imshow(egsphantObj.densityArray[:,:,250])   
+# plt.imshow(egsphantObj.densityArray[:,:,530])   
 plt.figure()         
-plt.imshow(Summed[:,:,367], cmap='hot')  
+plt.imshow(Summed[:,:,530], cmap='hot')  
 # plt.figure()         
 # plt.imshow(Summed[:,26,:], cmap='hot')  
      

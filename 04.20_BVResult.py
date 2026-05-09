@@ -8,33 +8,34 @@ Created on Thu Jan  8 13:29:53 2026
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
+from scipy import stats
 #%%
-filename = "BVResults200.npy"
+filename = "BVResults20.npy"
 cd = os.getcwd()
-stacked_results = np.load(os.path.join(cd,filename))
+results = np.load(os.path.join(cd,filename))
 
-#Flatten the results
-results = stacked_results.flatten()
-BV_data = results
-# Calculate mean and standard deviation
-mean = np.mean(BV_data)
-std_dev = np.std(BV_data)
+mean = results[:,0]
+std = results [:,1]
+BVnum = results[:,2]
 
-# Create the histogram
-plt.hist(BV_data, bins=15, alpha=0.7, color='skyblue', edgecolor='black', label='Blood Volume Dose')
+fig, ax1 = plt.subplots()
 
-# Add vertical lines for mean and standard deviation
-plt.axvline(mean, color='red', linestyle='dashed', linewidth=2, label=f'Mean: {mean:.2E}')
-plt.axvline(mean - std_dev, color='green', linestyle='dotted', linewidth=2, label=f'1 Std Dev: {std_dev:.2E}')
-plt.axvline(mean + std_dev, color='green', linestyle='dotted', linewidth=2)
+ax1.set_xlabel("Number of Blood Volumes Simulated")
+ax1.set_ylabel("Mean Dose (Gy)")
+ax1.plot(BVnum, mean, linestyle = "solid")
+ax1.tick_params(axis = "y")
+ax1.set_ylim(1.7,1.8)
 
-# Add labels and title
-plt.xlabel('Dose (Gy)')
-plt.ylabel('Blood Volume Count')
-plt.title('Preliminary Results for Co-60 Sweeping TBI')
-plt.legend()
-plt.grid(axis='y', alpha=0.75)
+ax2 = ax1.twinx()
+ax2.set_ylabel("Standard Deviaiton of Dose (Gy)")
+ax2.plot(BVnum, std , linestyle = "--")
+ax2.tick_params(axis='y')
+ax2.set_ylim(0.29,0.33)
 
-# Display the plot
 plt.show()
+
+fig, ax = plt.subplots()
+ax.fill_between(BVnum, mean-std, mean+std)
+
+resMean = stats.spearmanr(mean,BVnum)
+resStd = stats.spearmanr(std,BVnum)

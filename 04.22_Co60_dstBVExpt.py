@@ -997,7 +997,7 @@ class Network (object):
  
 #%% Excute Simulation
 
-dsts = [0.02]
+dsts = [0.002]
 BVNums = np.arange(100,1E4+100,100)
 for dst in dsts:
     results = np.zeros([len(BVNums),3])

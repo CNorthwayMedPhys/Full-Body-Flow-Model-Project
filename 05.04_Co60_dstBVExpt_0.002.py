@@ -997,8 +997,8 @@ class Network (object):
  
 #%% Excute Simulation
 
-dsts = [0.02]
-BVNums = np.arange(100,1E4+100,100)
+dsts = [0.002]
+BVNums = np.arange(2400,1E4+100,100)
 for dst in dsts:
     results = np.zeros([len(BVNums),3])
     j = 0
@@ -1048,7 +1048,7 @@ for dst in dsts:
         j += 1
         
         print(str(BV_num) + " done!")
-        np.save(os.path.join(cd,"BVResults" + str(timeName) + ".npy"), results)
+        np.save(os.path.join(cd,"BVResults" + str(timeName) + "SecondPortion.npy"), results)
 
 #%% Scratch Pad
     # vessel_dose = []

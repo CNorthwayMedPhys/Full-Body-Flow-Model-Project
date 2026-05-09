@@ -186,7 +186,7 @@ df = pd.read_excel(path)
 #%%Load in the relevant egsphant
 path = dir_path + "\\XCAT_PA.egsphant"
 egsphantObj = readEgsphant(path)
-path = dir_path + "\\XCAT_PA_unstacked.egsvoi"
+path = dir_path + "\\XCAT_PA_unstacked_new.egsvoi"
 addVOI(path, egsphantObj)  
 [xdim,ydim,zdim] = egsphantObj.dimensions
 VOIFittedArray = np.zeros((xdim,ydim,zdim))
@@ -257,25 +257,25 @@ for vesselNum in range(28,125+1):
 # print(f"Detected translation: {shift_values}")
 
 #%%
-# Summed = egsphantObj.materialArray + VOIFittedArray*10  
-# plt.figure()         
-# plt.imshow(Summed[:,:,500], cmap='hot')   
+Summed = egsphantObj.materialArray + VOIFittedArray*10  
+plt.figure()         
+plt.imshow(Summed[:,:,565], cmap='hot')   
 
-# truth = egsphantObj.materialArray + egsphantObj.VOIArray*10
-# plt.figure()         
-# plt.imshow(truth[:,:,500], cmap='hot') 
+truth = egsphantObj.materialArray + egsphantObj.VOIArray*10
+plt.figure()         
+plt.imshow(truth[:,:,565], cmap='hot') 
    
 
 #%%Find the transition points from voxel to voxel
-    transition_index = [0]
-    for i in range(np.shape(vesselArray)[0]-1):
-        a = vesselArray[i,5]
-        b = vesselArray[i+1,5]
-        if a-b != 0:
-            transition_index.append(i+1)
+    # transition_index = [0]
+    # for i in range(np.shape(vesselArray)[0]-1):
+    #     a = vesselArray[i,5]
+    #     b = vesselArray[i+1,5]
+    #     if a-b != 0:
+    #         transition_index.append(i+1)
     
-        dist_voxel_match = np.vstack([vesselArray[transition_index,4], vesselArray[transition_index,5]]).T    #mm, voxel num
+    #     dist_voxel_match = np.vstack([vesselArray[transition_index,4], vesselArray[transition_index,5]]).T    #mm, voxel num
          
 #%%Write to an excel document
-    np.save(dir_path + '\\VOIMappingArrays\\Hi-Res\\PA\\' + str(vesselNum) + '.npy', dist_voxel_match)
+    # np.save(dir_path + '\\VOIMappingArrays\\Hi-Res\\PA\\' + str(vesselNum) + '.npy', dist_voxel_match)
 

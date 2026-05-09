@@ -12,13 +12,12 @@ import pandas as pd
 import os
 import sys
 import random
-#import matplotlib.pyplot as plt
+
 
  
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
 T = 0.955 #Length of one period (s)
-#BV_num = 1E3 #total number BV
 Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 Tfield = round((0.45*15) * 60, 3) #Time per field (s)
 Ttrans = round(30*T,3) #(s)
@@ -27,16 +26,16 @@ Ttrans = round(30*T,3) #(s)
 cd = os.getcwd()
 
 #Dose file locations 
-dose_filename_AP = "4DDoseData\\Individual Sweeps\\AP\\Sweep"
-dose_filename_PA = "4DDoseData\\Individual Sweeps\\PA\\Sweep"
+dose_filename_AP = "4DDoseData/Individual Sweeps/AP/Sweep"
+dose_filename_PA = "4DDoseData/Individual Sweeps/PA/Sweep"
 
 #Get Voxel Mapping Array
-mapping_filename_AP = "VOIMappingArrays\\Hi-Res\\AP\\"
-mapping_filename_PA = "VOIMappingArrays\\Hi-Res\\PA\\"
+mapping_filename_AP = "VOIMappingArrays/Hi-Res/AP/"
+mapping_filename_PA = "VOIMappingArrays/Hi-Res/PA/"
 
 #Compartment data locations
-compartment_AP = "CompartmentData\\AP\\"
-compartment_PA = "CompartmentData\\PA\\"
+compartment_AP = "CompartmentData/AP/"
+compartment_PA = "CompartmentData/PA/"
 
 
 #%% Utility functions
@@ -166,7 +165,7 @@ class Location (object):
         
     def IntFlowData (self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        path = dir_path + '\\BVSimulationFiles\\'+ str(self.IDnum) + '.xlsx'
+        path = dir_path + '/BVSimulationFiles/'+ str(self.IDnum) + '.xlsx'
         df = pd.read_excel(path, header = None)
         self._flowdata = df.to_numpy()
 
@@ -456,7 +455,7 @@ class Network (object):
                 DTmod = 1
             self.locations.append(Location(int(data[0]),[int(data[1]),int(data[2]),int(data[3])],float(data[4])*DTmod,data[5]))
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        path = dir_path + '\\SplittingRatios.xlsx' 
+        path = dir_path + '/SplittingRatios.xlsx' 
         SRdf =  pd.read_excel(path, header = None)
         SRdf = SRdf.rename(index=lambda x: x+1, columns=lambda y: colToExcel(y+1) )
         for location in self.locations:
@@ -997,7 +996,7 @@ class Network (object):
  
 #%% Excute Simulation
 
-dsts = [0.02]
+dsts = [0.2,0.02,0.002]
 BVNums = np.arange(100,1E4+100,100)
 for dst in dsts:
     results = np.zeros([len(BVNums),3])
@@ -1049,34 +1048,4 @@ for dst in dsts:
         
         print(str(BV_num) + " done!")
         np.save(os.path.join(cd,"BVResults" + str(timeName) + ".npy"), results)
-
-#%% Scratch Pad
-    # vessel_dose = []
-    # comp_data = []
-    # for BV in BVolumes:
-    #     location = BV.location
-    #     if location > 27:
-    #         try:
-    #             vessel_dose.append(round(BV.dose[0],3)*BV.vesselTime)
-    #         except:
-                
-    #             vessel_dose.append(round(BV.dose,3)*BV.vesselTime)
-    #     else:
-    #         try:
-    #             comp_data.append(round(BV.dose[0],3))
-    #         except:
-                
-    #             comp_data.append(round(BV.dose,3))
-            
-    # vessel_mean = np.mean(vessel_dose)
-    # comp_mean = np.mean(comp_data)
-    
-    # plt. hist(vessel_dose, bins=25 )
-    # plt.title('Vessels')
-    # print(np.mean(vessel_dose))
-    # plt.show()
-    # plt.hist(comp_data,  bins=25)
-    # plt.title('Comp')
-    # print(np.mean(comp_data))
-    # plt.show()       
 
