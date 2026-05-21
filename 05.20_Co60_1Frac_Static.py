@@ -12,16 +12,21 @@ import pandas as pd
 import os
 import sys
 import random
+from pytictoc import TicToc
+t = TicToc()
+t.tic()
 #import matplotlib.pyplot as plt
 
  
 #%%Parameters
 dt = 0.002 #BFS Time step size (s)
+dst = 0.2 #Dose sampling time step size (s)
 T = 0.955 #Length of one period (s)
-#BV_num = 1E3 #total number BV
+BV_num = 1E4 #1E4 #total number BV
 Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
-Tfield = round((0.45*15) * 60, 3) #Time per field (s)
-Ttrans = round(30*T,3) #(s)
+Tfield = round((0.45*15) * 60, 3)#round((0.45*15) * 60, 3) #Time per field (s)
+
+Ttrans = round(120*T,3) #(s)
 
 #Dose file locations 
 cd = os.getcwd()
@@ -306,8 +311,9 @@ class BloodVolume (object):
         self._dwelltime = 0
         self._distance = 0
         self._dose_comp = 0
-        self._dose_vesAP = 0
-        self._vesselTimeAP = 0
+        self._dose_ves = 0
+        self._dose_vesTemp = 0
+        self._vesselTimeTemp = 0
         self._dose_vesPA = 0
         self._vesselTimePA = 0
         
@@ -363,28 +369,36 @@ class BloodVolume (object):
     @dose_comp.setter 
     def dose_comp(self,value):
         self._dose_comp = value
- 
+    
+    @property
+    def dose_ves(self):
+        return self._dose_ves
+        
+    @dose_ves.setter 
+    def dose_ves(self,value):
+         self._dose_ves = value  
+         
     @property 
-    def dose_vesAP(self):
+    def dose_vesTemp(self):
         """
         Dose to the BV while in vessels
         """
-        return self._dose_vesAP
+        return self._dose_vesTemp
     
-    @dose_vesAP.setter 
-    def dose_vesAP(self,value):
-        self._dose_vesAP = value        
+    @dose_vesTemp.setter 
+    def dose_vesTemp(self,value):
+        self._dose_vesTemp = value        
         
     @property 
-    def vesselTimeAP(self):
+    def vesselTimeTemp(self):
         """
         Time the vessels spend accumulating dose in the vessels 
         """
-        return self._vesselTimeAP
+        return self._vesselTimeTemp
     
-    @vesselTimeAP.setter 
-    def vesselTimeAP(self,value):
-        self._vesselTimeAP = value
+    @vesselTimeTemp.setter 
+    def vesselTimeTemp(self,value):
+        self._vesselTimeTemp = value
 
     @property 
     def dose_vesPA(self):
@@ -547,7 +561,7 @@ class Network (object):
         #Load in the first set of dose data
         current_file = 2
         self._currentDoseData = np.load(os.path.join(cd,dose_filename_AP+"1.npy"))
-     
+
      
 ############ Begin AP Field ###########################
         while localTime < self.Tfield:
@@ -558,7 +572,11 @@ class Network (object):
                  current_file += 1
                  localTimeSweep = 0
                  localTime = localTime - self.dt
-                 
+                 for BV in self.BVs:
+                     BV._dose_ves = BV._dose_ves + (BV.dose_vesTemp * BV.vesselTimeTemp)
+                     BV.dose_vesTemp = 0
+                     BV.vesselTimeTemp = 0
+
                  
             #Calculate the t w/in the period for table look ups
             pt = periodic(self.Nettime, self.T) 
@@ -569,44 +587,7 @@ class Network (object):
                 #BV determine their location type
                 clocation = self.locations[BV.location]
                 
-                if clocation.IDnum > 27: #outside of an organ
-                
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
-                   
-                   #Update position and exp time
-                    newdistance = (velocity * self.dt) + BV.distance
-    
-                   #Determine wether the BV is in the vessel
-                    if newdistance >= clocation.flowdata[0,-1]: 
-                       
-                       #Move BV to next location
-                       if clocation.splittingratios is None:
-                           BV._location = clocation.outflow[0]
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                       else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                           
-                   #Advance BV down vessel        
-                    else:
-                        BV._distance = newdistance
-
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
+              
                             
                 ######ADD DO HERE #####                
                 if int(localTime*1000) % int(dst*1000) == 0:
@@ -617,21 +598,8 @@ class Network (object):
                         doseStep = DoseDataSampler (self._currentDoseData,localTimeSweep,VOI)
                         #if doseStep > 0:
                         absdoseStep = doseStep * 9.76E14 #Gy/min
-                        BV._dose_vesAP = BV.dose_vesAP + absdoseStep
-                        BV._vesselTimeAP = BV.vesselTimeAP + (dst/60) #min
-
-                    else:
-                       doselocation = self.locations[BV.location]
-                       DVHArray = doselocation.DVH
-                       doseDVH = DVHSampler(DVHArray) #Gy
-                       DoseRateArray = doselocation.EventFreq
-                       doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
-                       doseStep = doseDVH * doseRate * dst 
-                       BV._dose_comp = BV.dose_comp + doseStep
-
-                   
-                   
-                   
+                        BV._dose_vesTemp = BV._dose_vesTemp + absdoseStep
+                        BV._vesselTimeTemp = BV.vesselTimeTemp + (dst/60) #min           
 
             self.timestep()
             localTime += self.dt
@@ -642,23 +610,16 @@ class Network (object):
 
 ######################End AP############################
 #Prep for PA 
-    
-        # BV_data = np.zeros([len(self.BVs),3])
-        # i = 0
-        # for BV in self.BVs:
-        #     dose_compartment = BV.dose_comp
-        #     dose_vessel = BV.dose_ves
-        #     time = BV.vesselTime
-        #     BV_data[i,0] = dose_compartment
-        #     BV_data[i,1] = dose_vessel
-        #     BV_data[i,2] = time
-        #     i += 1
-        
-        
-        # doseVessel = (BV_data[:,1] * BV_data[:,2])
-        # print("vessel mean:" + str(np.mean(doseVessel)))
-        # print("comp mean:" + str(np.mean(BV_data[:,1])))
-        
+
+        for BV in self.BVs:       
+            doselocation = self.locations[BV.location]
+            if BV.location <= 27:
+                DVHArray = doselocation.DVH
+                doseDVH = DVHSampler(DVHArray) #Gy
+                #DoseRateArray = doselocation.EventFreq
+                #doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
+                #doseStep = doseDVH * doseRate * dst 
+                BV._dose_comp = BV.dose_comp + doseDVH 
         #Load in new VOI Map
         for location in self.locations:
             if location.IDnum > 27:
@@ -673,62 +634,66 @@ class Network (object):
         #Load in the first set of dose data
         current_file = 2
         self._currentDoseData = np.load(os.path.join(cd,dose_filename_PA+"1.npy"))    
-        
-        self.shuffleBVs ()
+        for BV in self.BVs:
+            BV.dose_ves = BV.dose_ves + (BV.dose_vesTemp * BV.vesselTimeTemp)
+            BV.dose_vesTemp = 0
+            BV.vesselTimeTemp = 0
+            
+        # self.shuffleBVs ()
         
 ################ Run Tranistion Time without Field #################
-        while localTime < self.Ttrans:
+        # while localTime < self.Ttrans:
             
-            #Calculate the t w/in the period for table look ups
-            pt = periodic(self.Nettime, self.T) 
+        #     #Calculate the t w/in the period for table look ups
+        #     pt = periodic(self.Nettime, self.T) 
             
-            #Iterate through each BV
-            for BV in self.BVs:
-                #BV determine their location type
-                clocation = self.locations[BV.location]
+        #     #Iterate through each BV
+        #     for BV in self.BVs:
+        #         #BV determine their location type
+        #         clocation = self.locations[BV.location]
                 
-                if clocation.IDnum > 27: #outside of an organ
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
+        #         if clocation.IDnum > 27: #outside of an organ
+        #            #Determine velocity value at exact position and time
+        #             velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
 
-                   #Update position and exp time
-                    newdistance = velocity * self.dt + BV.distance
+        #            #Update position and exp time
+        #             newdistance = velocity * self.dt + BV.distance
     
-                   #Determine wether the BV is in the vessel
-                    if newdistance >= clocation.flowdata[0,-1]: 
+        #            #Determine wether the BV is in the vessel
+        #             if newdistance >= clocation.flowdata[0,-1]: 
                        
-                       #Move BV to next location
-                       if clocation.splittingratios is None:
-                           BV._location = clocation.outflow[0]
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                       else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                   #Advance BV down vessel        
-                    else:
-                        BV._distance = newdistance
+        #                #Move BV to next location
+        #                if clocation.splittingratios is None:
+        #                    BV._location = clocation.outflow[0]
+        #                    BV._dwelltime = 0
+        #                    BV._distance = 0
+        #                else:
+        #                    BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+        #                    BV._dwelltime = 0
+        #                    BV._distance = 0
+        #            #Advance BV down vessel        
+        #             else:
+        #                 BV._distance = newdistance
                       
 
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
+        #         #BV within organ
+        #         else:
+        #             #Stays in organ
+        #             if BV.dwelltime < clocation.dwelltime:
+        #                 BV._dwelltime += self.dt
+        #             #Leaves organ    
+        #             else:
+        #                 if clocation.splittingratios is None:
+        #                     BV._location = clocation.outflow[0]
+        #                     BV._dwelltime = 0
+        #                 else:
+        #                     BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+        #                     BV._dwelltime = 0 
 
-            self.timestep()
-            localTime += self.dt
-            localTime = round(localTime,3)
-            #self.print_status(localTime,self.Ttrans)
+        #     self.timestep()
+        #     localTime += self.dt
+        #     localTime = round(localTime,3)
+        #     #self.print_status(localTime,self.Ttrans)
             
             
 ###############Patient is ready to be treated ######################            
@@ -748,6 +713,10 @@ class Network (object):
                  current_file += 1
                  localTimeSweep = 0
                  localTime = localTime - self.dt
+                 for BV in self.BVs:
+                     BV.dose_ves = BV.dose_ves + (BV.dose_vesTemp * BV.vesselTimeTemp)
+                     BV.dose_vesTemp = 0
+                     BV.vesselTimeTemp = 0
               
              
             #Calculate the t w/in the period for table look ups
@@ -758,42 +727,42 @@ class Network (object):
                 #BV determine their location type
                 clocation = self.locations[BV.location]
             
-                if clocation.IDnum > 27: #outside of an organ
-                   #Determine velocity value at exact position and time
-                    velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
+                # if clocation.IDnum > 27: #outside of an organ
+                #    #Determine velocity value at exact position and time
+                #     velocity = velocity_interp(clocation.flowdata,pt,BV.distance)
 
-                    #Update position and exp time
-                    newdistance = (velocity * self.dt) + BV.distance
+                #     #Update position and exp time
+                #     newdistance = (velocity * self.dt) + BV.distance
                 
-                   #Determine whether the BV is in the vessel
-                    if newdistance >= clocation.flowdata[0,-1]: 
+                #    #Determine whether the BV is in the vessel
+                #     if newdistance >= clocation.flowdata[0,-1]: 
                
-                        #Move BV to next location
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                            BV._distance = 0
-                        else:
-                           BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                           BV._dwelltime = 0
-                           BV._distance = 0
-                           #Advance BV down vessel        
-                    else:
-                        BV._distance = newdistance
+                #         #Move BV to next location
+                #         if clocation.splittingratios is None:
+                #             BV._location = clocation.outflow[0]
+                #             BV._dwelltime = 0
+                #             BV._distance = 0
+                #         else:
+                #            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                #            BV._dwelltime = 0
+                #            BV._distance = 0
+                #            #Advance BV down vessel        
+                #     else:
+                #         BV._distance = newdistance
                  
-                #BV within organ
-                else:
-                    #Stays in organ
-                    if BV.dwelltime < clocation.dwelltime:
-                        BV._dwelltime += self.dt
-                    #Leaves organ    
-                    else:
-                        if clocation.splittingratios is None:
-                            BV._location = clocation.outflow[0]
-                            BV._dwelltime = 0
-                        else:
-                            BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
-                            BV._dwelltime = 0 
+                # #BV within organ
+                # else:
+                #     #Stays in organ
+                #     if BV.dwelltime < clocation.dwelltime:
+                #         BV._dwelltime += self.dt
+                #     #Leaves organ    
+                #     else:
+                #         if clocation.splittingratios is None:
+                #             BV._location = clocation.outflow[0]
+                #             BV._dwelltime = 0
+                #         else:
+                #             BV._location = pathselecter(clocation.outflow,clocation.splittingratios,pt)
+                #             BV._dwelltime = 0 
             
             ######ADD DOSE HERE #####                
                 if int(localTime*1000) % int(dst*1000) == 0:
@@ -804,17 +773,10 @@ class Network (object):
                         doseStep = DoseDataSampler (self._currentDoseData,localTimeSweep,VOI)
                         #if doseStep > 0:
                         absdoseStep = doseStep * 9.76E14 #Gy/min
-                        BV._dose_vesPA = BV.dose_vesPA  + absdoseStep
-                        BV._vesselTimePA = BV.vesselTimePA + (dst/60) #min
+                        BV._dose_vesTemp = BV.dose_vesTemp + absdoseStep
+                        BV._vesselTimeTemp = BV.vesselTimeTemp + (dst/60) #min
                      
-                    else:
-                       doselocation = self.locations[BV.location]
-                       DVHArray = doselocation.DVH
-                       doseDVH = DVHSampler(DVHArray) #Gy
-                       DoseRateArray = doselocation.EventFreq
-                       doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
-                       doseStep = doseDVH * doseRate * dst 
-                       BV._dose_comp = BV.dose_comp + doseStep  
+
                
             self.timestep()
             localTime += self.dt
@@ -823,7 +785,19 @@ class Network (object):
             localTimeSweep = round(localTimeSweep,3)
             #self.print_status(localTime,self.Tfield)
         #print( '\n PA field delivered ')
-                       
+        for BV in self.BVs:
+            BV.dose_ves = BV.dose_ves + (BV.dose_vesTemp * BV.vesselTimeTemp)
+            BV.dose_vesTemp = 0
+            BV.vesselTimeTemp = 0  
+                  
+            doselocation = self.locations[BV.location]
+            if BV.location <= 27:
+                DVHArray = doselocation.DVH
+                doseDVH = DVHSampler(DVHArray) #Gy
+                #DoseRateArray = doselocation.EventFreq
+                #doseRate = DoseRateSampler(DoseRateArray, localTime) #1/s
+                #doseStep = doseDVH * doseRate * dst 
+                BV._dose_comp = BV.dose_comp + doseDVH                      
 ######## DONE ##############
     def shuffleBVs (self):
         """
@@ -996,87 +970,39 @@ class Network (object):
         
  
 #%% Excute Simulation
+      
+def runSimulation(dummy_input):
+    nt = Network(dt, BV_num)
+    nt.setTimes(T, Tss, Tfield, Ttrans)
+    nt.intializeLocations()
+    nt.runNT()
+    BVolumes = nt.BVs
 
-dsts = [0.002]
-BVNums = np.arange(3100,1E4+100,100)
-for dst in dsts:
-    results = np.zeros([len(BVNums),3])
-    j = 0
-    timeName = str(int(dst*1000))
-    for BV_num in BVNums:
-        
-        def runSimulation(dummy_input):
-            nt = Network(dt, BV_num)
-            nt.setTimes(T, Tss, Tfield, Ttrans)
-            nt.intializeLocations()
-            nt.runNT()
-            BVolumes = nt.BVs
-        
-            return BVolumes
-       
-    #%% Process Data 
-        BVolumes = runSimulation(0)
-     
-    
-        BV_data = np.zeros([len(BVolumes),5])
-        i=0
-        for BV in BVolumes:
-            dose_compartment = BV.dose_comp
-            dose_vesselAP = BV.dose_vesAP
-            timeAP = BV.vesselTimeAP
-            dose_vesselPA = BV.dose_vesPA
-            timePA = BV.vesselTimePA
-            BV_data[i,0] = dose_compartment
-            BV_data[i,1] = dose_vesselAP
-            BV_data[i,2] = timeAP
-            BV_data[i,3] = dose_vesselPA
-            BV_data[i,4] = timePA
-            i += 1
-    
-        dose =  BV_data[:,0] + (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
-        doseVessel = (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
-    
-    
-    
-    # Calculate mean and standard deviation
-        mean = np.mean(dose)
-        std_dev = np.std(dose)
-    
-        results[j,0] = mean
-        results[j,1] = std_dev
-        results[j,2] = BV_num
-        j += 1
-        
-        print(str(BV_num) + " done!")
-        np.save(os.path.join(cd,"BVResults" + str(timeName) + "ThirdPortion.npy"), results)
+    return BVolumes
 
-#%% Scratch Pad
-    # vessel_dose = []
-    # comp_data = []
-    # for BV in BVolumes:
-    #     location = BV.location
-    #     if location > 27:
-    #         try:
-    #             vessel_dose.append(round(BV.dose[0],3)*BV.vesselTime)
-    #         except:
-                
-    #             vessel_dose.append(round(BV.dose,3)*BV.vesselTime)
-    #     else:
-    #         try:
-    #             comp_data.append(round(BV.dose[0],3))
-    #         except:
-                
-    #             comp_data.append(round(BV.dose,3))
-            
-    # vessel_mean = np.mean(vessel_dose)
-    # comp_mean = np.mean(comp_data)
+BVolumes = runSimulation(0)       
+#%% Process Data 
     
-    # plt. hist(vessel_dose, bins=25 )
-    # plt.title('Vessels')
-    # print(np.mean(vessel_dose))
-    # plt.show()
-    # plt.hist(comp_data,  bins=25)
-    # plt.title('Comp')
-    # print(np.mean(comp_data))
-    # plt.show()       
+BV_data = np.zeros([len(BVolumes),3])
+i=0
+for BV in BVolumes:
+    dose_compartment = BV.dose_comp
+    dose_vessel = BV.dose_ves
+    location = BV.location
+    #dose_vesselPA = BV.dose_vesPA
+    #timePA = BV.vesselTimePA
+    BV_data[i,0] = dose_compartment
+    BV_data[i,1] = dose_vessel
+    BV_data[i,2] = location
+    #BV_data[i,3] = dose_vesselPA
+    #BV_data[i,4] = timePA
+    i += 1
+
+dose =  BV_data[:,0] + BV_data[:,1] 
+doseVessel = BV_data[:,1] 
+
+
+np.save(os.path.join(cd,"SingleFracCo60_Static.npy"), BV_data)
+t.toc()
+
 

@@ -1018,7 +1018,7 @@ doseVessel = (BV_data[:,1] * BV_data[:,2]) + (BV_data[:,3] * BV_data[:,4])
 
 results = dose
 
-np.save(os.path.join(cd,"SingleFracCo60_4.npy"), results)
+np.save(os.path.join(cd,"SingleFracCo60_6.npy"), results)
 t.toc()
 
 
