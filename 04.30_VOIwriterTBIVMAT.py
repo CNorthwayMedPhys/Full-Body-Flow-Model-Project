@@ -23,8 +23,8 @@ from skimage import img_as_bool
 egsphantName = 'VCCN_XCAT.egsphant'
 structName = 'RS.CN_XCAT.FullAP_cHU.dcm'
 
-roiNum = 2
-LocationID = 'Vessels'
+roiNum = 14
+LocationID = '4'
 filename = "VMAT_Files//VOI_Files"
 #%%Define classes for handling files
 class egsphant:

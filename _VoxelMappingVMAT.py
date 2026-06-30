@@ -172,9 +172,9 @@ path = dir_path + "\\FlowTracker.xlsx"
 df = pd.read_excel(path)
 
 #%%Load in the relevant egsphant
-path = dir_path + "\\VCCN_XCAT.egsphant"
+path = dir_path + "\\CN_XCAT.egsphant"
 egsphantObj = readEgsphant(path)
-path = dir_path + "\\VMAT_Files\\VOI_Files\\Vessels.egsvoi"
+path = dir_path + "\\VMAT_Files\\VOI_Files\\VOI.egsvoi"
 addVOI(path, egsphantObj)  
 [xdim,ydim,zdim] = egsphantObj.dimensions
 VOIFittedArray = np.zeros((xdim,ydim,zdim))
@@ -194,7 +194,7 @@ for vesselNum in range(28,125+1):
     
     # #for PA
     #vesselArray[:,0] = -vesselArray[:,0]
-    vesselArray[:,1] = -vesselArray[:,1]
+    #vesselArray[:,1] = -vesselArray[:,1]
 
     #%% Create an array that is the total distance elapsed between n and n+1 vessel
     distanceArray = np.zeros(np.shape(vesselArray)[0])
@@ -208,7 +208,7 @@ for vesselNum in range(28,125+1):
     vesselArray = np.append(vesselArray,distanceArray, axis = 1)    
 
     #%% Map positions in orginal vessels location to finalized egsphant coords
-    transition_map = [300 + 12.8 ,-140.2 +0.8, -663.4 -5.0+0.2 ]
+    transition_map = [300 + 14.2 ,-140 - 152.7 , -663.4 -7.5-2.9 ]
     vesselArray[:,0:3] = vesselArray[:,0:3] + transition_map
     
     #%% Determine which positions are in which voxel
@@ -240,16 +240,17 @@ for vesselNum in range(28,125+1):
         VOIFittedArray[x_ind,y_ind,z_ind] = 1
 
 #%%Compelte a rigid registration of the two VOI Arrays to determine the transform 
-    #to apply to the vessels
+#     #to apply to the vessels
 # shift_values, error, phasediff = phase_cross_correlation(egsphantObj.VOIArray,  VOIFittedArray, upsample_factor=10)
 # print(f"Detected translation: {shift_values}")
 
 # #%%
-# index =566
+# indices = [566]
 
-# Summed = egsphantObj.materialArray + VOIFittedArray*10  
-# plt.figure()         
-# plt.imshow(Summed[:,:,index], cmap='hot')   
+# for index in indices:
+#     Summed = egsphantObj.materialArray + VOIFittedArray*10  
+#     plt.figure()         
+#     plt.imshow(Summed[:,:,index], cmap='hot')   
 
 # truth = egsphantObj.materialArray + egsphantObj.VOIArray*10
 # plt.figure()         

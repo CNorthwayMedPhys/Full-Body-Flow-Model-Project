@@ -139,3 +139,8 @@ abs_err = results * results_err
 
 avg_err = (1/10)*np.sqrt(np.sum(abs_err**2))
 avg_err_rel = (avg_err/avg)*100
+
+#%%
+
+doseArray = dose.doseArray
+plt.imshow(doseArray[:,:,20])
