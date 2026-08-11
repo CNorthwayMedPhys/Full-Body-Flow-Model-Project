@@ -37,13 +37,14 @@ all_sheets = pd.read_excel(excelfile,sheet_name=None)
 #%% Load in treatment plan
 num_fields = 11
 
-treatmentPlan = os.path.join(cd,"VMAT_Files\\TreatmentPlan.txt")
+treatmentPlan = os.path.join(cd,"VMAT_Files\\TreatmentPlan_4Feet.txt")
 fieldsArray = np.zeros([num_fields,2],dtype=object)
 with open(treatmentPlan, 'r') as x:
-    for i in range(num_fields):
-        line = x.readline().split(',')
-        fieldsArray[i,0] = line[0]
-        fieldsArray[i,1] = float(line[1].strip())
+    for i in range(num_fields+1):
+            line = x.readline().split(',')
+            if i != 0:
+                fieldsArray[i-1,0] = line[0]
+                fieldsArray[i-1,1] = float(line[1].strip())
 
 #%% Process VMAT files
 for iso in ["Abdo","Chest","Pelvis"]:
@@ -113,7 +114,9 @@ for iso in ["HeadL","HeadR","RFoot","LFoot","KneeAnt","KneePost"]:
     MU_per_field[nans] = np.interp(x(nans),x(~nans),MU_per_field[~nans])
    
     
-    
-    final_file = np.vstack((MU.T,MU_per_field.T,time.T))
+    if "Foot" in iso:
+        final_file = np.vstack((MU.T,MU_per_field.T*2,time.T))
+    else:
+        final_file = np.vstack((MU.T,MU_per_field.T,time.T))
     writename = os.path.join(cd,'VMAT_Files\\MUvsTimeArray',iso+".npy" )
     np.save(writename,final_file)

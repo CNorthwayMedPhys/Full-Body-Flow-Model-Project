@@ -192,7 +192,7 @@ majorDir = os.path.join(cd,filePath)
 
 egsphantfile = os.path.join(cd,'CN_XCAT.egsphant')
 egsvoifile = os.path.join(cd,"VMAT_Files\\VOI_Files\\Vessels.egsvoi")
-treatmentPlan = os.path.join(cd,"VMAT_Files\\TreatmentPlan.txt")
+treatmentPlan = os.path.join(cd,"VMAT_Files\\TreatmentPlan_4Feet.txt")
 MUtimeloc = os.path.join(cd,"VMAT_Files\\MUvsTimeArray")
 
 step_size = 0.025
@@ -200,10 +200,11 @@ step_size = 0.025
 #%%Load in and process treatmentPlan
 fieldsArray = np.zeros([11,2],dtype=object)
 with open(treatmentPlan, 'r') as x:
-    for i in range(num_fields):
+    for i in range(num_fields+1):
         line = x.readline().split(',')
-        fieldsArray[i,0] = line[0]
-        fieldsArray[i,1] = float(line[1].strip())
+        if i != 0:
+            fieldsArray[i-1,0] = line[0]
+            fieldsArray[i-1,1] = float(line[1].strip())
 
 
 
@@ -290,7 +291,7 @@ for i in range(0,7):
                 uE_array[timeIndex,voiIndex] = uE_array[timeIndex,voiIndex] + eventArray[0,i]**2
        
             
-            #print(sub_files) 
+            print(sub_files) 
     #%% Generate Mass Array
     massArray = np.zeros_like(E_array)
     
@@ -317,7 +318,7 @@ for i in range(0,7):
     finalArray[1:,1:] = doseArray  
     
     arrayname = os.path.join(cd,"VMAT_Files\\4DDoseData\\" +fieldname+"_Vessel.npy")
-    np.save(arrayname,finalArray)
+    #np.save(arrayname,finalArray)
     del finalArray
     del doseArray
     del unCertArray

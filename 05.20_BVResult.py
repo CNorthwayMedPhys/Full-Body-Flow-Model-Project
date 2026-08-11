@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import os
 from scipy import stats
 #%%
-filename = "BVResults2.npy"
+filename = "BVnumResutls_VMAT.npy"
 filename2 = "BVResults2SecondPortion.npy"
 filename3 = "BVResults2ThirdPortion.npy"
 cd = os.getcwd()

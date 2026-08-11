@@ -11,20 +11,20 @@ import os
 #%%
 
 #Enter the orginal number of dimensions
-iXDim =  264 
-iYDim =  108 
+iXDim =  263  #264 #263
+iYDim =  107  #108 #107
 iZDim =  697
 
 #Enter the stacked number of dimensions
 
-fXDim = 264 
-fYDim = 129
+fXDim = 263 #264 #263
+fYDim = 111 #112 #111
 fZDim = 697
 
 #Enter the file name you want to save this under
-filename_unstacked = '\\XCAT_AP_unstacked.egsvoi'
-filename_stacked = '\\XCAT_AP_stacked.egsvoi'  
-mapping_array = 'APVOIUnstackToStackMapHiRes.npy'
+filename_unstacked = "\\ExtSSD_Files\\VOI_Files\\PA\\unstacked_VOI\\vessels.egsvoi"
+filename_stacked = '\\ExtSSD_Files\\VOI_Files\\PA\\stacked_VOI\\vessels.egsvoi'  
+mapping_array = "\\ExtSSD_Files\\StackMaps\\PAVOIUnstackToStackMapextSSD.npy"
 #%%
 
 #Load in the egsvoi file
@@ -86,7 +86,7 @@ print('Writing egsvoi... Done.')
 #%%
 pairedArray = np.array(np.vstack((voxelIndices, egsvoi)))
 dir_path = os.path.dirname(os.path.realpath(__file__))
-path = dir_path + '\\StackToUnstackMaps\\'+ mapping_array
+path = dir_path + mapping_array
 np.save(path, pairedArray)
 
 

@@ -11,19 +11,19 @@ import os
 #%%
 
 #Enter the orginal number of dimensions
-iXDim =  264 
-iYDim =  108 
+iXDim =  263 
+iYDim =  107 
 iZDim =  697
 
 #Enter the stacked number of dimensions
 
-fXDim = 264 
-fYDim = 129
+fXDim = 263 
+fYDim = 111
 fZDim = 697
 
 #Enter the file name you want to save this under
-files_unstacked_location = '\\CompartmentData\\AP\\UnStackedEgsvoi'
-files_stacked_location = '\\CompartmentData\\AP\\StackedEgsvoi\\'  
+files_unstacked_location = '\\ExtSSD_Files\\VOI_Files\\PA\\unstacked_VOI'
+files_stacked_location = '\\ExtSSD_Files\\VOI_Files\\PA\\stacked_VOI\\'  
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 file_search_location = dir_path + files_unstacked_location

@@ -1,0 +1,12 @@
+iso, time(s), MU, timebetween(s)
+HeadR,6,112,2
+HeadL,6,112,2
+Chest,474.71,1260,2
+Abdomen,185.7,971,2 
+Pelvis,184.77,1072,2
+KneeAnt,8,150,2
+KneePost,8,150,2
+LFootLPO,8,107,2
+LFootMAO,8,107,2
+RFootRPO,8,107,2
+RFootMAO,8,107,2

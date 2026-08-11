@@ -12,12 +12,12 @@ import matplotlib.pyplot as plt
 
 #%% Load in the RT file
 cd = os.getcwd()
-filenameRD = "XCAT_RPRSRD_files\\RD.CN_XCAT.TBI_Full_PA.dcm"
+filenameRD = "ExtSSD_Files\\RD.CN_XCAT.PA.dcm"
 rd_file = pd.dcmread(os.path.join(cd,filenameRD))
-filenameRS = "XCAT_RPRSRD_files\\RS.CN_XCAT.Full_PA.dcm"
+filenameRS = "ExtSSD_Files\\RS.CN_XCAT.CT_1.dcm"
 rs_file = pd.dcmread(os.path.join(cd,filenameRS))
 
-write_file = "CompartmentData\\PA\\"
+write_file = "ExtSSD_Files\\CompartmentData\\PA\\"
 #%%Create ROI seq
 ROIseq = rs_file.StructureSetROISequence
 numROI = len(ROIseq)

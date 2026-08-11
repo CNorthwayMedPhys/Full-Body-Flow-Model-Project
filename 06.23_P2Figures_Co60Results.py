@@ -52,9 +52,9 @@ print("Static Fraction Mean % of Rx " + f"{np.mean(FracStatic)/2 * 100:.2f}" +"%
 #%% Plot the DVHs
 fig, ax = plt.subplots()
 
-sns.ecdfplot(data=(AllFrac/12), complementary = True, linestyle = '-', label = "BV - All Fractions (Rx = 12 Gy)")
-sns.ecdfplot(data=(Frac1/2), complementary = True, linestyle = '--', label = "BV - One Fractions (Rx = 2 Gy)")
-sns.ecdfplot(data=(FracStatic/2), complementary = True,linestyle = ':',  label = "BV - One Fractions - Static (Rx = 2 Gy)")
+#sns.ecdfplot(data=(AllFrac/12), complementary = True, linestyle = '-', label = "BV - All Fractions (Rx = 12 Gy)")
+#sns.ecdfplot(data=(Frac1/2), complementary = True, linestyle = '--', label = "BV - One Fractions (Rx = 2 Gy)")
+#sns.ecdfplot(data=(FracStatic/2), complementary = True,linestyle = ':',  label = "BV - One Fractions - Static (Rx = 2 Gy)")
 
 ax.set_title ("Dose Volume Histograms")
 
@@ -86,7 +86,9 @@ for j in range(numDVH):
     for i in range(1,len(doseArray)):
         step = doseArray[i]
         doseArray[i] = doseArray[i-1]+step  
-    doseArray = doseArray/2 #Relative to Rx    
+    doseArray = doseArray/2 #Relative to Rx
+    doseArray = doseArray /0.83 #Use Levi's K
+    print(np.mean(doseArray))    
     DVHArray = np.concat(([volumeArray],[doseArray])) 
     lstyle = '-'
     if j == 1:

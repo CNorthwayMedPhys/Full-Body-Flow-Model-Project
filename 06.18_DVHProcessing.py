@@ -32,7 +32,9 @@ for fieldname in fieldnames:
         doseData = df[columns[0]].to_numpy()
         volumeData = df[columns[1]].to_numpy()
         finalData = np.vstack((volumeData,doseData))
+    
         filename = os.path.join(cd,'VMAT_Files\\CompartmentData\\',fieldname,str(compartmentnumber)+'DVH.npy')
+        
         np.save(filename,finalData)
         
         
