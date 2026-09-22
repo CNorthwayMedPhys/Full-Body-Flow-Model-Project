@@ -184,8 +184,11 @@ Summed = egsphantObj.densityArray + egsphantObj.VOIArray*2
 index = np.where(Summed > 1)
 # plt.figure()         
 # plt.imshow(egsphantObj.densityArray[:,:,530])   
-plt.figure()         
-plt.imshow(Summed[:,:,530], cmap='hot')  
+plt.figure()
+for i in range(199,800,100): 
+    print(i) 
+    plt.figure()       
+    plt.imshow(Summed[:,:,i], cmap='hot')  
 # plt.figure()         
 # plt.imshow(Summed[:,26,:], cmap='hot')  
      

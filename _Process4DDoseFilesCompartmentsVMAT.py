@@ -10,13 +10,13 @@ import numpy as np
 import physt 
 import matplotlib.pyplot as plt
 #%%Files names and manual data 
-fieldnames = ['Abdomen', 'Chest', 'Pelvis', 'KneeAnt', 'KneePost']#, 'LFoot', 'RFoot']#'HeadL', 'HeadR'
+fieldnames = ['Abdomen', 'Chest', 'Pelvis', 'Knee', 'Head', 'Feet']#, 'LFoot', 'RFoot']#'HeadL', 'HeadR'
 compartmentnumbers = [0,1,2,3,4,5,6,7,8,9,10,12,15,18,19,20,21,22,23,24,25,26,27]
 
 cd = os.getcwd()
-filelocation = "VMAT_Files\\4DDose_Raw_Data"
-writelocation = "VMAT_Files\\CompartmentData\\"
-MUtimeloc = os.path.join(cd,"VMAT_Files\\MUvsTimeArray")
+filelocation = "allVMAT_Files\\4DDose_Raw_Data"
+writelocation = "allVMAT_Files\\CompartmentData\\"
+MUtimeloc = os.path.join(cd,"allVMAT_Files\\MUvsTimeArray")
 
 num_files  = 80
 #%% FCN: Read edepheader
@@ -80,7 +80,7 @@ def MU2Time(MUarray,key):
 for compartmentnum in compartmentnumbers:
     filename = os.path.join(cd,filelocation,str(compartmentnum))
     for iso in fieldnames:
-        isoname = os.path.join(filename,'VCCN_XCAT_'+iso+"_plan02")
+        isoname = os.path.join(filename,'VCCN_XCAT_'+iso+"_plan04")
         muTime = np.load(os.path.join(MUtimeloc,iso+".npy" ))
         for sub_files in range(1,num_files+1):
             headerfile = os.path.join(cd,isoname +"_w" + str(sub_files) + '.edepheader')
@@ -116,7 +116,7 @@ for compartmentnum in compartmentnumbers:
         
             if sub_files == 1:
             #Create first histogram to fill
-                hist = physt.h1(hist_data,'fixed_width', bin_width = 0.05) #bin width in ms
+                hist = physt.h1(hist_data,'fixed_width', bin_width = 0.5) #bin width in s, normally 0.5
             
             else:
             #Update hist with new data
@@ -125,129 +125,129 @@ for compartmentnum in compartmentnumbers:
     #%%Now we have a filled histogram of events 
         total = hist.total
         freq_data = hist.frequencies
-        norm_freq = freq_data / total
+        norm_freq = freq_data / (total * 0.5)
         bin_data = hist.bin_left_edges
         event_trace = np.concatenate(([bin_data], [norm_freq]),axis=0)
     
-        plt.plot(event_trace[0,:],event_trace[1,:])
-        plt.show()
+        #plt.plot(event_trace[0,:],event_trace[1,:])
+        #plt.show()
 
         #Save the data
         savefilename = os.path.join(cd,writelocation,iso,str(compartmentnum) +'eventTrace.npy')
         np.save(savefilename,event_trace)
 
-#%% For L feet need to sum both arrays
-for compartmentnum in compartmentnumbers:
-    filename = os.path.join(cd,filelocation,str(compartmentnum))
-    tag = 0
-    for iso in ['LFootMAO','LFootLPO']: 
-        isoname = os.path.join(filename,'VCCN_XCAT_'+iso+"_plan02")
-        muTime = np.load(os.path.join(MUtimeloc,"LFoot.npy" ))
-        for sub_files in range(1,num_files+1):
-            headerfile = os.path.join(cd,isoname +"_w" + str(sub_files) + '.edepheader')
-            datafile = os.path.join(cd,isoname +"_w" + str(sub_files)+ '.edepdat')
-            header = read_edepheader(headerfile)
-            if header == []:
-                continue
-            data = read_edepdat(datafile)
+# #%% For L feet need to sum both arrays
+# for compartmentnum in compartmentnumbers:
+#     filename = os.path.join(cd,filelocation,str(compartmentnum))
+#     tag = 0
+#     for iso in ['LFootMAO','LFootLPO']: 
+#         isoname = os.path.join(filename,'VCCN_XCAT_'+iso+"_plan02")
+#         muTime = np.load(os.path.join(MUtimeloc,"LFoot.npy" ))
+#         for sub_files in range(1,num_files+1):
+#             headerfile = os.path.join(cd,isoname +"_w" + str(sub_files) + '.edepheader')
+#             datafile = os.path.join(cd,isoname +"_w" + str(sub_files)+ '.edepdat')
+#             header = read_edepheader(headerfile)
+#             if header == []:
+#                 continue
+#             data = read_edepdat(datafile)
     
-        #%%Create array of for all interactions
-            eventArray = np.zeros((3, len(data)))
-            #for each incident particle in header, write particle with MU tag
-            j = 0
-            for i in range(len(header)):
-                particle = header[i]
-                muIndex = particle[2]
-                numEvents = int(particle[3])
-                for k in range(numEvents):
-                    event = data[j]
-                    eventArray[:,j] = np.hstack((event,muIndex))
-                    j += 1 
+#         #%%Create array of for all interactions
+#             eventArray = np.zeros((3, len(data)))
+#             #for each incident particle in header, write particle with MU tag
+#             j = 0
+#             for i in range(len(header)):
+#                 particle = header[i]
+#                 muIndex = particle[2]
+#                 numEvents = int(particle[3])
+#                 for k in range(numEvents):
+#                     event = data[j]
+#                     eventArray[:,j] = np.hstack((event,muIndex))
+#                     j += 1 
                 
-    #%%Convert MU to time     
+#     #%%Convert MU to time     
     
-            #Converting treatment time to seconds
-            eventArray[2,:] = MU2Time(eventArray[2,:],muTime)
+#             #Converting treatment time to seconds
+#             eventArray[2,:] = MU2Time(eventArray[2,:],muTime)
         
-    #%%Create / update histrogram
+#     #%%Create / update histrogram
     
-            #Convert data to histogram format
-            hist_data = eventArray[2,:]
+#             #Convert data to histogram format
+#             hist_data = eventArray[2,:]
         
-            if sub_files == 1 and tag == 0:
-            #Create first histogram to fill
-                hist = physt.h1(hist_data,'fixed_width', bin_width = 0.5) #bin width in ms
-                tag = 1
+#             if sub_files == 1 and tag == 0:
+#             #Create first histogram to fill
+#                 hist = physt.h1(hist_data,'fixed_width', bin_width = 0.5) #bin width in ms
+#                 tag = 1
             
-            else:
-            #Update hist with new data
-                hist.fill_n(hist_data)
+#             else:
+#             #Update hist with new data
+#                 hist.fill_n(hist_data)
         
-#%%Now we have a filled histogram of events 
-    total = hist.total
-    freq_data = hist.frequencies
-    norm_freq = freq_data / total
-    bin_data = hist.bin_left_edges
-    event_trace = np.concatenate(([bin_data], [norm_freq]),axis=0)
+# #%%Now we have a filled histogram of events 
+#     total = hist.total
+#     freq_data = hist.frequencies
+#     norm_freq = freq_data / total
+#     bin_data = hist.bin_left_edges
+#     event_trace = np.concatenate(([bin_data], [norm_freq]),axis=0)
 
-    #Save the data
-    savefilename = os.path.join(cd,writelocation,'LFoot',str(compartmentnum) +'eventTrace.npy')
-    np.save(savefilename,event_trace)
+#     #Save the data
+#     savefilename = os.path.join(cd,writelocation,'LFoot',str(compartmentnum) +'eventTrace.npy')
+#     np.save(savefilename,event_trace)
     
-#%% For R feet need to sum both arrays
-for compartmentnum in compartmentnumbers:
-    filename = os.path.join(cd,filelocation,str(compartmentnum))
-    tag = 0
-    for iso in ['RFootMAO','RFootRPO']: 
-        isoname = os.path.join(filename,'VCCN_XCAT_'+iso+"_plan02")
-        muTime = np.load(os.path.join(MUtimeloc,"RFoot.npy" ))
-        for sub_files in range(1,num_files+1):
-            headerfile = os.path.join(cd,isoname +"_w" + str(sub_files) + '.edepheader')
-            datafile = os.path.join(cd,isoname +"_w" + str(sub_files)+ '.edepdat')
-            header = read_edepheader(headerfile)
-            if header == []:
-                continue
-            data = read_edepdat(datafile)
+# #%% For R feet need to sum both arrays
+# for compartmentnum in compartmentnumbers:
+#     filename = os.path.join(cd,filelocation,str(compartmentnum))
+#     tag = 0
+#     for iso in ['RFootMAO','RFootRPO']: 
+#         isoname = os.path.join(filename,'VCCN_XCAT_'+iso+"_plan02")
+#         muTime = np.load(os.path.join(MUtimeloc,"RFoot.npy" ))
+#         for sub_files in range(1,num_files+1):
+#             headerfile = os.path.join(cd,isoname +"_w" + str(sub_files) + '.edepheader')
+#             datafile = os.path.join(cd,isoname +"_w" + str(sub_files)+ '.edepdat')
+#             header = read_edepheader(headerfile)
+#             if header == []:
+#                 continue
+#             data = read_edepdat(datafile)
     
-        #%%Create array of for all interactions
-            eventArray = np.zeros((3, len(data)))
-            #for each incident particle in header, write particle with MU tag
-            j = 0
-            for i in range(len(header)):
-                particle = header[i]
-                muIndex = particle[2]
-                numEvents = int(particle[3])
-                for k in range(numEvents):
-                    event = data[j]
-                    eventArray[:,j] = np.hstack((event,muIndex))
-                    j += 1 
+#         #%%Create array of for all interactions
+#             eventArray = np.zeros((3, len(data)))
+#             #for each incident particle in header, write particle with MU tag
+#             j = 0
+#             for i in range(len(header)):
+#                 particle = header[i]
+#                 muIndex = particle[2]
+#                 numEvents = int(particle[3])
+#                 for k in range(numEvents):
+#                     event = data[j]
+#                     eventArray[:,j] = np.hstack((event,muIndex))
+#                     j += 1 
                 
-    #%%Convert MU to time     
+#     #%%Convert MU to time     
     
-            #Converting treatment time to seconds
-            eventArray[2,:] = MU2Time(eventArray[2,:],muTime)
+#             #Converting treatment time to seconds
+#             eventArray[2,:] = MU2Time(eventArray[2,:],muTime)
         
-    #%%Create / update histrogram
+#     #%%Create / update histrogram
     
-            #Convert data to histogram format
-            hist_data = eventArray[2,:]
+#             #Convert data to histogram format
+#             hist_data = eventArray[2,:]
         
-            if sub_files == 1 and tag == 0:
-            #Create first histogram to fill
-                hist = physt.h1(hist_data,'fixed_width', bin_width = 0.5) #bin width in ms
-                tag = 1
+#             if sub_files == 1 and tag == 0:
+#             #Create first histogram to fill
+#                 hist = physt.h1(hist_data,'fixed_width', bin_width = 0.5) #bin width in ms
+#                 tag = 1
             
-            else:
-            #Update hist with new data
-                hist.fill_n(hist_data)
+#             else:
+#             #Update hist with new data
+#                 hist.fill_n(hist_data)
         
-#%%Now we have a filled histogram of events 
-    total = hist.total
-    freq_data = hist.frequencies
-    norm_freq = freq_data / total
-    bin_data = hist.bin_left_edges
-    event_trace = np.concatenate(([bin_data], [norm_freq]),axis=0)
+# #%%Now we have a filled histogram of events 
+#     total = hist.total
+#     freq_data = hist.frequencies
+#     norm_freq = freq_data / total
+#     bin_data = hist.bin_left_edges
+#     event_trace = np.concatenate(([bin_data], [norm_freq]),axis=0)
 
-    #Save the data
-    savefilename = os.path.join(cd,writelocation,'RFoot',str(compartmentnum) +'eventTrace.npy')
-    np.save(savefilename,event_trace)    
+#     #Save the data
+#     savefilename = os.path.join(cd,writelocation,'RFoot',str(compartmentnum) +'eventTrace.npy')
+#     np.save(savefilename,event_trace)    

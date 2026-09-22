@@ -102,22 +102,22 @@ def readEgsphant(path):
         
         #Build material image
         materialArray = np.zeros((xdim,ydim,zdim))
-        # for k in range(zdim):
-        #     for j in range(ydim+1):
-        #         xRow = x.readline().strip()
-        #         if len(xRow) == xdim:
-        #             for i in range(xdim):
-        #                 materialArray[i,j,k] = int(xRow[i])
-        #         else:
-        #             m = 0
-        #             for i in range(len(xRow)):
-        #                 try:
-        #                     xValue = int(xRow[i])
-        #                     if int(xRow[i]) in range(1,nmaterials):
-        #                         materialArray[m,j,k] = int(xRow[i])
-        #                         m += 1
-        #                 except:
-        #                     pass
+        for k in range(zdim):
+            for j in range(ydim+1):
+                xRow = x.readline().strip()
+                if len(xRow) == xdim:
+                    for i in range(xdim):
+                        materialArray[i,j,k] = int(xRow[i])
+                else:
+                    m = 0
+                    for i in range(len(xRow)):
+                        try:
+                            xValue = int(xRow[i])
+                            if int(xRow[i]) in range(1,nmaterials):
+                                materialArray[m,j,k] = int(xRow[i])
+                                m += 1
+                        except:
+                            pass
         
         #Build density image
         densityArray = np.zeros((xdim,ydim,zdim))
@@ -184,9 +184,9 @@ path = dir_path + "\\FlowTracker.xlsx"
 df = pd.read_excel(path)
 
 #%%Load in the relevant egsphant
-path = dir_path + "\\ExtSSD_Files\\extended_lead_plastic_XCAT_AP.egsphant"
+path = dir_path + "\\XCAT_PA.egsphant"
 egsphantObj = readEgsphant(path)
-path = dir_path + "\\XCAT_AP_unstacked_new.egsvoi"
+path = dir_path + "\\XCAT_PA_unstacked_new.egsvoi"
 addVOI(path, egsphantObj)  
 [xdim,ydim,zdim] = egsphantObj.dimensions
 VOIFittedArray = np.zeros((xdim,ydim,zdim))
@@ -253,29 +253,29 @@ for vesselNum in range(28,125+1):
 
 #%%Compelte a rigid registration of the two VOI Arrays to determine the transform 
     #to apply to the vessels
-shift_values, error, phasediff = phase_cross_correlation(egsphantObj.VOIArray,  VOIFittedArray, upsample_factor=10)
-print(f"Detected translation: {shift_values}")
+# shift_values, error, phasediff = phase_cross_correlation(egsphantObj.VOIArray,  VOIFittedArray, upsample_factor=10)
+# print(f"Detected translation: {shift_values}")
 
 
-Summed = egsphantObj.materialArray + VOIFittedArray*10  
-plt.figure()         
-plt.imshow(Summed[:,:,500], cmap='hot')   
+# Summed = egsphantObj.materialArray + VOIFittedArray*2  
+# plt.figure()         
+# plt.imshow(Summed[:,:,500], cmap='hot')   
 
-truth = egsphantObj.materialArray + egsphantObj.VOIArray*10
-plt.figure()         
-plt.imshow(truth[:,:,500], cmap='hot') 
+# truth = egsphantObj.materialArray + egsphantObj.VOIArray*10
+# plt.figure()         
+# plt.imshow(truth[:,:,500], cmap='hot') 
    
 
 #%%Find the transition points from voxel to voxel
-    # transition_index = [0]
-    # for i in range(np.shape(vesselArray)[0]-1):
-    #     a = vesselArray[i,5]
-    #     b = vesselArray[i+1,5]
-    #     if a-b != 0:
-    #         transition_index.append(i+1)
+    transition_index = [0]
+    for i in range(np.shape(vesselArray)[0]-1):
+        a = vesselArray[i,5]
+        b = vesselArray[i+1,5]
+        if a-b != 0:
+            transition_index.append(i+1)
     
-    #     dist_voxel_match = np.vstack([vesselArray[transition_index,4], vesselArray[transition_index,5]]).T    #mm, voxel num
+        dist_voxel_match = np.vstack([vesselArray[transition_index,4], vesselArray[transition_index,5]]).T    #mm, voxel num
          
 #%%Write to an excel document
-    #np.save(dir_path + '\\VOIMappingArrays\\Hi-Res\\PA\\' + str(vesselNum) + '.npy', dist_voxel_match)
+    np.save(dir_path + '\\VOIMappingArrays\\Hi-Res\\PA\\' + str(vesselNum) + '.npy', dist_voxel_match)
 

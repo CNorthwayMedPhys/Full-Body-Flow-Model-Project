@@ -1,0 +1,7 @@
+iso, time(s), MU, timebetween(s)
+Chest,243.07,1260,120
+Head,121.31,758,120
+Abdomen,198.24,1327,570
+Pelvis,180.77,1061,120
+Knee,119.94,670,120
+Feet,137.32,1203,1

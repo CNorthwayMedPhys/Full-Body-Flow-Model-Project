@@ -1,0 +1,34 @@
+10x10 field, stationary at 160 ssd	 	 	 #!GUI1.0
+0
+/home/mcqa/MC/VC/XCAT/AbsDoseSims/WaterTankRect.egsphant
+0.7, 0.01, 0
+0, 0, 0
+2, 20, 2, 0, 0, 0, 0, 0, 0
+0, 0, 0, 90, 270.0, 270, 170, 0.00
+0, 0, 0, 90, 270.0, 270, 170, 1
+2, 2, 2, 160, 0, 0, 0, 0
+0,/home/mcqa/EGSnrc/EGS_HOME/BEAM_Cobalt_sync/cobalt_phsp_10.1.IAEAphsp,0
+20000000000, 0, 999, 381, 462, 100, 0, 0, 2, 1, 1, 0, 0, 0, 1, 0
+#########################
+:Start MC Transport Parameter:
+
+Global ECUT= 0.7
+Global PCUT= 0.01
+Global SMAX= 5
+ESTEPE= 0.25
+XIMAX= 0.5
+Boundary crossing algorithm= PRESTA-I
+Skin depth for BCA= 0
+Electron-step algorithm= PRESTA-II
+Spin effects= On
+Brems angular sampling= Simple
+Brems cross sections= BH
+Bound Compton scattering= Off
+Pair angular sampling= Simple
+Photoelectron angular sampling= Off
+Rayleigh scattering= Off
+Atomic relaxations= Off
+Electron impact ionization= Off
+
+:Stop MC Transport Parameter:
+#########################

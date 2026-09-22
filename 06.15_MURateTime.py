@@ -82,41 +82,4 @@ for iso in ["Abdo","Chest","Pelvis"]:
     writename = os.path.join(cd,'VMAT_Files\\MUvsTimeArray',iso+".npy" )
     np.save(writename,final_file)
 
-#%% Process IMRT files
-for iso in ["HeadL","HeadR","RFoot","LFoot","KneeAnt","KneePost"]:
-
-
-    keys = [key for key in all_sheets if iso in key] 
-    MU = []
-    time = []
-    MU_per_field = [] 
-    i = 0
-    for key in keys:
-        sheet = all_sheets[key]
-        MUseries = sheet.loc[:,'Meterset Weight']
-        MU_fieldseries = sheet.loc[:,"MU"]
-        MU_per_field = np.append(MU_per_field,MU_fieldseries.to_numpy())
-        MU= np.append(MU,MUseries.to_numpy() + i)
-        timeseries = sheet.loc[:,'Time (s)']
-        time = np.append(time, timeseries.to_numpy())
-        i += 1.0001
-        
-    #Renormalize MU scale 
-    MU = (MU - MU.min())/(MU.max()-MU.min())
-    
-    #Interpolate NaN values
-    time[0] = 0
-    nans, x =nan_helper(time)
-    time[nans] =np.interp(x(nans),x(~nans),time[~nans]) 
-
-    MU_per_field[0] = 0
-    nans, x = nan_helper(MU_per_field)
-    MU_per_field[nans] = np.interp(x(nans),x(~nans),MU_per_field[~nans])
-   
-    
-    if "Foot" in iso:
-        final_file = np.vstack((MU.T,MU_per_field.T*2,time.T))
-    else:
-        final_file = np.vstack((MU.T,MU_per_field.T,time.T))
-    writename = os.path.join(cd,'VMAT_Files\\MUvsTimeArray',iso+".npy" )
-    np.save(writename,final_file)
+#%% Process IMRT Files

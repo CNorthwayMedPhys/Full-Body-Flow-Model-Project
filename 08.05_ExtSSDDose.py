@@ -20,10 +20,10 @@ t.tic()
 
 #%%Parameters
 dt = 0.0025 #BFS Time step size (s)
-dst = 0.025 #Dose sampling time step size (s) Min is 0.025 s
+dst = 0.2 #Dose sampling time step size (s) Min is 0.025 s
 T = 0.955 #Length of one period (s)
 BV_num = 1E1 #total number BV
-Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
+Tss =  3 * T #round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 
 #Dose file locations 
 cd = os.getcwd()
@@ -661,10 +661,10 @@ class Network (object):
                         VOIArray = newlocation.VOIMap
                         VOI = VOISelector(BV.distance, VOIArray)
                         doseStep = DoseDataSampler (self._currentDoseData,self.localtime,VOI)
-                        absdoseStep = doseStep * 9.76E14 #Gy/particle
+                        absdoseStep = doseStep * 9.76E14  #Gy/particle
                         BV._dose_ves = BV.dose_ves + absdoseStep
                         #muStep = MUStepSampler(self._currentMUData, self.localtime)
-                        BV._vesselMU = BV.vesselMU + dst #MU
+                        BV._vesselMU = BV.vesselMU + (dst/60) #MU
 
                     else:
                        doselocation = self.locations[BV.location]
@@ -888,7 +888,7 @@ nt.runNT2Equil()
 for iso in ['AP','PA']:
     nt.locationIsoInfo(iso)
     print("Running "+iso)
-    rxTime = 3.90*60
+    rxTime = 7.485*60
     nt.runNTDose(rxTime, iso)
     nt.shuffleBVs()
     dryTime = 3*60

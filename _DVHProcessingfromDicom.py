@@ -9,7 +9,14 @@ import os
 import pydicom as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
+def DVHSampler(DVHArray):
+    volume = random.random()*100 #convert to percentages
+    DVHArray = np.fliplr(DVHArray)
+    index = np.searchsorted(DVHArray[0,:],volume)
+    value = np.interp(volume, [DVHArray[0,index-1], DVHArray[0,index]],[DVHArray[1,index-1],DVHArray[1,index]])
+    return value #Gy
 #%% Load in the RT file
 cd = os.getcwd()
 filenameRD = "ExtSSD_Files\\RD.CN_XCAT.PA.dcm"
@@ -46,15 +53,17 @@ for i in range(numDVH):
     Dmax = DVH.DVHMaximumDose
     Dmin = DVH.DVHMinimumDose
     
-    doseArray[0] = Dmin
+    doseArray[0] = 0
     for i in range(1,len(doseArray)):
         step = doseArray[i]
         doseArray[i] = doseArray[i-1]+step
         
     DVHArray = np.concat(([volumeArray],[doseArray])) 
-    
+    plt.plot(doseArray,volumeArray)
+    plt.ylim((0,100))
     np.save(os.path.join(cd,write_file + ROIName + "DVH.npy"),DVHArray)
     
+    #DVHSampler(DVHArray)
 
 #%% ScratchPad
 

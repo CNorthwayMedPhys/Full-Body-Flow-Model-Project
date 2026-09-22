@@ -21,7 +21,7 @@ writelocation = "ExtSSD_Files\\CompartmentData\\"
 num_files  = 80
 
 #Treatment time (min/field)
-rxTime= 3.90
+rxTime= 7.485
 rxTime = rxTime * 60 #(s)
 #%% FCN: Read edepheader
 def read_edepheader(headerfile):
@@ -109,7 +109,7 @@ for iso in fieldnames:
         
             if sub_files == 1:
             #Create first histogram to fill
-                hist = physt.h1(hist_data,'fixed_width', bin_width = 1) #bin width in s
+                hist = physt.h1(hist_data,'fixed_width', bin_width = 5) #bin width in s
             
             else:
             #Update hist with new data
@@ -118,7 +118,8 @@ for iso in fieldnames:
     #%%Now we have a filled histogram of events 
         total = hist.total
         freq_data = hist.frequencies
-        norm_freq = freq_data / total
+        norm_freq = freq_data / (total*5)
+        norm_freq[-1] = norm_freq[-2]
         bin_data = hist.bin_left_edges
         event_trace = np.concatenate(([bin_data], [norm_freq]),axis=0)
     

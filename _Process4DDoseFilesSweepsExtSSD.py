@@ -7,9 +7,9 @@ Created on Wed Oct  8 16:07:20 2025
 
 import os
 import numpy as np
-import glob
 
-orientation = 'PA'
+
+orientation = 'AP'
 #%% FCN: Read edepdat
 def read_edepdat(datafile):
     with open(datafile, 'r') as fid:
@@ -174,13 +174,13 @@ num_files  = 80
 
 filePath = "ExtSSD_Files\\Raw_4DDoseData\\"+orientation+"\\vessels\\"
 
-egsphantfile = os.path.join(cd,'XCAT_AP.egsphant')
+egsphantfile = os.path.join(cd,'XCAT_' + orientation + '.egsphant')
 egsvoifile = os.path.join(cd,"ExtSSD_Files\\VOI_Files",orientation,"stacked_VOI\\vessels.egsvoi")
 
 #Treatment time (min/field)
-rxTime= 3.90
+rxTime= 7.485 *60 #s
 
-step_size = 0.2
+step_size = 0.2 #s 
 
 
 #Is the volume stacked (Co-60 with filters)?

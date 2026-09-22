@@ -153,11 +153,14 @@ zcenters = doseObj.centers[2][441]
 doseIso = np.mean(doseObj.doseArray[xMidIndex-1:xMidIndex+2,yMidIndex-1:yMidIndex+2,zMidIndex-1:zMidIndex+2])
 unCertIso= np.mean(doseObj.unCertArray[xMidIndex-1:xMidIndex+2,yMidIndex-1:yMidIndex+2,zMidIndex-1:zMidIndex+2])
 
+plt.plot(doseObj.centers[0][87:168],doseObj.doseArray[87:168,yMidIndex,zMidIndex])
 dosePlane = doseObj.doseArray[:,yMidIndex,zMidIndex]
-
+line = np.polynomial.Polynomial.fit(doseObj.centers[0][87:168], doseObj.doseArray[87:168,yMidIndex,zMidIndex], deg=1).convert()
+b, m = line.coef
 #%% Calc treatment time for both fields!!! Assuming delivering 2 Gy per frac
-k = 9.76E14
-deliveryTime = 1 *(1/doseIso) *(1/k)
+k = 1.0206E15
+deliveryTime = 2 *(1/doseIso) *(1/k)
+deliveryTimeb = 2 * (1/b) * (1/k)
 
 
     
