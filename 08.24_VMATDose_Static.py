@@ -874,38 +874,38 @@ class Network (object):
 
     
 #%% Excute Simulation
-
+for j in range(1,6):
 #Load in treatment plan
-dfTreatmentPlan = readTreatmentPlan(treatmentplan)    
-
-
-
-#Construct and intialize the network
-nt = Network(dt, BV_num)
-nt.setTimes(T, Tss)
-nt.intializeLocations()
-
-#Run until equilbruim is reached
-print("Finding Equilibrium")
-nt.runNT2Equil()
-#Add in the iso info and run
-for iso_num in range(dfTreatmentPlan.shape[0]):
-    iso = dfTreatmentPlan.iso[iso_num]
-    nt.locationIsoInfo(iso)
-    print("Running "+iso)
-    rxTime = dfTreatmentPlan.time[iso_num]
-    nt.runNTDose(rxTime, iso)
-    #dryTime = dfTreatmentPlan.Gap[iso_num]
-    #nt.runNTDry(dryTime)
+    dfTreatmentPlan = readTreatmentPlan(treatmentplan)    
     
     
-BV_data = np.zeros([len(nt.BVs)])
-i = 0    
-for BV in nt.BVs:
-    BV_data[i] = BV.dose
-    i += 1
+    
+    #Construct and intialize the network
+    nt = Network(dt, BV_num)
+    nt.setTimes(T, Tss)
+    nt.intializeLocations()
+    
+    #Run until equilbruim is reached
+    print("Finding Equilibrium")
+    nt.runNT2Equil()
+    #Add in the iso info and run
+    for iso_num in range(dfTreatmentPlan.shape[0]):
+        iso = dfTreatmentPlan.iso[iso_num]
+        nt.locationIsoInfo(iso)
+        print("Running "+iso)
+        rxTime = dfTreatmentPlan.time[iso_num]
+        nt.runNTDose(rxTime, iso)
+        #dryTime = dfTreatmentPlan.Gap[iso_num]
+        #nt.runNTDry(dryTime)
+        
+        
+    BV_data = np.zeros([len(nt.BVs)])
+    i = 0    
+    for BV in nt.BVs:
+        BV_data[i] = BV.dose
+        i += 1
 
-np.save(os.path.join(cd,"BVResults_VMAT_static.npy"),BV_data)
+    np.save(os.path.join(cd,"BVResults_VMAT_static_"+str(j)+".npy"),BV_data)
       
         
 # dsts = np.arange(0.025,1.025,0.025) #Dose sample time step size (s)

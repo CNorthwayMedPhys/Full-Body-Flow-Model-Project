@@ -19,12 +19,12 @@ def DVHSampler(DVHArray):
     return value #Gy
 #%% Load in the RT file
 cd = os.getcwd()
-filenameRD = "ExtSSD_Files\\RD.CN_XCAT.PA.dcm"
+filenameRD = "ExtSSD_Files\\RD.CN_XCAT.AP.dcm"
 rd_file = pd.dcmread(os.path.join(cd,filenameRD))
-filenameRS = "ExtSSD_Files\\RS.CN_XCAT.CT_1.dcm"
+filenameRS = "ExtSSD_Files\\RS.CN_XCAT.Full_AP.dcm"
 rs_file = pd.dcmread(os.path.join(cd,filenameRS))
 
-write_file = "ExtSSD_Files\\CompartmentData\\PA\\"
+write_file = "ExtSSD_Files\\CompartmentData\\AP\\"
 #%%Create ROI seq
 ROIseq = rs_file.StructureSetROISequence
 numROI = len(ROIseq)
@@ -53,14 +53,16 @@ for i in range(numDVH):
     Dmax = DVH.DVHMaximumDose
     Dmin = DVH.DVHMinimumDose
     
-    doseArray[0] = 0
-    for i in range(1,len(doseArray)):
-        step = doseArray[i]
-        doseArray[i] = doseArray[i-1]+step
+    doseArray[-1] = DVH.DVHMaximumDose
+    for i in reversed(range(1,len(doseArray)-1)):
+        step = doseArray[i-1] 
+        doseArray[i] = doseArray[i+1]-step  
         
     DVHArray = np.concat(([volumeArray],[doseArray])) 
+    plt.title(ROIName)
     plt.plot(doseArray,volumeArray)
     plt.ylim((0,100))
+    plt.show()
     np.save(os.path.join(cd,write_file + ROIName + "DVH.npy"),DVHArray)
     
     #DVHSampler(DVHArray)

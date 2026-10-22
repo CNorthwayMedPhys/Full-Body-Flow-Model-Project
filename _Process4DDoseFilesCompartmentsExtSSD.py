@@ -109,7 +109,7 @@ for iso in fieldnames:
         
             if sub_files == 1:
             #Create first histogram to fill
-                hist = physt.h1(hist_data,'fixed_width', bin_width = 5) #bin width in s
+                hist = physt.h1(hist_data,'fixed_width', bin_width = 30) #bin width in s
             
             else:
             #Update hist with new data
@@ -118,16 +118,16 @@ for iso in fieldnames:
     #%%Now we have a filled histogram of events 
         total = hist.total
         freq_data = hist.frequencies
-        norm_freq = freq_data / (total*5)
+        norm_freq = freq_data / (total*30)
         norm_freq[-1] = norm_freq[-2]
         bin_data = hist.bin_left_edges
         event_trace = np.concatenate(([bin_data], [norm_freq]),axis=0)
     
-        # plt.plot(event_trace[0,:],event_trace[1,:])
-        # plt.show()
+        plt.plot(event_trace[0,:],event_trace[1,:])
+        plt.show()
 
         #Save the data
         savefilename = os.path.join(cd,writelocation,iso,str(compartmentnum) +'eventTrace.npy')
-        np.save(savefilename,event_trace)
+        #np.save(savefilename,event_trace)
         print(str(compartmentnum))
 

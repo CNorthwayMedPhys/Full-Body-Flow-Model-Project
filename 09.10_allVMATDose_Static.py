@@ -22,8 +22,8 @@ t.tic()
 dt = 0.0025 #BFS Time step size (s)
 dst = 0.025 #Dose sampling time step size (s) Min is 0.025 s
 T = 0.955 #Length of one period (s)
-BV_num = 1E1 #1E4 #total number BV
-Tss =  3# round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
+BV_num = 1E4 #1E4 #total number BV
+Tss =  round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 
 #Dose file locations 
 cd = os.getcwd()
@@ -880,7 +880,7 @@ class Network (object):
 #Load in treatment plan
 dfTreatmentPlan = readTreatmentPlan(treatmentplan)    
 
-for j in range(0,1):
+for j in range(1,7):
 
     #Construct and intialize the network
     nt = Network(dt, BV_num)
@@ -908,7 +908,7 @@ for j in range(0,1):
         print(BV.dose)
         i += 1
     
-    #np.save(os.path.join(cd,"BVResults_allVMAT_"+str(j)+".npy"),BV_data)
+    np.save(os.path.join(cd,"BVResults_allVMAT_Static"+str(j)+".npy"),BV_data)
       
         
 # dsts = np.arange(0.025,1.025,0.025) #Dose sample time step size (s)

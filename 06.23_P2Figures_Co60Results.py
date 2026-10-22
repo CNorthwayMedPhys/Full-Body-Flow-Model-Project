@@ -82,7 +82,7 @@ for j in range(numDVH):
     Dmax = DVH.DVHMaximumDose
     Dmin = DVH.DVHMinimumDose
     
-    doseArray[0] = Dmin
+    doseArray[0] = 0
     for i in range(1,len(doseArray)):
         step = doseArray[i]
         doseArray[i] = doseArray[i-1]+step  

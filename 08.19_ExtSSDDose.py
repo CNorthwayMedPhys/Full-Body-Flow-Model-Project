@@ -20,9 +20,9 @@ t.tic()
 
 #%%Parameters
 dt = 0.0025 #BFS Time step size (s)
-dst = 0.2 #Dose sampling time step size (s) Min is 0.025 s
+dst = 1 #0.2 #Dose sampling time step size (s) Min is 0.025 s
 T = 0.955 #Length of one period (s)
-BV_num = 1E4 #total number BV
+BV_num = 1E1 #total number BV
 Tss =   round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 
 #Dose file locations 
@@ -680,9 +680,12 @@ class Network (object):
         for BV in self.BVs:
             vesselDose = BV.dose_ves * BV.vesselMU
             BV._dose = BV.dose + vesselDose + BV.dose_comp
+            print(vesselDose, BV.dose_comp)
             BV._dose_ves = 0 
             BV._dose_comp = 0
             BV._vesselMU = 0
+            print(BV._dose)
+
             
             
     def shuffleBVs (self):
@@ -901,7 +904,7 @@ for i in range(1,7):
         BV_data[i] = BV.dose
         i += 1
     name = "ExtSSD_Results"+str(i)+".npy"
-    np.save(os.path.join(cd,name),BV_data)
+    #np.save(os.path.join(cd,name),BV_data)
       
         
 # dsts = np.arange(0.025,1.025,0.025) #Dose sample time step size (s)

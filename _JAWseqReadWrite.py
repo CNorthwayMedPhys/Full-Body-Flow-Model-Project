@@ -48,10 +48,10 @@ def writeSeq(filename,sI,eI,muList, dataList):
             j += 1
     
     
-    preamble = filename + "  04"
+    preamble = filename + "  06"
     cpnumber = int(len(writeArray)/3)
 
-    writename = os.path.join(cd,"allVMAT_Files/MCFiles/",filename + "_plan04_JAW.sequence")
+    writename = os.path.join(cd,"TMI_Files/MCFiles/",filename + "_plan06_JAW.sequence")
 
     with open(writename, 'w') as fid:
         fid.write(preamble)
@@ -67,10 +67,10 @@ def writeSeq(filename,sI,eI,muList, dataList):
 #%%
 cd = os.getcwd()
 
-filename = "allVMAT_Files\MCFiles\VCCN_XCAT_plan01_JAW.sequence"
+filename = "TMI_Files\MCFiles\VCCN_XCAT_plan01_JAW.sequence"
 filepath = os.path.join(cd,filename)
 
-cpkeyname = "allVMAT_Files\MCFiles\cpKey.npy"
+cpkeyname = "TMI_Files\MCFiles\cpKey.npy"
 cpKey = np.load(os.path.join(cd,cpkeyname))
 
 
@@ -87,7 +87,7 @@ for i in range(len(lines)):
     else:
         dataList.append(lines[i])
 #%%
-filename = "VCCN_XCAT_Head"
+filename = "VCCN_XCAT_LegSUP"
 sI = 0 
 eI = float(cpKey[0])
 
@@ -95,34 +95,46 @@ muList, dataList = writeSeq(filename,sI,eI,muList, dataList)
   
 
  #%%
-filename = "VCCN_XCAT_Chest"
+filename = "VCCN_XCAT_LegINF"
 sI = eI 
 eI = float(cpKey[1])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)  
 
 #%%
-filename = "VCCN_XCAT_Abdomen"
+filename = "VCCN_XCAT_Head"
 sI = eI 
 eI = float(cpKey[2])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)  
 
 #%%
-filename = "VCCN_XCAT_Pelvis"
+filename = "VCCN_XCAT_Chest"
 sI = eI 
 eI = float(cpKey[3])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)  
 #%%
-filename = "VCCN_XCAT_Knee"
+filename = "VCCN_XCAT_Abdo1"
 sI = eI 
 eI = float(cpKey[4])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)         
+#%%
+filename = "VCCN_XCAT_Pelvis1"
+sI = eI 
+eI = float(cpKey[5])
+
+muList, dataList = writeSeq(filename,sI,eI,muList, dataList)         
+#%%
+filename = "VCCN_XCAT_Pelvis2"
+sI = eI 
+eI = float(cpKey[6])
+
+muList, dataList = writeSeq(filename,sI,eI,muList, dataList)         
 
 #%%
-filename = "VCCN_XCAT_Feet"
+filename = "VCCN_XCAT_Abdo2"
 sI = eI 
 eI = 1
 

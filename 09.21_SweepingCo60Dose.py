@@ -1038,6 +1038,7 @@ for j in range(1,7):
         dose_vessel = BV.dose_ves
         
         BV_data[i] = dose_compartment + dose_vessel
+        i += 1
     print(str(j))
     np.save(os.path.join(cd,'Co60Sweeping_'+str(j)),BV_data)
 

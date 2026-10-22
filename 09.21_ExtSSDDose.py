@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              # -*- coding: utf-8 -*-
 """
 Created on Tue Dec 17 11:46:42 2024
 
@@ -16,6 +16,7 @@ from pytictoc import TicToc
 t = TicToc()
 t.tic()
 #import matplotlib.pyplot as plt
+
 
 
 #%%Parameters
@@ -139,9 +140,11 @@ def DoseDataSampler (doseArray,time,voi):
         voiIndex = np.where(doseArray[0,:] == int(voi))[0][0]
         timeIndex = np.where(np.isclose(doseArray[1:,0],time))[0][0] + 1
         dose = np.sum(doseArray[timeIndex:timeIndex+timeRange,voiIndex])
+        flag = 0
     except:
         dose = 0
-    return dose
+        flag = 1
+    return dose, flag
 
 def MUStepSampler(muArray, time):
     timeRange = int(dst/0.025)
@@ -602,12 +605,13 @@ class Network (object):
     def runNTDose(self, rxTime, iso): 
         self._currentDoseData = np.load(os.path.join(cd,dose_folder,"Extended"+iso+".npy"))        
         #self._currentMUData = np.load(os.path.join(cd,dose_folder,iso+"_MUsteps.npy"))
-        
+        fail = 0 
+        success = 0
         while self.localtime < rxTime:
 
             #Calculate the t w/in the period for table look ups
             pt = periodic(self.Nettime, self.T) 
-            
+
             #Iterate through each BV
             for BV in self.BVs:
                 
@@ -660,7 +664,11 @@ class Network (object):
                         newlocation = self.locations[BV.location]
                         VOIArray = newlocation.VOIMap
                         VOI = VOISelector(BV.distance, VOIArray)
-                        doseStep = DoseDataSampler (self._currentDoseData,self.localtime,VOI)
+                        doseStep, flag = DoseDataSampler (self._currentDoseData,self.localtime,VOI)
+                        if flag == 0:
+                            success += 1
+                        else:
+                            fail += 1
                         absdoseStep = doseStep * 1.02E15  #Gy/particle
                         BV._dose_ves = BV.dose_ves + absdoseStep
                         #muStep = MUStepSampler(self._currentMUData, self.localtime)
@@ -679,11 +687,14 @@ class Network (object):
         self._localtime = 0
         for BV in self.BVs:
             vesselDose = BV.dose_ves * BV.vesselMU
+            #print(vesselDose)
+            #print(BV.dose_comp)
             BV._dose = BV.dose + vesselDose + BV.dose_comp
             BV._dose_ves = 0 
             BV._dose_comp = 0
             BV._vesselMU = 0
-            
+            #print(BV._dose)
+        #print(fail/(fail+success))    
             
     def shuffleBVs (self):
         """
@@ -876,6 +887,8 @@ class Network (object):
 #%% Excute Simulation
 
 for i in range(1,7):
+    fail = 0 
+    success = 0
     #Construct and intialize the network
     nt = Network(dt, BV_num)
     nt.setTimes(T, Tss)
@@ -896,13 +909,13 @@ for i in range(1,7):
     
         
     BV_data = np.zeros([len(nt.BVs)])
-    i = 0    
+    j = 0    
     for BV in nt.BVs:
-        BV_data[i] = BV.dose
-        i += 1
+        BV_data[j] = BV.dose
+        j += 1
     name = "ExtSSD_Results"+str(i)+".npy"
     np.save(os.path.join(cd,name),BV_data)
-      
+    print(np.mean(BV_data)) 
         
 # dsts = np.arange(0.025,1.025,0.025) #Dose sample time step size (s)
 # dsts = dsts[::-1]

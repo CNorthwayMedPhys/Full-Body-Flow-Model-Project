@@ -29,7 +29,7 @@ def writeMlc(filename,sI,eI,lines):
                 break
     
     muArray = normalizeMU(np.array(muArray))
-    writename = os.path.join(cd,"allVMAT_Files/MCFiles/",filename + "_plan04.mlc")
+    writename = os.path.join(cd,"TMI_Files/MCFiles/",filename + "_plan06.mlc")
     with open(writename, 'w') as fid:
         for i in range(5):
             fid.write(preamble[i])
@@ -53,10 +53,10 @@ def writeMlc(filename,sI,eI,lines):
 #%%
 cd = os.getcwd()
 
-filename = "allVMAT_Files\MCFiles\VCCN_XCAT_plan01.mlc"
+filename = "TMI_Files\MCFiles\VCCN_XCAT_plan01.mlc"
 filepath = os.path.join(cd,filename)
 
-cpkeyname = "allVMAT_Files\MCFiles\cpKey.npy"
+cpkeyname = "TMI_Files\MCFiles\cpKey.npy"
 cpKey = np.load(os.path.join(cd,cpkeyname))
 
 
@@ -67,39 +67,51 @@ preamble = lines  [0:9]
 lines = lines[9:]
 
 #%%
-filename = "VCCN_XCAT_Head"
+filename = "VCCN_XCAT_LegSUP"
 sI = 0 
 eI = float(cpKey[0])
 lines = writeMlc(filename,sI,eI,lines)
 
  #%%
-filename = "VCCN_XCAT_Chest"
+filename = "VCCN_XCAT_LegINF"
 sI = eI 
 eI = float(cpKey[1])
 lines = writeMlc(filename,sI,eI,lines)
 
 #%%
-filename = "VCCN_XCAT_Abdomen"
+filename = "VCCN_XCAT_Head"
 sI = eI 
 eI = float(cpKey[2])
 
 lines = writeMlc(filename,sI,eI,lines)
 
 #%%
-filename = "VCCN_XCAT_Pelvis"
+filename = "VCCN_XCAT_Chest"
 sI = eI 
 eI = float(cpKey[3])
 
 lines = writeMlc(filename,sI,eI,lines)
 #%%
-filename = "VCCN_XCAT_Knee"
+filename = "VCCN_XCAT_Abdo1"
 sI = eI 
 eI = float(cpKey[4])
+
+lines = writeMlc(filename,sI,eI,lines) 
+#%%
+filename = "VCCN_XCAT_Pelvis1"
+sI = eI 
+eI = float(cpKey[5])
+
+lines = writeMlc(filename,sI,eI,lines) 
+#%%
+filename = "VCCN_XCAT_Pelvis2"
+sI = eI 
+eI = float(cpKey[6])
 
 lines = writeMlc(filename,sI,eI,lines)      
 
 #%%
-filename = "VCCN_XCAT_Feet"
+filename = "VCCN_XCAT_Abdo2"
 sI = eI 
 eI = 1
 

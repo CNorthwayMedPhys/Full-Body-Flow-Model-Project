@@ -23,7 +23,7 @@ dt = 0.0025 #BFS Time step size (s)
 dst = 0.2 #Dose sampling time step size (s) Min is 0.025 s
 T = 0.955 #Length of one period (s)
 BV_num = 1E4 #total number BV
-Tss =   round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
+Tss = round(400*T,3) #Time to reach Steady State (s) #Needs to be a round number!!!
 
 #Dose file locations 
 cd = os.getcwd()
@@ -664,7 +664,7 @@ class Network (object):
                     absdoseStep = doseStep * 1.02E15  #Gy/particle
                     BV._dose_ves = BV.dose_ves + absdoseStep
                     #muStep = MUStepSampler(self._currentMUData, self.localtime)
-                    BV._vesselMU = BV.vesselMU + rxTime #MU
+                    BV._vesselMU = BV.vesselMU + rxTime/60 #MU
 
                 else:
                    doselocation = self.locations[BV.location]
@@ -683,7 +683,7 @@ class Network (object):
             BV._dose_ves = 0 
             BV._dose_comp = 0
             BV._vesselMU = 0
-            
+            #print(BV._dose)
             
     def shuffleBVs (self):
         """
@@ -896,10 +896,10 @@ for i in range(1,7):
     
         
     BV_data = np.zeros([len(nt.BVs)])
-    i = 0    
+    j = 0    
     for BV in nt.BVs:
-        BV_data[i] = BV.dose
-        i += 1
+        BV_data[j] = BV.dose
+        j += 1
     name = "ExtSSD_Results_Static"+str(i)+".npy"
     np.save(os.path.join(cd,name),BV_data)
       

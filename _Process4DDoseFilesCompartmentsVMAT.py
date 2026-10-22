@@ -10,13 +10,13 @@ import numpy as np
 import physt 
 import matplotlib.pyplot as plt
 #%%Files names and manual data 
-fieldnames = ['Abdomen', 'Chest', 'Pelvis', 'Knee', 'Head', 'Feet']#, 'LFoot', 'RFoot']#'HeadL', 'HeadR'
-compartmentnumbers = [0,1,2,3,4,5,6,7,8,9,10,12,15,18,19,20,21,22,23,24,25,26,27]
+fieldnames = ['Head']#['Abdomen', 'Chest', 'Pelvis', 'Knee', 'Head', 'Feet']#, 'LFoot', 'RFoot']#'HeadL', 'HeadR'
+compartmentnumbers = [2] #[0,1,2,3,4,5,6,7,8,9,10,12,15,18,19,20,21,22,23,24,25,26,27]
 
 cd = os.getcwd()
-filelocation = "allVMAT_Files\\4DDose_Raw_Data"
-writelocation = "allVMAT_Files\\CompartmentData\\"
-MUtimeloc = os.path.join(cd,"allVMAT_Files\\MUvsTimeArray")
+filelocation = "TMI_Files\\4DDose_Raw_Data"
+writelocation = "TMI_Files\\CompartmentData\\"
+#MUtimeloc = os.path.join(cd,"allVMAT_Files\\MUvsTimeArray")
 
 num_files  = 80
 #%% FCN: Read edepheader
@@ -80,8 +80,8 @@ def MU2Time(MUarray,key):
 for compartmentnum in compartmentnumbers:
     filename = os.path.join(cd,filelocation,str(compartmentnum))
     for iso in fieldnames:
-        isoname = os.path.join(filename,'VCCN_XCAT_'+iso+"_plan04")
-        muTime = np.load(os.path.join(MUtimeloc,iso+".npy" ))
+        isoname = os.path.join(filename,'VCCN_XCAT_'+iso+"_plan06")
+        #muTime = np.load(os.path.join(MUtimeloc,iso+".npy" ))
         for sub_files in range(1,num_files+1):
             headerfile = os.path.join(cd,isoname +"_w" + str(sub_files) + '.edepheader')
             datafile = os.path.join(cd,isoname +"_w" + str(sub_files)+ '.edepdat')
@@ -107,7 +107,7 @@ for compartmentnum in compartmentnumbers:
     #%%Convert MU to time     
     
             #Converting treatment time to seconds
-            eventArray[2,:] = MU2Time(eventArray[2,:],muTime)
+            #eventArray[2,:] = MU2Time(eventArray[2,:],muTime)
         
     #%%Create / update histrogram
     
@@ -116,7 +116,7 @@ for compartmentnum in compartmentnumbers:
         
             if sub_files == 1:
             #Create first histogram to fill
-                hist = physt.h1(hist_data,'fixed_width', bin_width = 0.5) #bin width in s, normally 0.5
+                hist = physt.h1(hist_data,'fixed_width', bin_width = 0.01) #bin width in s, normally 0.5
             
             else:
             #Update hist with new data
@@ -129,12 +129,12 @@ for compartmentnum in compartmentnumbers:
         bin_data = hist.bin_left_edges
         event_trace = np.concatenate(([bin_data], [norm_freq]),axis=0)
     
-        #plt.plot(event_trace[0,:],event_trace[1,:])
-        #plt.show()
+        plt.plot(event_trace[0,:],event_trace[1,:])
+        plt.show()
 
         #Save the data
-        savefilename = os.path.join(cd,writelocation,iso,str(compartmentnum) +'eventTrace.npy')
-        np.save(savefilename,event_trace)
+        #savefilename = os.path.join(cd,writelocation,iso,str(compartmentnum) +'eventTrace.npy')
+        #np.save(savefilename,event_trace)
 
 # #%% For L feet need to sum both arrays
 # for compartmentnum in compartmentnumbers:
