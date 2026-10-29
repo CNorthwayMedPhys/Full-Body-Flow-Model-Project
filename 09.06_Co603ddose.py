@@ -138,4 +138,11 @@ for doseObj in [doseRect]:
     print(doseObj.doseArray[x,y,z])
     print(doseObj.errorArray[x,y,z])
 
+doseIso = np.mean(doseObj.doseArray[x-1:+2,y-1:y+2,z-1:z+2])
+unCertIso= np.mean(doseObj.unCertArray[x-1:x+2,y-1:y+2,z-1:z+2])
+
+plt.plot(doseObj.centers[0][87:168],doseObj.doseArray[87:168,y,z])
+dosePlane = doseObj.doseArray[:,y,z]
+line = np.polynomial.Polynomial.fit(doseObj.centers[0][87:168], doseObj.doseArray[87:168,y,z], deg=1).convert()
+b, m = line.coef
 

@@ -183,22 +183,22 @@ def MU2Time(MUarray,key):
 #%%Files names and manual data 
 
 cd = os.getcwd()
-num_files  = 80
-num_fields = 6
-filePath = "allVMAT_Files\\4DDose_Raw_Data\\Vessels"
+num_files  = 360
+num_fields = 8
+filePath = "TMI_Files\\4DDose_Raw_Data\\Vessels"
 
 majorDir = os.path.join(cd,filePath)
 
 
 egsphantfile = os.path.join(cd,'CN_XCAT.egsphant')
-egsvoifile = os.path.join(cd,"allVMAT_Files\\VOI_Files\\Vessels.egsvoi")
-treatmentPlan = os.path.join(cd,"allVMAT_Files\\TreatmentPlan.txt")
-MUtimeloc = os.path.join(cd,"allVMAT_Files\\MUvsTimeArray")
+egsvoifile = os.path.join(cd,"TMI_Files\\VOI_Files\\Vessels.egsvoi")
+treatmentPlan = os.path.join(cd,"TMI_Files\\TreatmentPlan.txt")
+MUtimeloc = os.path.join(cd,"TMI_Files\\MUvsTimeArray")
 
 step_size = 0.025
 
 #%%Load in and process treatmentPlan
-fieldsArray = np.zeros([6,2],dtype=object)
+fieldsArray = np.zeros([num_fields,2],dtype=object)
 with open(treatmentPlan, 'r') as x:
     for i in range(num_fields+1):
         line = x.readline().split(',')
@@ -225,74 +225,198 @@ with open(egsvoifile) as x:
 voiArray = np.array(voiArray)        
 
 
-#%% Process isos 
-for i in range(0,num_fields):
+# #%% Process isos 
+# for i in range(0,num_fields):
+#     rxTime = fieldsArray[i,1]
+
+#     #Determine number of time intervals
+#     timeArray = np.arange(0,rxTime + step_size, step_size)
+
+#     #Create empty aray
+#     E_array = np.zeros([len(timeArray),len(voiArray)],dtype= 'f')
+#     uE_array = np.zeros([len(timeArray),len(voiArray)], dtype= 'f')
+#     ainflu_sum = 0
+#     fieldname = fieldsArray[i,0] 
+#     filename = 'VCCN_XCAT_'+fieldname+"_plan06"
+#     muTime = np.load(os.path.join(MUtimeloc,fieldname+".npy" ))
+    
+     
+#     for sub_files in range(1,num_files+1):
+    
+#         headerfile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.edepheader')
+#         datafile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.edepdat')
+#         ainflufile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.ainflu')
+#         header = read_edepheader(headerfile)
+#         data = read_edepdat(datafile)
+#         ainflu = read_ainflu(ainflufile)
+        
+#         ainflu_sum = ainflu_sum + ainflu
+        
+#         #%%Create array of for all interactions 
+#         eventArray = np.zeros((4, len(data)))
+    
+#         #for each incident particle in header, write particle with MU tag
+#         j = 0
+#         for i in range(len(header)):
+#             particle = header[i]
+#             muIndex = particle[2]
+#             numEvents = int(particle[3])
+#             for k in range(numEvents):
+#                 event = data[j]
+#                 eventArray[:,j] = np.hstack((event,muIndex,0))
+#                 j += 1
+    
+#     #%%Convert MU to time and step size and sort in descending order    
+        
+#         #Sort by MU index, aka in time
+#         ind = np.argsort(eventArray[2,:])
+#         eventArray = eventArray[:,ind]
+        
+    
+#         #Converting MU index to time
+#         timefromMU = MU2Time(eventArray[2,:], muTime)
+#         eventArray[2,:] = timefromMU #s
+        
+#         #Round to stepsizes
+#         for j in range(np.size(eventArray, axis = 1)):
+#              new_value = round(eventArray[2,j] / step_size)*step_size
+#              eventArray[2,j] = new_value
+
+
+# #%% Fill E_Array
+#         for i in range(np.size(eventArray, axis = 1)):
+#             voiIndex = np.where(voiArray == eventArray[1,i])[0][0]
+#             timeIndex = np.where(timeArray == eventArray[2,i])[0][0]
+#             E_array[timeIndex,voiIndex] = E_array[timeIndex,voiIndex] + eventArray[0,i]
+#             uE_array[timeIndex,voiIndex] = uE_array[timeIndex,voiIndex] + eventArray[0,i]**2
+   
+        
+#         #print(sub_files) 
+# #%% Generate Mass Array
+#     massArray = np.zeros_like(E_array)
+    
+#     for i in range(np.size(voiArray)):
+#         location = voiArray[i]
+#         x_ind = int((location-1) % xdim)
+#         y_ind = int(((location-1) //xdim) % ydim)
+#         z_ind = int(((location-1)//xdim) // ydim)
+#         voxelVolume = (xbnds[x_ind+1]-xbnds[x_ind])*(ybnds[y_ind+1]-ybnds[y_ind])*(zbnds[z_ind+1]-zbnds[z_ind]) #cm^3
+#         voxelDensity = egsphantom.densityArray[x_ind,y_ind,z_ind] #g/cm
+#         voxelMass = voxelDensity * voxelVolume # g
+#         massArray[:,i] = voxelMass
+    
+
+
+#     #%% Convert from E to dose
+#     doseArray = (1.602E-10 * E_array) / (massArray * ainflu_sum)    
+#     unCertArray = (1/E_array)*np.sqrt((ainflu_sum/(ainflu_sum-1))*(uE_array - (E_array**2/ainflu_sum)))
+    
+       
+#     finalArray = np.zeros([np.size(timeArray)+1, np.size(voiArray)+1]) 
+#     finalArray[1:,0] = timeArray
+#     finalArray[0,1:] = voiArray
+#     finalArray[1:,1:] = doseArray  
+    
+#     arrayname = os.path.join(cd,"TMI_Files\\4DDoseData\\" +fieldname+"_Vessel.npy")
+#     np.save(arrayname,finalArray)
+#     del finalArray
+#     del doseArray
+#     del unCertArray
+
+#     #%%Create MU steps vs time steps array
+#     MUstepsArray = np.zeros_like(timeArray)
+#     k = 0
+#     for s in timeArray:
+#         if s == 0:
+#             MUstep = 0
+#         if s > muTime[2,-1]:
+#             MUstep = 0
+#         else:
+#             index = np.searchsorted(muTime[2,:], s)
+#             t0 = muTime[2,index-1]
+#             t1 = muTime[2,index]
+#             mu0 = muTime[1,index-1] 
+#             mu1 = muTime[1,index]
+#             MUstep = mu0 + ((s-t0)/(t1-t0))*(mu1-mu0)
+#         MUstepsArray[k] = MUstep
+#         k += 1
+#     MUstepsArray[1:] = np.diff(MUstepsArray)
+#     #MUstepsArray[-2] = MUstepsArray[-3]    
+#     MUstepsArray[-1] = MUstepsArray[-2]
+#     MUstepsArray = np.vstack([timeArray,MUstepsArray])
+#     print(MUstepsArray[:,-1])
+#     np.save(os.path.join(cd,"TMI_Files\\4DDoseData\\" + fieldname+"_MUsteps.npy"),MUstepsArray)
+#     #Generate the diff array were each value becomes x(i+1) = x(i+1) - x(i)
+#     print(fieldname)
+
+# #%%Feet Arrays
+for i in [6,7]:
     rxTime = fieldsArray[i,1]
 
-    #Determine number of time intervals
-    timeArray = np.arange(0,rxTime + step_size, step_size)
 
-    #Create empty aray
+    #Determine number of time intervals
+    timeArray = np.arange(0,rxTime + 2*step_size, step_size)
+    
+    #Create empty array
     E_array = np.zeros([len(timeArray),len(voiArray)],dtype= 'f')
     uE_array = np.zeros([len(timeArray),len(voiArray)], dtype= 'f')
     ainflu_sum = 0
-    fieldname = fieldsArray[i,0] 
-    filename = 'VCCN_XCAT_'+fieldname+"_plan04"
-    muTime = np.load(os.path.join(MUtimeloc,fieldname+".npy" ))
-    
-     
-    for sub_files in range(1,num_files+1):
-    
-        headerfile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.edepheader')
-        datafile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.edepdat')
-        ainflufile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.ainflu')
-        header = read_edepheader(headerfile)
-        data = read_edepdat(datafile)
-        ainflu = read_ainflu(ainflufile)
+    fieldname = fieldsArray[7,0] 
+    filename = 'VCCN_XCAT_'+fieldname+"_plan06"
+    muTime = np.load(os.path.join(MUtimeloc,str(fieldname)+".npy" ))
+    for i in range(7,9):
+        if fieldname in fieldname: 
+            for sub_files in range(1,num_files+1):
+            
+                headerfile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.edepheader')
+                datafile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.edepdat')
+                ainflufile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.ainflu')
+                header = read_edepheader(headerfile)
+                data = read_edepdat(datafile)
+                ainflu = read_ainflu(ainflufile)
+                
+                ainflu_sum = ainflu_sum + ainflu
+                
+                #%%Create array of for all interactions 
+                eventArray = np.zeros((4, len(data)))
+            
+                #for each incident particle in header, write particle with MU tag
+                j = 0
+                for i in range(len(header)):
+                    particle = header[i]
+                    muIndex = particle[2]
+                    numEvents = int(particle[3])
+                    for k in range(numEvents):
+                        event = data[j]
+                        eventArray[:,j] = np.hstack((event,muIndex,0))
+                        j += 1
+            
+            #%%Convert MU to time and step size and sort in descending order    
+                
+                #Sort by MU index, aka in time
+                ind = np.argsort(eventArray[2,:])
+                eventArray = eventArray[:,ind]
+                
+                #Converting MU index to time
+                MufromTime  = MU2Time(eventArray[2,:], muTime)
+                eventArray[2,:] = MufromTime #s
+                
+                for j in range(np.size(eventArray, axis = 1)):
+                     new_value = round(eventArray[2,j] / step_size)*step_size
+                     eventArray[2,j] = new_value
         
-        ainflu_sum = ainflu_sum + ainflu
         
-        #%%Create array of for all interactions 
-        eventArray = np.zeros((4, len(data)))
-    
-        #for each incident particle in header, write particle with MU tag
-        j = 0
-        for i in range(len(header)):
-            particle = header[i]
-            muIndex = particle[2]
-            numEvents = int(particle[3])
-            for k in range(numEvents):
-                event = data[j]
-                eventArray[:,j] = np.hstack((event,muIndex,0))
-                j += 1
-    
-    #%%Convert MU to time and step size and sort in descending order    
-        
-        #Sort by MU index, aka in time
-        ind = np.argsort(eventArray[2,:])
-        eventArray = eventArray[:,ind]
-        
-    
-        #Converting MU index to time
-        timefromMU = MU2Time(eventArray[2,:], muTime)
-        eventArray[2,:] = timefromMU #s
-        
-        #Round to stepsizes
-        for j in range(np.size(eventArray, axis = 1)):
-             new_value = round(eventArray[2,j] / step_size)*step_size
-             eventArray[2,j] = new_value
-
-
-#%% Fill E_Array
-        for i in range(np.size(eventArray, axis = 1)):
-            voiIndex = np.where(voiArray == eventArray[1,i])[0][0]
-            timeIndex = np.where(timeArray == eventArray[2,i])[0][0]
-            E_array[timeIndex,voiIndex] = E_array[timeIndex,voiIndex] + eventArray[0,i]
-            uE_array[timeIndex,voiIndex] = uE_array[timeIndex,voiIndex] + eventArray[0,i]**2
-   
-        
-        print(sub_files) 
-#%% Generate Mass Array
+        #%% Fill E_Array
+                for i in range(np.size(eventArray, axis = 1)):
+                    voiIndex = np.where(voiArray == eventArray[1,i])[0][0]
+                    
+                    timeIndex = np.where(np.isclose(np.array(timeArray),np.round(eventArray[2,i],3)))[0][0]
+                    E_array[timeIndex,voiIndex] = E_array[timeIndex,voiIndex] + eventArray[0,i]
+                    uE_array[timeIndex,voiIndex] = uE_array[timeIndex,voiIndex] + eventArray[0,i]**2
+           
+                
+                print(sub_files) 
+        #%% Generate Mass Array
     massArray = np.zeros_like(E_array)
     
     for i in range(np.size(voiArray)):
@@ -304,25 +428,27 @@ for i in range(0,num_fields):
         voxelDensity = egsphantom.densityArray[x_ind,y_ind,z_ind] #g/cm
         voxelMass = voxelDensity * voxelVolume # g
         massArray[:,i] = voxelMass
+        
     
-
-
+    
     #%% Convert from E to dose
     doseArray = (1.602E-10 * E_array) / (massArray * ainflu_sum)    
     unCertArray = (1/E_array)*np.sqrt((ainflu_sum/(ainflu_sum-1))*(uE_array - (E_array**2/ainflu_sum)))
     
-       
+    #%%Add MU per time step Array 
+    
+      
     finalArray = np.zeros([np.size(timeArray)+1, np.size(voiArray)+1]) 
     finalArray[1:,0] = timeArray
     finalArray[0,1:] = voiArray
     finalArray[1:,1:] = doseArray  
     
-    arrayname = os.path.join(cd,"allVMAT_Files\\4DDoseData\\" +fieldname+"_Vessel.npy")
-    #np.save(arrayname,finalArray)
+    arrayname = os.path.join(cd,"TMI_Files\\4DDoseData\\" + fieldname + "_Vessel.npy")
+    np.save(arrayname,finalArray)
+    print(fieldname)
     del finalArray
     del doseArray
     del unCertArray
-
     #%%Create MU steps vs time steps array
     MUstepsArray = np.zeros_like(timeArray)
     k = 0
@@ -330,7 +456,7 @@ for i in range(0,num_fields):
         if s == 0:
             MUstep = 0
         if s > muTime[2,-1]:
-            MUstep = 0
+            MUstep = 0    
         else:
             index = np.searchsorted(muTime[2,:], s)
             t0 = muTime[2,index-1]
@@ -341,132 +467,8 @@ for i in range(0,num_fields):
         MUstepsArray[k] = MUstep
         k += 1
     MUstepsArray[1:] = np.diff(MUstepsArray)
-    MUstepsArray[-1] = MUstepsArray[-2]
     MUstepsArray = np.vstack([timeArray,MUstepsArray])
-    print(MUstepsArray[:,-1])
-    np.save(os.path.join(cd,"allVMAT_Files\\4DDoseData\\" + fieldname+"_MUsteps.npy"),MUstepsArray)
-    #Generate the diff array were each value becomes x(i+1) = x(i+1) - x(i)
-    print(fieldname)
-
-# #%%Feet Arrays
-
-# rxTime = fieldsArray[7,1]
-
-# #Determine number of time intervals
-# timeArray = np.arange(0,rxTime + step_size, step_size)
-
-# #Create empty array
-# E_array = np.zeros([len(timeArray),len(voiArray)],dtype= 'f')
-# uE_array = np.zeros([len(timeArray),len(voiArray)], dtype= 'f')
-# ainflu_sum = 0
-# fieldname = fieldsArray[7,0] 
-# filename = 'VCCN_XCAT_'+fieldname+"_plan02"
-# muTime = np.load(os.path.join(MUtimeloc,"LFoot.npy" ))
-# for i in range(7,9):
-#     if "LFoot" in fieldname: 
-#         for sub_files in range(1,num_files+1):
-        
-#             headerfile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.edepheader')
-#             datafile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.edepdat')
-#             ainflufile = os.path.join(cd,filePath,filename +"_w" + str(sub_files) + '.ainflu')
-#             header = read_edepheader(headerfile)
-#             data = read_edepdat(datafile)
-#             ainflu = read_ainflu(ainflufile)
-            
-#             ainflu_sum = ainflu_sum + ainflu
-            
-#             #%%Create array of for all interactions 
-#             eventArray = np.zeros((4, len(data)))
-        
-#             #for each incident particle in header, write particle with MU tag
-#             j = 0
-#             for i in range(len(header)):
-#                 particle = header[i]
-#                 muIndex = particle[2]
-#                 numEvents = int(particle[3])
-#                 for k in range(numEvents):
-#                     event = data[j]
-#                     eventArray[:,j] = np.hstack((event,muIndex,0))
-#                     j += 1
-        
-#         #%%Convert MU to time and step size and sort in descending order    
-            
-#             #Sort by MU index, aka in time
-#             ind = np.argsort(eventArray[2,:])
-#             eventArray = eventArray[:,ind]
-            
-#             #Converting MU index to time
-#             MufromTime  = MU2Time(eventArray[2,:], muTime)
-#             eventArray[2,:] = MufromTime #s
-            
-#             for j in range(np.size(eventArray, axis = 1)):
-#                  new_value = round(eventArray[2,j] / step_size)*step_size
-#                  eventArray[2,j] = new_value
-    
-    
-#     #%% Fill E_Array
-#             for i in range(np.size(eventArray, axis = 1)):
-#                 voiIndex = np.where(voiArray == eventArray[1,i])[0][0]
-                
-#                 timeIndex = np.where(timeArray == eventArray[2,i])[0][0]
-#                 E_array[timeIndex,voiIndex] = E_array[timeIndex,voiIndex] + eventArray[0,i]
-#                 uE_array[timeIndex,voiIndex] = uE_array[timeIndex,voiIndex] + eventArray[0,i]**2
-       
-            
-#             #print(sub_files) 
-#     #%% Generate Mass Array
-# massArray = np.zeros_like(E_array)
-
-# for i in range(np.size(voiArray)):
-#     location = voiArray[i]
-#     x_ind = int((location-1) % xdim)
-#     y_ind = int(((location-1) //xdim) % ydim)
-#     z_ind = int(((location-1)//xdim) // ydim)
-#     voxelVolume = (xbnds[x_ind+1]-xbnds[x_ind])*(ybnds[y_ind+1]-ybnds[y_ind])*(zbnds[z_ind+1]-zbnds[z_ind]) #cm^3
-#     voxelDensity = egsphantom.densityArray[x_ind,y_ind,z_ind] #g/cm
-#     voxelMass = voxelDensity * voxelVolume # g
-#     massArray[:,i] = voxelMass
-    
-
-
-# #%% Convert from E to dose
-# doseArray = (1.602E-10 * E_array) / (massArray * ainflu_sum)    
-# unCertArray = (1/E_array)*np.sqrt((ainflu_sum/(ainflu_sum-1))*(uE_array - (E_array**2/ainflu_sum)))
-
-# #%%Add MU per time step Array 
-
-  
-# finalArray = np.zeros([np.size(timeArray)+1, np.size(voiArray)+1]) 
-# finalArray[1:,0] = timeArray
-# finalArray[0,1:] = voiArray
-# finalArray[1:,1:] = doseArray  
-
-# arrayname = os.path.join(cd,"VMAT_Files\\4DDoseData\\" + fieldname + "_Vessel.npy")
-# np.save(arrayname,finalArray)
-# print(fieldname)
-# del finalArray
-# del doseArray
-# del unCertArray
-# #%%Create MU steps vs time steps array
-# MUstepsArray = np.zeros_like(timeArray)
-# k = 0
-# for s in timeArray:
-#     if s == 0:
-#         MUstep = 0
-#     if s > muTime[2,-1]:
-#         MUstep = 0    
-#     else:
-#         index = np.searchsorted(muTime[2,:], s)
-#         t0 = muTime[2,index-1]
-#         t1 = muTime[2,index]
-#         mu0 = muTime[1,index-1] 
-#         mu1 = muTime[1,index]
-#         MUstep = mu0 + ((s-t0)/(t1-t0))*(mu1-mu0)
-#     MUstepsArray[k] = MUstep
-#     k += 1
-# MUstepsArray[1:] = np.diff(MUstepsArray)
-# MUstepsArray = np.vstack([timeArray,MUstepsArray])
-# np.save(os.path.join(cd,"VMAT_Files\\4DDoseData\\" + fieldname+"_MUsteps.npy"),MUstepsArray)
+    np.save(os.path.join(cd,"TMI_Files\\4DDoseData\\" + fieldname+"_MUsteps.npy"),MUstepsArray)
 
 
 # #%%Feet Arrays

@@ -9,10 +9,22 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
-#%%Files names and manual data 
 
+import tkinter as tk
+import tkinter.filedialog as fd
+
+#%%Files names and manual data 
+root = tk.Tk()
+root.lift()
+root.attributes('-topmost',True)
+root.after_idle(root.attributes,'-topmost',False)
 cd = os.getcwd()
-dosefile = os.path.join(cd,"extSSDdose.3ddose")
+
+root = tk.Tk()
+root.withdraw()  # Hide the main window
+file_path = fd.askopenfilenames(parent=root, filetypes =[ ("3DDose Files", '*.3ddose')])    
+    
+dosefile = str(file_path)
 
 
 #%%
@@ -141,16 +153,14 @@ def readDose(dosefile):
 doseObj= readDose(dosefile)
 dose = doseObj.doseArray
 #%%
-xMidIndex = 127
-yMidIndex = 62 
-zMidIndex= 441 #based on ct looks good
+location = [0,0,0]
 doseObj = doseObj
 
-xcenters = doseObj.centers[0][127]
-ycenters = doseObj.centers[1][62]
-zcenters = doseObj.centers[2][441]
+xMidIndex = np.searchsorted(doseObj.centers[0],location[0])
+yMidIndex = np.searchsorted(doseObj.centers[1],location[1])
+zMidIndex = np.searchsorted(doseObj.centers[2],location[2])
 
-doseIso = np.mean(doseObj.doseArray[xMidIndex-1:xMidIndex+2,yMidIndex-1:yMidIndex+2,zMidIndex-1:zMidIndex+2])
+doseIso = np.mean(doseObj.doseArray[xMidIndex-1:+2,yMidIndex-1:yMidIndex+2,zMidIndex-1:zMidIndex+2])
 unCertIso= np.mean(doseObj.unCertArray[xMidIndex-1:xMidIndex+2,yMidIndex-1:yMidIndex+2,zMidIndex-1:zMidIndex+2])
 
 plt.plot(doseObj.centers[0][87:168],doseObj.doseArray[87:168,yMidIndex,zMidIndex])

@@ -1,0 +1,9 @@
+iso, time(s), MU, timebetween(s)
+Chest,359.82,1389,120
+Head,258.3,1284,240
+Abdo1,179.91,634,6
+Abdo2,179.98,684,570
+Pelvis1,179.91,578,6
+Pelvis2,180.03,639,120
+LegSUP,26,466.2,30
+LegINF,22,432.8,40
