@@ -32,7 +32,7 @@ cd = os.getcwd()
 dose_folder = "allVMAT_Files\\4DDoseData\\"
 mapping_folder = "allVMAT_Files\\VOIMappingArrays\\"
 compartment_folder = "allVMAT_Files\\CompartmentData\\"
-treatmentplan = "allVMAT_Files\\TreatmentPlan.txt"
+treatmentplan = "allVMAT_Files\\TreatmentPlan_NoGaps.txt"
 
 
 #%% Utility functions
@@ -912,7 +912,7 @@ for j in range(0,6):
         BV_data[i] = BV.dose
         i += 1
     print(np.mean(BV_data))
-    np.save(os.path.join(cd,"BVResults_allVMAT"+str(j)+".npy"),BV_data)
+    np.save(os.path.join(cd,"BVResults_allVMAT_noGaps"+str(j)+".npy"),BV_data)
       
         
 # dsts = np.arange(0.025,1.025,0.025) #Dose sample time step size (s)

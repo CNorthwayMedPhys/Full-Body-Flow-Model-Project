@@ -20,7 +20,7 @@ def writeSeq(filename,sI,eI,muList, dataList):
     for i in range(len(muList)):
         mu = muList[i].strip()
         mu = np.round(float(mu),decimals=4)
-        if mu == sI:
+        if mu == sI or i == 0:
             writeflag = 1
         if writeflag ==1:
             writeArray.append(muList[i])
@@ -48,10 +48,10 @@ def writeSeq(filename,sI,eI,muList, dataList):
             j += 1
     
     
-    preamble = filename + "  06"
+    preamble = filename + "  08"
     cpnumber = int(len(writeArray)/3)
 
-    writename = os.path.join(cd,"TMI_Files/MCFiles/",filename + "_plan06_JAW.sequence")
+    writename = os.path.join(cd,"TMLI_Files/MCFiles/",filename + "_plan08_JAW.sequence")
 
     with open(writename, 'w') as fid:
         fid.write(preamble)
@@ -67,10 +67,10 @@ def writeSeq(filename,sI,eI,muList, dataList):
 #%%
 cd = os.getcwd()
 
-filename = "TMI_Files\MCFiles\VCCN_XCAT_plan01_JAW.sequence"
+filename = "TMLI_Files\MCFiles\VCCN_XCAT_plan01_JAW.sequence"
 filepath = os.path.join(cd,filename)
 
-cpkeyname = "TMI_Files\MCFiles\cpKey.npy"
+cpkeyname = "TMLI_Files\MCFiles\cpKey.npy"
 cpKey = np.load(os.path.join(cd,cpkeyname))
 
 
@@ -87,7 +87,7 @@ for i in range(len(lines)):
     else:
         dataList.append(lines[i])
 #%%
-filename = "VCCN_XCAT_LegSUP"
+filename = "VCCN_XCAT_Head"
 sI = 0 
 eI = float(cpKey[0])
 
@@ -95,46 +95,46 @@ muList, dataList = writeSeq(filename,sI,eI,muList, dataList)
   
 
  #%%
-filename = "VCCN_XCAT_LegINF"
+filename = "VCCN_XCAT_Chest"
 sI = eI 
 eI = float(cpKey[1])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)  
 
 #%%
-filename = "VCCN_XCAT_Head"
+filename = "VCCN_XCAT_Abdo1"
 sI = eI 
 eI = float(cpKey[2])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)  
 
 #%%
-filename = "VCCN_XCAT_Chest"
+filename = "VCCN_XCAT_Abdo2"
 sI = eI 
 eI = float(cpKey[3])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)  
 #%%
-filename = "VCCN_XCAT_Abdo1"
+filename = "VCCN_XCAT_Pelvis1"
 sI = eI 
 eI = float(cpKey[4])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)         
 #%%
-filename = "VCCN_XCAT_Pelvis1"
+filename = "VCCN_XCAT_Pelvis2"
 sI = eI 
 eI = float(cpKey[5])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)         
 #%%
-filename = "VCCN_XCAT_Pelvis2"
+filename = "VCCN_XCAT_LegSUP"
 sI = eI 
 eI = float(cpKey[6])
 
 muList, dataList = writeSeq(filename,sI,eI,muList, dataList)         
 
 #%%
-filename = "VCCN_XCAT_Abdo2"
+filename = "VCCN_XCAT_LegINF"
 sI = eI 
 eI = 1
 

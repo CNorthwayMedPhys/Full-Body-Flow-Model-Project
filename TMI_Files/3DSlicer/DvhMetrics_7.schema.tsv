@@ -1,0 +1,8 @@
+columnName	type	componentNames
+Show	bit	
+Structure	string	
+Volume name	string	
+Volume (cc)	string	
+Mean dose (Gy)	string	
+Min dose (Gy)	string	
+Max dose (Gy)	string	

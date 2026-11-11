@@ -24,14 +24,14 @@ def normalizeMU (muArray):
 #%% Write .egsinp function
 def writeEgsinp(name,preamble,parameters,array, postamble):
     
-    writename = os.path.join(cd,"TMI_Files/MCFiles/",name + ".egsinp")
+    writename = os.path.join(cd,"TMLI_Files/MCFiles/",name + ".egsinp")
 
     newPost = postamble[1]
     newPost = newPost.split(',')
     
     newWriteLocation = newPost[2]
     newWriteLocation = newWriteLocation.split("/")
-    newWriteLocation[6] = "06"
+    newWriteLocation[6] = "08"
     newWriteLocation[7] = name + ".txt"
     newWriteLocation = "/".join(newWriteLocation)
     newPost[2] = newWriteLocation
@@ -62,7 +62,7 @@ def writeEgsinp(name,preamble,parameters,array, postamble):
     
 #%%
 cd = os.getcwd()
-filename = "TMI_Files\MCFiles\VCCN_XCAT_plan01.egsinp"
+filename = "TMLI_Files\MCFiles\VCCN_XCAT_plan01.egsinp"
 filepath = os.path.join(cd,filename)
 
 #Will contain all Control Values of interest for splitting up ALL files
@@ -94,7 +94,7 @@ for line in controlPoints:
 
 #%% First seperate iso1
 sI = 0
-eI = 64
+eI = 720
 
 head1Array = controlArray[sI:eI,:]
 cpkey.append(head1Array[-1,-1])
@@ -105,13 +105,13 @@ head1Array[:,-1] = newMU
 newCP = np.shape(head1Array)[0]
 parameters[2] = str(newCP)
 
-name = "VCCN_XCAT_LegSUP_plan06"
+name = "VCCN_XCAT_Head_plan08"
 writeEgsinp(name, preamble, parameters, head1Array, postamble) 
 
 
 #%% Arcs around the chest
 sI = eI
-eI = 128
+eI = 1798
 
 newArray = controlArray[sI:eI,:]
 cpkey.append(newArray[-1,-1])
@@ -122,12 +122,12 @@ newArray[:,-1] = newMU
 newCP = np.shape(newArray)[0]
 parameters[2] = str(newCP)
 
-name = "VCCN_XCAT_LegINF_plan06"
+name = "VCCN_XCAT_Chest_plan08"
 writeEgsinp(name, preamble, parameters, newArray, postamble) 
 
 #%% 4 Arcs around the Abdomen
 sI = eI
-eI = 848
+eI = 2338
 
 newArray = controlArray[sI:eI,:]
 cpkey.append(newArray[-1,-1])
@@ -138,12 +138,12 @@ newArray[:,-1] = newMU
 newCP = np.shape(newArray)[0]
 parameters[2] = str(newCP)
 
-name = "VCCN_XCAT_Head_plan06"
+name = "VCCN_XCAT_Abdo1_plan08"
 writeEgsinp(name, preamble, parameters, newArray, postamble) 
 
 #%% 4 Arcs around the Pelvis
 sI = eI
-eI = 1568
+eI = 2878
 
 newArray = controlArray[sI:eI,:]
 cpkey.append(newArray[-1,-1])
@@ -154,12 +154,12 @@ newArray[:,-1] = newMU
 newCP = np.shape(newArray)[0]
 parameters[2] = str(newCP)
 
-name = "VCCN_XCAT_Chest_plan06"
+name = "VCCN_XCAT_Abdo2_plan08"
 writeEgsinp(name, preamble, parameters, newArray, postamble) 
 
 #%%Knee Field
 sI = eI
-eI = 1928
+eI = 3418
 
 newArray = controlArray[sI:eI,:]
 cpkey.append(newArray[-1,-1])
@@ -170,12 +170,12 @@ newArray[:,-1] = newMU
 newCP = np.shape(newArray)[0]
 parameters[2] = str(newCP)
 
-name = "VCCN_XCAT_Abdo1_plan06"
+name = "VCCN_XCAT_Pelvis1_plan08"
 writeEgsinp(name, preamble, parameters, newArray, postamble) 
 
 #%%Knee Field
 sI = eI
-eI = 3008
+eI = 3958
 
 newArray = controlArray[sI:eI,:]
 cpkey.append(newArray[-1,-1])
@@ -186,12 +186,12 @@ newArray[:,-1] = newMU
 newCP = np.shape(newArray)[0]
 parameters[2] = str(newCP)
 
-name = "VCCN_XCAT_Pelvis1_plan06"
+name = "VCCN_XCAT_Pelvis2_plan08"
 writeEgsinp(name, preamble, parameters, newArray, postamble) 
 
 #%%Knee Field
 sI = eI
-eI = 3368
+eI = 4022
 
 newArray = controlArray[sI:eI,:]
 cpkey.append(newArray[-1,-1])
@@ -202,7 +202,7 @@ newArray[:,-1] = newMU
 newCP = np.shape(newArray)[0]
 parameters[2] = str(newCP)
 
-name = "VCCN_XCAT_Pelvis2_plan06"
+name = "VCCN_XCAT_LegSUP_plan08"
 writeEgsinp(name, preamble, parameters, newArray, postamble) 
 
 
@@ -219,11 +219,11 @@ newArray[:,-1] = newMU
 newCP = np.shape(newArray)[0]
 parameters[2] = str(newCP)
 
-name = "VCCN_XCAT_Abdo2_plan06"
+name = "VCCN_XCAT_LegINF_plan08"
 writeEgsinp(name, preamble, parameters, newArray, postamble) 
 
 #%% Finally save the cpKEY
-writename = os.path.join(cd,"TMI_Files/MCFiles/","cpKey.npy") 
+writename = os.path.join(cd,"TMLI_Files/MCFiles/","cpKey.npy") 
 
 np.save(writename,cpkey)
 
